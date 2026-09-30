@@ -13,3 +13,7 @@ coverage/
 .claude/
 .kiro/
 CLAUDE.md
+# local agent reports and janitor state (may contain private paths)
+reports/
+reports_dev/
+.janitor/
