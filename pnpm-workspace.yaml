@@ -4,5 +4,8 @@ packages:
 # build scripts are not needed: tsc, eslint, jest, and the build all pass
 # without running them (verified locally with pnpm 9 and pnpm 12.6; pnpm 9 ignores allowBuilds).
 allowBuilds:
+  # @parcel/watcher: native fs-watcher used by jest-haste-map (jest 30.5+) only in
+  # --watch mode; this repo runs jest non-watch, so the postinstall build is unneeded.
+  '@parcel/watcher': false
   esbuild: false
   unrs-resolver: false

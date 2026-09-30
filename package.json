@@ -61,17 +61,17 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@jest/globals": "^30.0.4",
+    "@jest/globals": "^30.5.2",
     "@types/jest": "^30.0.0",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.57.1",
-    "jest": "^30.0.4",
-    "jsdom": "^26.1.0",
-    "ts-jest": "^29.4.0",
-    "tsx": "^4.20.3",
+    "jest": "^30.5.2",
+    "jsdom": "26.1.0",
+    "ts-jest": "^29.4.14",
+    "tsx": "^4.23.15",
     "typescript": "^5.3.3"
   }
 }
