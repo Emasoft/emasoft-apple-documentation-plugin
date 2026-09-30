@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "apple-docs": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/servers/apple-docs/index.js"]
+    }
+  }
+}

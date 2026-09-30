@@ -19,7 +19,10 @@ export function getWWDCDataDirectory(): string {
   const currentFilePath = fileURLToPath(import.meta.url);
   const currentDirPath = path.dirname(currentFilePath);
 
-  // After build, data is copied to dist/data
-  // The compiled JS is in dist/utils/, so data is at ../data
-  return path.resolve(currentDirPath, '../data/wwdc');
+  // The plugin ships ONE copy of the data, at the plugin root (data/wwdc).
+  // The running file is the esbuild bundle servers/apple-docs/index.js, so the
+  // plugin root is two levels up from its directory. The same expression also
+  // resolves correctly when the server runs from source (src/utils/ -> repo
+  // root), so there is no build-time copy of data/ to keep in sync.
+  return path.resolve(currentDirPath, '../../data/wwdc');
 }
