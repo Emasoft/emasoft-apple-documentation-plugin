@@ -18,11 +18,34 @@ const POPULAR_FRAMEWORKS = [
   ...getFrameworksByCategory('Games').slice(0, 3), // ARKit, SceneKit, SpriteKit
 ].map(f => f.toLowerCase());
 
+// Tracks the AbortController for whichever preloadPopularFrameworks() run is in flight, so
+// abortPreload() can cancel it. Fresh controller per run — see cache-warmer.ts for why a
+// single reused controller would be wrong (it's single-use).
+let currentPreloadController: AbortController | null = null;
+
+/**
+ * Cancel whichever preloadPopularFrameworks() run is currently in flight. Called on client
+ * disconnect (stdin 'end' in src/index.ts) alongside abortWarmUp() so background framework
+ * preloading stops holding the event loop open on an unreachable network. No-op if none in
+ * flight.
+ */
+export function abortPreload(): void {
+  currentPreloadController?.abort();
+}
+
+/**
+ * True when `error` is the result of an aborted fetch/AbortController (the DOMException/Error
+ * thrown by fetch, AbortSignal.throwIfAborted, etc.), regardless of the message text.
+ */
 /**
  * Preload popular framework indexes
  */
 export async function preloadPopularFrameworks(): Promise<void> {
   logger.info('Starting framework preload...');
+
+  const controller = new AbortController();
+  currentPreloadController = controller;
+  const { signal } = controller;
 
   const preloadPromises = POPULAR_FRAMEWORKS.map(async (framework) => {
     try {
@@ -35,10 +58,18 @@ export async function preloadPopularFrameworks(): Promise<void> {
 
       // Load framework index with minimal results
       logger.info(`Preloading framework: ${framework}`);
-      await searchFrameworkSymbols(framework, 'all', undefined, 'swift', 1);
+      await searchFrameworkSymbols(framework, 'all', undefined, 'swift', 1, signal);
 
       logger.info(`Successfully preloaded: ${framework}`);
     } catch (error) {
+      // Classify by OUR OWN controller's signal.aborted, not by error name: a per-request
+      // AbortSignal.timeout() inside httpClient also throws an abort-shaped TimeoutError, and
+      // that is a real failure that must still be logged. signal.aborted is only true when
+      // abortPreload() ran (client disconnect via stdin 'end') — expected shutdown, not a failure.
+      if (signal.aborted) {
+        logger.debug(`Preload of ${framework} aborted: client disconnected`);
+        return;
+      }
       logger.error(`Failed to preload ${framework}:`, error);
     }
   });

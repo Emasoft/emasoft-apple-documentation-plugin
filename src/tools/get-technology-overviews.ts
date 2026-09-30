@@ -47,6 +47,7 @@ export async function handleGetTechnologyOverviews(
   searchQuery?: string,
   includeSubcategories: boolean = true,
   limit: number = 50,
+  signal?: AbortSignal,
 ): Promise<string> {
   try {
     logger.info('Fetching technology overviews...');
@@ -69,8 +70,8 @@ export async function handleGetTechnologyOverviews(
 
     // Fetch both data files
     const [overviewsData, overviewsIndex] = await Promise.all([
-      httpClient.getJson<TechnologyOverviewsData>(APPLE_URLS.TECHNOLOGY_OVERVIEWS_JSON),
-      httpClient.getJson<TechnologyOverviewsIndexData>(APPLE_URLS.TECHNOLOGY_OVERVIEWS_INDEX_JSON),
+      httpClient.getJson<TechnologyOverviewsData>(APPLE_URLS.TECHNOLOGY_OVERVIEWS_JSON, signal ? { signal } : undefined),
+      httpClient.getJson<TechnologyOverviewsIndexData>(APPLE_URLS.TECHNOLOGY_OVERVIEWS_INDEX_JSON, signal ? { signal } : undefined),
     ]);
 
     // Parse and filter overviews

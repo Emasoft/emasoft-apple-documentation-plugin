@@ -37,6 +37,7 @@ export async function handleListTechnologies(
   language?: string,
   includeBeta: boolean = true,
   limit: number = API_LIMITS.DEFAULT_TECHNOLOGIES_LIMIT,
+  signal?: AbortSignal,
 ): Promise<string> {
   try {
     logger.info('Fetching technologies list...');
@@ -52,7 +53,7 @@ export async function handleListTechnologies(
     }
 
     // 获取技术列表
-    const data = await httpClient.getJson<TechnologiesData>(APPLE_URLS.TECHNOLOGIES_JSON);
+    const data = await httpClient.getJson<TechnologiesData>(APPLE_URLS.TECHNOLOGIES_JSON, signal ? { signal } : undefined);
 
     // 解析技术列表
     const technologies = parseTechnologies(data);

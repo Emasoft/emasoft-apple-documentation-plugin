@@ -39,6 +39,15 @@ interface RequestOptions {
   allowManualRedirect?: boolean;
   /** Additional headers to include in the request */
   headers?: Record<string, string>;
+  /**
+   * External cancellation signal (e.g. background cache warm-up aborting on client
+   * disconnect). Combined with the per-attempt timeout for the in-flight fetch, and
+   * used alone (never the timeout signal) to cut short the retry backoff sleep — see
+   * HttpClient.delay(). Never threaded into in-flight client tool requests, only into
+   * background warm-up/preload calls (see abortWarmUp/abortPreload), so a real client
+   * request in flight when the client disconnects still gets its response flushed.
+   */
+  signal?: AbortSignal;
 }
 
 /**
@@ -119,6 +128,38 @@ function initializeHeadersGenerator(): HttpHeadersGenerator | null {
   }
 }
 
+/**
+ * Combines a caller's cancellation `signal` with a per-attempt timeout into one fetch
+ * signal, without AbortSignal.any() — that needs Node >=20.3, and this project supports
+ * older Node. A fresh AbortController is aborted either by the caller's `signal` firing or
+ * by the timeout timer; cleanup() clears the timer and detaches the listener once the
+ * request settles, so the timer can never fire (and hold the event loop open) after the
+ * fetch has already finished. Callers MUST call cleanup() in a finally block.
+ */
+function createFetchSignal(
+  timeout: number,
+  createAbortError: () => Error,
+  signal?: AbortSignal,
+): { signal: AbortSignal; cleanup: () => void } {
+  const controller = new AbortController();
+  const timer = setTimeout(() => {
+    const error = new Error(`Request timed out after ${timeout}ms`);
+    error.name = 'TimeoutError';
+    controller.abort(error);
+  }, timeout);
+  const onAbort = () => controller.abort(signal?.reason ?? createAbortError());
+  if (signal?.aborted) {
+    onAbort();
+  } else {
+    signal?.addEventListener('abort', onAbort, { once: true });
+  }
+  const cleanup = () => {
+    clearTimeout(timer);
+    signal?.removeEventListener('abort', onAbort);
+  };
+  return { signal: controller.signal, cleanup };
+}
+
 class HttpClient {
   private requestQueue: Array<() => Promise<void>> = [];
   private activeRequests = 0;
@@ -135,38 +176,6 @@ class HttpClient {
     requestsByStatus: {},
     requestsByDomain: {},
   };
-
-  /**
-   * Make a GET request with timeout, retry logic, and browser-compatible headers
-   * Uses rotating User-Agent and matching headers for better request distribution
-   */
-  async get(url: string, options: RequestOptions = {}): Promise<Response> {
-    const {
-      timeout = REQUEST_CONFIG.TIMEOUT,
-      retries = REQUEST_CONFIG.MAX_RETRIES,
-      retryDelay = REQUEST_CONFIG.RETRY_DELAY,
-      redirect,
-      allowManualRedirect = false,
-      headers = {},
-    } = options;
-
-    return this.executeWithQueue(async () => {
-      // Check rate limit
-      if (!globalRateLimiter.canMakeRequest()) {
-        throw new Error('Rate limit exceeded. Please try again later.');
-      }
-
-      // Generate headers with User-Agent rotation
-      const requestHeaders = await this.generateRequestHeaders(headers, 'application/json');
-
-      return this.fetchWithRetry(url, {
-        method: 'GET',
-        headers: requestHeaders,
-        redirect,
-        signal: AbortSignal.timeout(timeout),
-      }, retries, retryDelay, allowManualRedirect);
-    });
-  }
 
   /**
    * Execute request with concurrency control
@@ -201,6 +210,94 @@ class HttpClient {
   }
 
   /**
+   * Make a GET request with timeout, retry logic, and browser-compatible headers
+   * Uses rotating User-Agent and matching headers for better request distribution
+   */
+  async get(url: string, options: RequestOptions = {}): Promise<Response> {
+    const {
+      timeout = REQUEST_CONFIG.TIMEOUT,
+      retries = REQUEST_CONFIG.MAX_RETRIES,
+      retryDelay = REQUEST_CONFIG.RETRY_DELAY,
+      redirect,
+      allowManualRedirect = false,
+      headers = {},
+      signal,
+    } = options;
+
+    return this.executeWithQueue(async () => {
+      // Check rate limit
+      if (!globalRateLimiter.canMakeRequest()) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      }
+
+      // Generate headers with User-Agent rotation
+      const requestHeaders = await this.generateRequestHeaders(headers, 'application/json');
+
+      // Combine the caller's cancellation signal with the per-attempt timeout so either
+      // one aborts the in-flight fetch, without AbortSignal.any() (needs Node >=20.3 — see
+      // createFetchSignal). The retry backoff sleep between attempts is cancelled
+      // separately, using `signal` alone (passed to fetchWithRetry below) — the timeout
+      // must not cut short a sleep that happens between attempts.
+      const fetchSignalHolder = createFetchSignal(timeout, () => this.createAbortError(), signal);
+
+      return this.fetchWithRetry(url, {
+        method: 'GET',
+        headers: requestHeaders,
+        redirect,
+        signal: fetchSignalHolder.signal,
+      }, retries, retryDelay, allowManualRedirect, signal).finally(() => fetchSignalHolder.cleanup());
+    });
+  }
+
+  /**
+   * Get text response with error handling
+   */
+  async getText(url: string, options: RequestOptions = {}): Promise<string> {
+    const {
+      timeout = REQUEST_CONFIG.TIMEOUT,
+      retries = REQUEST_CONFIG.MAX_RETRIES,
+      retryDelay = REQUEST_CONFIG.RETRY_DELAY,
+      redirect,
+      allowManualRedirect = false,
+      headers = {},
+      signal,
+    } = options;
+
+    try {
+      return this.executeWithQueue(async () => {
+        // Check rate limit
+        if (!globalRateLimiter.canMakeRequest()) {
+          throw new Error('Rate limit exceeded. Please try again later.');
+        }
+
+        // Generate headers with HTML Accept type
+        const requestHeaders = await this.generateRequestHeaders(
+          headers,
+          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        );
+
+        // See get() above: the caller's signal is combined with the per-attempt
+        // timeout for the fetch itself (via createFetchSignal — no AbortSignal.any(),
+        // needs Node >=20.3), and passed alone to fetchWithRetry so it can also cut
+        // short the retry backoff sleep.
+        const fetchSignalHolder = createFetchSignal(timeout, () => this.createAbortError(), signal);
+
+        const response = await this.fetchWithRetry(url, {
+          method: 'GET',
+          headers: requestHeaders,
+          redirect,
+          signal: fetchSignalHolder.signal,
+        }, retries, retryDelay, allowManualRedirect, signal).finally(() => fetchSignalHolder.cleanup());
+
+        return await response.text();
+      });
+    } catch (error) {
+      const appError = handleFetchError(error, url);
+      throw appError;
+    }
+  }
+
+  /**
    * Fetch with retry logic, performance monitoring, and User-Agent rotation
    * Each retry attempt uses a fresh User-Agent from the pool
    */
@@ -210,6 +307,7 @@ class HttpClient {
     retries: number,
     retryDelay: number,
     allowManualRedirect: boolean,
+    cancelSignal?: AbortSignal,
   ): Promise<Response> {
     const startTime = Date.now();
     const domain = new URL(url).hostname;
@@ -290,9 +388,13 @@ class HttpClient {
           }
         }
 
-        // Wait before retry (except on last attempt)
+        // Wait before retry (except on last attempt). Pass cancelSignal so a background
+        // warm-up abort (stdin end) cuts the backoff sleep short instead of blocking the
+        // event loop for up to retryDelay * 2^attempt ms per failed request — this is what
+        // held the process alive for tens of seconds offline (many warm-up requests each
+        // sleeping through their full exponential backoff before the process could exit).
         if (attempt < retries) {
-          await this.delay(retryDelay * Math.pow(2, attempt)); // Exponential backoff
+          await this.delay(retryDelay * Math.pow(2, attempt), cancelSignal);
         }
       }
     }
@@ -378,10 +480,31 @@ class HttpClient {
   }
 
   /**
-   * Delay utility
+   * Delay utility. When `signal` aborts (background warm-up cancelled on client
+   * disconnect), the pending timer is cleared and the promise rejects immediately
+   * instead of holding the event loop open until `ms` elapses — this is the half of
+   * the abort plumbing that actually shortens the retry backoff sleep, not just the
+   * in-flight fetch.
    */
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  private delay(ms: number, signal?: AbortSignal): Promise<void> {
+    if (signal?.aborted) {
+      return Promise.reject(this.createAbortError());
+    }
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        resolve();
+      }, ms);
+      signal?.addEventListener('abort', () => {
+        clearTimeout(timer);
+        reject(this.createAbortError());
+      }, { once: true });
+    });
+  }
+
+  private createAbortError(): Error {
+    const error = new Error('Request aborted');
+    error.name = 'AbortError';
+    return error;
   }
 
   /**
@@ -391,47 +514,6 @@ class HttpClient {
     try {
       const response = await this.get(url, options);
       return await response.json() as T;
-    } catch (error) {
-      const appError = handleFetchError(error, url);
-      throw appError;
-    }
-  }
-
-  /**
-   * Get text response with error handling
-   */
-  async getText(url: string, options: RequestOptions = {}): Promise<string> {
-    const {
-      timeout = REQUEST_CONFIG.TIMEOUT,
-      retries = REQUEST_CONFIG.MAX_RETRIES,
-      retryDelay = REQUEST_CONFIG.RETRY_DELAY,
-      redirect,
-      allowManualRedirect = false,
-      headers = {},
-    } = options;
-
-    try {
-      return this.executeWithQueue(async () => {
-        // Check rate limit
-        if (!globalRateLimiter.canMakeRequest()) {
-          throw new Error('Rate limit exceeded. Please try again later.');
-        }
-
-        // Generate headers with HTML Accept type
-        const requestHeaders = await this.generateRequestHeaders(
-          headers,
-          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        );
-
-        const response = await this.fetchWithRetry(url, {
-          method: 'GET',
-          headers: requestHeaders,
-          redirect,
-          signal: AbortSignal.timeout(timeout),
-        }, retries, retryDelay, allowManualRedirect);
-
-        return await response.text();
-      });
     } catch (error) {
       const appError = handleFetchError(error, url);
       throw appError;

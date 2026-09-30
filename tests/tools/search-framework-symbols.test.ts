@@ -25,7 +25,7 @@ describe('searchFrameworkSymbols', () => {
       const result = await searchFrameworkSymbols('uikit', 'class', undefined, 'swift', 10);
 
       expect(httpClient.getJson).toHaveBeenCalledWith(
-        'https://developer.apple.com/tutorials/data/index/uikit'
+        'https://developer.apple.com/tutorials/data/index/uikit', undefined
       );
       expect(result).toContain('UIView');
       expect(result).toContain('UIViewController');
@@ -221,7 +221,7 @@ describe('searchFrameworkSymbols', () => {
 
       // All should call the same lowercase URL
       expect(httpClient.getJson).toHaveBeenCalledWith(
-        'https://developer.apple.com/tutorials/data/index/uikit'
+        'https://developer.apple.com/tutorials/data/index/uikit', undefined
       );
       expect(httpClient.getJson).toHaveBeenCalledTimes(3);
     });

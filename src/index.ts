@@ -36,8 +36,8 @@ import { APPLE_URLS } from './utils/constants.js';
 import type { AppError } from './types/error.js';
 import { isAppleDesignUrl, isValidAppleDeveloperUrl } from './utils/url-converter.js';
 import { validateInput, ErrorType, createStandardErrorResponse, createToolErrorResponse } from './utils/error-handler.js';
-import { preloadPopularFrameworks } from './utils/preloader.js';
-import { warmUpCaches, schedulePeriodicCacheRefresh } from './utils/cache-warmer.js';
+import { preloadPopularFrameworks, abortPreload } from './utils/preloader.js';
+import { warmUpCaches, schedulePeriodicCacheRefresh, abortWarmUp } from './utils/cache-warmer.js';
 import { logger } from './utils/logger.js';
 import { API_LIMITS } from './utils/constants.js';
 
@@ -50,21 +50,86 @@ function isAppError(error: unknown): error is AppError {
   );
 }
 
+// Module-level (not instance-level) shutdown state and process-handler registration.
+// A bound `this.shutdown`/`this.isShuttingDown` on the class would tie process-level
+// SIGINT/SIGTERM/stdin/unhandledRejection/uncaughtException handlers to whichever server
+// instance happened to construct first — wrong for a library whose default export may be
+// instantiated more than once (tests construct many instances; an embedder may too). Process
+// lifecycle is inherently a singleton concern, so it lives here instead.
+let isShuttingDown = false;
+let errorHandlersRegistered = false;
+
+function shutdown(exitCode: number = 0, reason?: string): void {
+  if (isShuttingDown) {
+    return;
+  }
+
+  isShuttingDown = true;
+  if (reason) {
+    logger.info(`Shutting down MCP server: ${reason}`);
+  }
+  process.exit(exitCode);
+}
+
+/**
+ * Registers process-level signal/error handlers exactly once per process. `process.on()` has
+ * no "already registered" check of its own — every call adds a NEW listener — so calling this
+ * from the constructor unconditionally meant N server instances (routine under jest, which
+ * constructs one per test) produced N sets of listeners, tripping Node's MaxListenersExceeded
+ * warning. The module-level guard keeps the first registration authoritative; every later call
+ * (more instances constructed) is a no-op, so embedders and tests alike still get working
+ * SIGINT/SIGTERM/error handling without the listener count growing per instance.
+ */
+function setupProcessErrorHandling(): void {
+  if (errorHandlersRegistered) {
+    return;
+  }
+  errorHandlersRegistered = true;
+
+  process.on('SIGINT', () => {
+    shutdown(0, 'SIGINT');
+  });
+
+  process.on('SIGTERM', () => {
+    shutdown(0, 'SIGTERM');
+  });
+
+  // After EOF the event loop drains on its own once in-flight requests finish and
+  // responses flush (the cache/cache-warmer timers are unref'd, so they no longer
+  // hold the process open). This unref'd timer only fires as a backstop if some
+  // unknown ref'd handle keeps the process alive after stdin EOF — a clean drain
+  // exits immediately without waiting for it.
+  // ponytail: fixed 60s ceiling — covers the slowest measured request (search,
+  // ~25s) with margin, and exceeds REQUEST_CONFIG.TIMEOUT (30s) plus slack; but a
+  // retried httpClient call (retries x 30s + backoff) can still exceed it. Track
+  // in-flight requests instead if a tool ever needs longer.
+  process.stdin.on('end', () => {
+    // The client disconnected: background cache warm-up/framework preload (and their
+    // httpClient retry backoff sleeps) no longer serve anyone and must not hold the
+    // event loop open waiting on a network that may be unreachable offline — abort them
+    // immediately. This never touches in-flight CLIENT tool requests (no signal reaches
+    // them), so a response already being computed when the client disconnects still gets
+    // flushed — see tests/stdio-shutdown.test.ts (the #44 dropped-response regression).
+    abortWarmUp();
+    abortPreload();
+    setTimeout(() => {
+      shutdown(0, 'stdin end: forced exit after grace period');
+    }, 60_000).unref();
+  });
+
+  process.on('unhandledRejection', (reason) => {
+    logger.error('Unhandled Rejection, reason:', reason);
+    shutdown(1, 'unhandledRejection');
+  });
+
+  process.on('uncaughtException', (error) => {
+    logger.error('Uncaught Exception:', error);
+    shutdown(1, 'uncaughtException');
+  });
+}
+
 export default class AppleDeveloperDocsMCPServer {
   private server: Server;
-  private isShuttingDown = false;
-
-  private shutdown(exitCode: number = 0, reason?: string) {
-    if (this.isShuttingDown) {
-      return;
-    }
-
-    this.isShuttingDown = true;
-    if (reason) {
-      logger.info(`Shutting down MCP server: ${reason}`);
-    }
-    process.exit(exitCode);
-  }
 
   /**
    * Helper method to handle async operations with consistent error handling
@@ -122,7 +187,7 @@ export default class AppleDeveloperDocsMCPServer {
 
     this.setupTools();
     this.setupResources();
-    this.setupErrorHandling();
+    setupProcessErrorHandling();
   }
 
   private setupTools() {
@@ -408,42 +473,6 @@ export default class AppleDeveloperDocsMCPServer {
       () => handleGetSampleCode(framework, beta, searchQuery, limit),
       'getSampleCode',
     );
-  }
-
-  private setupErrorHandling() {
-    // 处理 SIGINT 以优雅关闭服务器
-    process.on('SIGINT', () => {
-      this.shutdown(0, 'SIGINT');
-    });
-
-    process.on('SIGTERM', () => {
-      this.shutdown(0, 'SIGTERM');
-    });
-
-    // After EOF the event loop drains on its own once in-flight requests finish and
-    // responses flush (the cache/cache-warmer timers are unref'd, so they no longer
-    // hold the process open). This unref'd timer only fires as a backstop if some
-    // unknown ref'd handle keeps the process alive after stdin EOF — a clean drain
-    // exits immediately without waiting for it.
-    // ponytail: fixed 60s ceiling — covers the slowest measured request (search,
-    // ~25s) with margin, and exceeds REQUEST_CONFIG.TIMEOUT (30s) plus slack; but a
-    // retried httpClient call (retries x 30s + backoff) can still exceed it. Track
-    // in-flight requests instead if a tool ever needs longer.
-    process.stdin.on('end', () => {
-      setTimeout(() => {
-        this.shutdown(0, 'stdin end: forced exit after grace period');
-      }, 60_000).unref();
-    });
-
-    process.on('unhandledRejection', (reason) => {
-      logger.error('Unhandled Rejection, reason:', reason);
-      this.shutdown(1, 'unhandledRejection');
-    });
-
-    process.on('uncaughtException', (error) => {
-      logger.error('Uncaught Exception:', error);
-      this.shutdown(1, 'uncaughtException');
-    });
   }
 
   async run() {

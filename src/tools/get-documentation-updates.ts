@@ -50,6 +50,7 @@ export async function handleGetDocumentationUpdates(
   searchQuery?: string,
   includeBeta: boolean = true,
   limit: number = 50,
+  signal?: AbortSignal,
 ): Promise<string> {
   try {
     logger.info('Fetching documentation updates...');
@@ -73,8 +74,8 @@ export async function handleGetDocumentationUpdates(
 
     // Fetch both updates data files
     const [updatesData, updatesIndex] = await Promise.all([
-      httpClient.getJson<UpdatesData>(APPLE_URLS.UPDATES_JSON),
-      httpClient.getJson<UpdatesIndexData>(APPLE_URLS.UPDATES_INDEX_JSON),
+      httpClient.getJson<UpdatesData>(APPLE_URLS.UPDATES_JSON, signal ? { signal } : undefined),
+      httpClient.getJson<UpdatesIndexData>(APPLE_URLS.UPDATES_INDEX_JSON, signal ? { signal } : undefined),
     ]);
 
     // Parse and filter updates

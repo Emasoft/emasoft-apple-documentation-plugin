@@ -116,6 +116,7 @@ export async function searchFrameworkSymbols(
   namePattern?: string,
   language: string = 'swift',
   limit: number = API_LIMITS.DEFAULT_FRAMEWORK_SYMBOLS_LIMIT,
+  signal?: AbortSignal,
 ): Promise<string> {
   try {
     // Normalize framework name for consistent processing
@@ -132,7 +133,7 @@ export async function searchFrameworkSymbols(
       return cachedResult;
     }
 
-    const data = await httpClient.getJson<FrameworkIndex>(indexUrl);
+    const data = await httpClient.getJson<FrameworkIndex>(indexUrl, signal ? { signal } : undefined);
 
     // Get language-specific index
     const indexItems = data.interfaceLanguages?.[language] || [];

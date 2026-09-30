@@ -73,7 +73,7 @@ describe('list-technologies', () => {
       const result = await handleListTechnologies();
 
       expect(mockHttpClient.getJson).toHaveBeenCalledWith(
-        'https://developer.apple.com/tutorials/data/documentation/technologies.json'
+        'https://developer.apple.com/tutorials/data/documentation/technologies.json', undefined
       );
       expect(result).toContain('# Apple Developer Technologies');
       expect(result).toContain('## Featured');
