@@ -1,26 +1,62 @@
 /**
- * Regression test for the stdio transport shutdown bug: before this fix the
- * server force-exited on stdin 'end'/'close' and transport.onclose, which
- * could drop in-flight JSON-RPC responses. Now the event loop is left to
- * drain on its own (cache timers are unref'd) and the process must still
- * exit by itself, after flushing the response.
+ * Regression test for the stdio transport shutdown bug (fixed in 7fbf8e3):
+ * before that fix the server force-exited on stdin 'end'/'close' and
+ * transport.onclose, which could drop in-flight JSON-RPC responses that were
+ * still being written to stdout when the process was killed.
+ *
+ * This test proves two things, both required for the fix to be considered
+ * correct rather than merely "passes on the happy path":
+ *
+ * 1. Every in-flight request gets its response flushed before the process
+ *    exits, even when many requests are pending at stdin EOF (20 concurrent
+ *    calls to a disk-only tool, no network involved so timing is
+ *    deterministic in CI).
+ * 2. The process exits fast on its own — via the event loop draining once
+ *    responses are flushed and the cache/cache-warmer timers are unref'd —
+ *    rather than by hitting the 10s "forced exit after grace period"
+ *    backstop in src/index.ts. Asserting stderr does NOT contain that
+ *    message, and that exit happens well under the grace period, is what
+ *    turns this from "the backstop covers it" into "the real drain path
+ *    covers it".
+ *
+ * It deliberately does NOT assert anything about the exit code, since a
+ * 12s failsafe kill (see below) intentionally does not produce one.
  */
-import { spawn } from 'node:child_process';
+import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import path from 'node:path';
 
 describe('stdio server shutdown', () => {
-  it('flushes in-flight responses then exits 0 on its own after stdin EOF', async () => {
+  it('flushes all 20 in-flight responses then exits fast on its own after stdin EOF', async () => {
     const entry = path.join(__dirname, '..', 'src', 'index.ts');
-    const tsx = path.join(__dirname, '..', 'node_modules', '.bin', 'tsx');
 
-    const child = spawn(tsx, [entry], {
-      // NODE_ENV must NOT be 'test' — the entrypoint only runs the server
-      // when it isn't.
-      env: { ...process.env, NODE_ENV: 'development' },
-      stdio: ['pipe', 'pipe', 'pipe'],
+    // `process.execPath` + `--import tsx` (Node's native loader hook) spawns
+    // portably across platforms/package managers, unlike resolving
+    // node_modules/.bin/tsx (a symlink on POSIX, a generated .cmd shim on
+    // Windows, and not guaranteed executable from a plain spawn() there).
+    // tsx is a devDependency (package.json) — fine for a test, not shipped.
+    const child: ChildProcessWithoutNullStreams = spawn(
+      process.execPath,
+      ['--import', 'tsx', entry],
+      {
+        // NODE_ENV must NOT be 'test' — the entrypoint only runs the server
+        // when it isn't.
+        env: { ...process.env, NODE_ENV: 'development' },
+        stdio: ['pipe', 'pipe', 'pipe'],
+      },
+    );
+
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk.toString();
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
     });
 
     try {
+      const TOOL_CALL_IDS = Array.from({ length: 20 }, (_, i) => i + 2); // 2..21
+
       const requests = [
         JSON.stringify({
           jsonrpc: '2.0',
@@ -33,40 +69,70 @@ describe('stdio server shutdown', () => {
           },
         }),
         JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }),
-        JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list' }),
+        // list_wwdc_videos reads bundled JSON from disk (src/utils/wwdc-data-source.ts)
+        // and needs no network, so 20 concurrent calls stay fast and
+        // deterministic while still being async work genuinely in flight at
+        // stdin EOF — the scenario that dropped responses before the fix.
+        ...TOOL_CALL_IDS.map((id) =>
+          JSON.stringify({
+            jsonrpc: '2.0',
+            id,
+            method: 'tools/call',
+            params: { name: 'list_wwdc_videos', arguments: { year: '2024', limit: 5 } },
+          }),
+        ),
       ].join('\n') + '\n';
 
-      let stdout = '';
-      child.stdout.on('data', (chunk) => {
-        stdout += chunk.toString();
-      });
-
-      const exitPromise = new Promise<number | null>((resolve) => {
-        child.on('exit', (code) => resolve(code));
+      // Race the exit against a failsafe: if the server ever regresses to
+      // hanging past this, killing the child here (instead of letting the
+      // suite time out) guarantees no orphaned process survives the test run.
+      const FAILSAFE_MS = 12_000;
+      const exitPromise = new Promise<number | null>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          child.kill('SIGKILL');
+          reject(new Error(`server did not exit within ${FAILSAFE_MS}ms failsafe`));
+        }, FAILSAFE_MS);
+        child.on('exit', (code) => {
+          clearTimeout(timer);
+          resolve(code);
+        });
       });
 
       child.stdin.write(requests);
       child.stdin.end();
+      const drainStart = Date.now();
 
       const exitCode = await exitPromise;
+      const drainMs = Date.now() - drainStart;
 
       expect(exitCode).toBe(0);
-      const responses = stdout
-        .split('\n')
-        .filter((line) => line.trim().length > 0)
-        .map((line) => {
-          try {
-            return JSON.parse(line);
-          } catch {
-            return null;
-          }
-        })
-        .filter((msg) => msg && msg.id === 2);
-      expect(responses.length).toBeGreaterThan(0);
+
+      // Must drain via the real event-loop-empties-naturally path, not the
+      // 10s forced-exit backstop in setupErrorHandling() (src/index.ts).
+      // Threshold is generous (well under the 10s backstop, but above the
+      // ~2s typical drain) to absorb CPU contention when run alongside the
+      // rest of the suite in parallel Jest workers.
+      expect(stderr).not.toContain('forced exit after grace period');
+      expect(drainMs).toBeLessThan(6_000);
+
+      const responsesById = new Map<number, unknown>();
+      for (const line of stdout.split('\n')) {
+        if (!line.trim()) continue;
+        try {
+          const msg = JSON.parse(line);
+          if (typeof msg?.id === 'number') responsesById.set(msg.id, msg);
+        } catch {
+          // non-JSON log line on stdout; ignore
+        }
+      }
+
+      for (const id of TOOL_CALL_IDS) {
+        expect(responsesById.has(id)).toBe(true);
+      }
     } finally {
       if (!child.killed) {
         child.kill();
       }
     }
-  }, 15000);
+  }, 15_000);
 });
