@@ -265,6 +265,7 @@ npm install && npm run build
 
 - **Getting outdated behavior after an update?** `npx` caches package versions. If the plain command fails or behaves like an older version, pin `@latest`: use `npx -y @kimsungwhee/apple-docs-mcp@latest` in your MCP client config (as shown above) to force the latest version.
 - **Client reports `"Client closed"` or `"No server info found"`?** One known cause is that the client's MCP host process can't find `npx` on its `PATH` (common with GUI apps that don't inherit your shell's `PATH`). Run `which npx` in your terminal and use the absolute path it prints (e.g. `/opt/homebrew/bin/npx` on Apple Silicon Homebrew installs) as the `"command"` value in your MCP config instead of the bare `"npx"`.
+- **`search_apple_docs` returning nothing, or erroring?** It depends on an undocumented Apple search backend (`devintserv.msc.sbz.apple.com`) that developer.apple.com's own search page uses internally; if Apple changes its response shape, `search_apple_docs` can break without a new release of this project catching up yet. `search_framework_symbols` and `get_apple_doc_content` don't depend on that endpoint and keep working.
 
 ## 💬 Usage Examples
 

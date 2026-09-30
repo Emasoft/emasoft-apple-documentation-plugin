@@ -9,7 +9,8 @@ import {
   ReadResourceRequestSchema,
   type CallToolResult,
 } from '@modelcontextprotocol/sdk/types.js';
-import { parseSearchResults } from './tools/search-parser.js';
+import { formatSearchResultsResponse } from './tools/search-parser.js';
+import { fetchAppleDocsSearch } from './tools/apple-search-api.js';
 import { fetchAppleDocJson } from './tools/doc-fetcher.js';
 import { handleListTechnologies } from './tools/list-technologies.js';
 import { searchFrameworkSymbols } from './tools/search-framework-symbols.js';
@@ -35,7 +36,6 @@ import { APPLE_URLS } from './utils/constants.js';
 import type { AppError } from './types/error.js';
 import { isAppleDesignUrl, isValidAppleDeveloperUrl } from './utils/url-converter.js';
 import { validateInput, ErrorType, createStandardErrorResponse, createToolErrorResponse } from './utils/error-handler.js';
-import { httpClient } from './utils/http-client.js';
 import { preloadPopularFrameworks } from './utils/preloader.js';
 import { warmUpCaches, schedulePeriodicCacheRefresh } from './utils/cache-warmer.js';
 import { logger } from './utils/logger.js';
@@ -179,16 +179,17 @@ export default class AppleDeveloperDocsMCPServer {
         return createToolErrorResponse(queryValidation, 'search_apple_docs');
       }
 
-      // 创建 Apple Developer Documentation 搜索 URL
+      // 创建 Apple Developer Documentation 搜索 URL（仅用于展示/回退链接，实际请求走 JSON API）
       const searchUrl = `${APPLE_URLS.SEARCH}?q=${encodeURIComponent(query)}`;
 
       logger.info(`Searching Apple docs for: ${query}`);
 
-      // 获取搜索结果页面
-      const html = await httpClient.getText(searchUrl);
+      // 获取搜索结果：developer.apple.com/search 现在是客户端渲染的，HTML 里不再包含结果
+      // (issue #51, #43)，改为直接调用该页面自己使用的内部 JSON 搜索接口。
+      const results = await fetchAppleDocsSearch(query, type, searchUrl);
 
-      // 解析并返回搜索结果，传递type参数进行过滤
-      return parseSearchResults(html, query, searchUrl, type);
+      // 格式化并返回搜索结果
+      return formatSearchResultsResponse(results, query, searchUrl, type);
     } catch (error) {
       if (error && typeof error === 'object' && 'type' in error) {
         return createToolErrorResponse(error as any, 'search_apple_docs');

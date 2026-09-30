@@ -1,7 +1,4 @@
-import * as cheerio from 'cheerio';
 import type { SearchResult } from './search-result-parser.js';
-import { parseSearchResult } from './search-result-parser.js';
-import { API_LIMITS } from '../utils/constants.js';
 import { logger } from '../utils/logger.js';
 
 /**
@@ -188,31 +185,21 @@ This search covers documentation and samples, but not WWDC videos. For WWDC cont
 }
 
 /**
- * Parse search results with reduced complexity
+ * Build the MCP tool response from already-fetched/parsed search results.
+ *
+ * WHY this used to be `parseSearchResults(html, ...)`: the old implementation
+ * scraped `.search-result` nodes out of the Apple search page's HTML with
+ * cheerio. That page is now rendered client-side (issues #51, #43), so results
+ * are fetched and parsed upstream by apple-search-api.ts / search-result-parser.ts
+ * and handed in here already as SearchResult[] — this function only formats them.
  */
-export function parseSearchResults(
-  html: string,
+export function formatSearchResultsResponse(
+  results: SearchResult[],
   query: string,
   searchUrl: string,
   filterType: string = 'all',
 ): { content: Array<{ type: string; text: string }> } {
   try {
-    const $ = cheerio.load(html);
-    const results: SearchResult[] = [];
-
-    // Parse each search result (with limit)
-    $('.search-result').each((_, element) => {
-      if (results.length >= API_LIMITS.MAX_SEARCH_RESULTS) {
-        return false; // Stop parsing when limit reached
-      }
-      const result = parseSearchResult($(element), filterType);
-      if (result) {
-        results.push(result);
-      }
-      return true; // Continue parsing
-    });
-
-    // Format results
     const formattedContent = formatSearchResults(results, query, filterType, searchUrl);
 
     return {
@@ -222,11 +209,11 @@ export function parseSearchResults(
       }],
     };
   } catch (error) {
-    logger.error('Error parsing search results:', error);
+    logger.error('Error formatting search results:', error);
     return {
       content: [{
         type: 'text',
-        text: `Error parsing search results: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        text: `Error formatting search results: ${error instanceof Error ? error.message : 'Unknown error'}`,
       }],
     };
   }

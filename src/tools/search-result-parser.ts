@@ -1,8 +1,13 @@
 /**
- * Search result parsing utilities
+ * Search result parsing utilities.
+ *
+ * WHY this no longer uses cheerio/HTML (issues #51, #43): developer.apple.com/search/
+ * used to render a `.search-result` list server-side; it is now a client-rendered
+ * page that fetches JSON from Apple's internal search API (see ../tools/apple-search-api.ts
+ * for the fetch + stream-reconstruction side). This file now parses ONE raw API
+ * result item into the same SearchResult shape the rest of the tool already expects,
+ * so formatting (search-parser.ts) didn't need to change at all.
  */
-
-import type * as cheerio from 'cheerio';
 
 export interface SearchResult {
   title: string;
@@ -14,165 +19,65 @@ export interface SearchResult {
 }
 
 /**
- * Type mapping for search filters
+ * Metadata shape of one item in the internal search API's "search" response
+ * (`value.metadata`). Only the fields we use are typed; the real payload carries
+ * more (e.g. platform-specific availability arrays) that we don't need here.
  */
-export const typeMapping: Record<string, string[]> = {
-  all: ['documentation', 'documentation-article', 'documentation-tutorial', 'sample-code'],
-  documentation: ['documentation', 'documentation-article'],
-  sample: ['sample-code'],
+export interface ApiResultMetadata {
+  title?: string;
+  permalink?: string;
+  description?: string;
+  hierarchy?: string;
+  kind?: string; // 'symbol' | 'article' | 'sampleCode' | 'collectionGroup' | 'tutorial' | ...
+}
+
+export interface ApiResultItem {
+  excerpt?: string;
+  value?: { metadata?: ApiResultMetadata };
+}
+
+// Maps the API's `metadata.kind` to the type labels formatSearchResults/getDisplayType
+// (search-parser.ts) already know how to group and display.
+const KIND_TO_TYPE: Record<string, string> = {
+  symbol: 'documentation',
+  article: 'documentation-article',
+  tutorial: 'documentation-tutorial',
+  collectionGroup: 'guide',
+  collection: 'guide',
+  sampleCode: 'sample-code',
 };
 
 /**
- * Unsupported document types
+ * Parse one raw API result item into a SearchResult, or null to drop it.
+ *
+ * Two kinds of items are dropped: WWDC video/session entries (they carry a
+ * completely different shape with no `metadata.permalink` — search_apple_docs
+ * intentionally excludes videos, pointing users at the dedicated WWDC tools
+ * instead, see getVideoSuggestion in search-parser.ts), and — when filterType is
+ * "documentation" — sample-code entries that leak through the API's own
+ * pathPrefix scope (verified live: scoping to "/documentation/" still returns a
+ * handful of kind:"sampleCode" items), so we filter them out here instead.
  */
-const UNSUPPORTED_TYPES = ['general', 'video', 'forums', 'news'];
-
-/**
- * Extract search result type from element classes
- */
-export function extractResultType(element: cheerio.Cheerio<any>): string {
-  const classes = element.attr('class')?.split(' ') ?? [];
-
-  for (const className of classes) {
-    if (className !== 'search-result' && className.trim()) {
-      return className;
-    }
-  }
-
-  return 'other';
-}
-
-/**
- * Check if result type is supported
- */
-export function isResultTypeSupported(resultType: string, filterType: string): boolean {
-  // Apply type filter
-  const allowedTypes = typeMapping[filterType] ?? typeMapping['all'];
-  if (!allowedTypes.includes(resultType)) {
-    return false;
-  }
-
-  // Exclude known unsupported types
-  if (UNSUPPORTED_TYPES.includes(resultType)) {
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Extract result title and URL
- */
-export function extractTitleAndUrl(resultItem: cheerio.Cheerio<any>): { title: string; url: string } {
-  const titleElement = resultItem.find('.result-title');
-  const title = titleElement.text().trim();
-
-  const urlElement = titleElement.find('a');
-  let url = urlElement.attr('href') ?? '';
-
-  if (url && url.startsWith('/')) {
-    url = `https://developer.apple.com${url}`;
-  }
-
-  return { title, url };
-}
-
-/**
- * Check if URL is supported
- */
-export function isUrlSupported(url: string): boolean {
-  if (!url) {
-    return false;
-  }
-
-  // Skip non-documentation URLs
-  if (!url.includes('/documentation/')) {
-    return false;
-  }
-
-  // Skip download links and zip files
-  if (url.includes('download.apple.com') || url.includes('.zip')) {
-    return false;
-  }
-
-  // Skip human interface guidelines
-  if (url.includes('/design/human-interface-guidelines/')) {
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Extract result description
- */
-export function extractDescription(resultItem: cheerio.Cheerio<any>): string {
-  const descriptionElement = resultItem.find('.result-description');
-  return descriptionElement.text().trim();
-}
-
-/**
- * Extract framework information
- */
-export function extractFramework(resultItem: cheerio.Cheerio<any>, url: string): string | undefined {
-  // Try to extract from link text
-  const linkText = resultItem.find('.result-link').text().trim();
-  const frameworkMatch = linkText.match(/^([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)\s+[>›]/);
-
-  if (frameworkMatch) {
-    return frameworkMatch[1];
-  }
-
-  // Try to extract from URL
-  const urlMatch = url.match(/\/documentation\/([^\/]+)/);
-  if (urlMatch) {
-    const framework = urlMatch[1];
-    // Convert underscore to space and capitalize
-    return framework.split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  }
-
-  return undefined;
-}
-
-/**
- * Extract beta status
- */
-export function extractBetaStatus(resultItem: cheerio.Cheerio<any>): boolean {
-  const titleText = resultItem.find('.result-title').text();
-  const descriptionText = resultItem.find('.result-description').text();
-
-  return titleText.includes('Beta') || descriptionText.includes('Beta');
-}
-
-/**
- * Parse a single search result
- */
-export function parseSearchResult(
-  element: cheerio.Cheerio<any>,
-  filterType: string,
-): SearchResult | null {
-  const resultType = extractResultType(element);
-
-  if (!isResultTypeSupported(resultType, filterType)) {
+export function parseSearchResult(item: ApiResultItem, filterType: string): SearchResult | null {
+  const metadata = item.value?.metadata;
+  if (!metadata?.permalink || !metadata.title) {
     return null;
   }
 
-  const { title, url } = extractTitleAndUrl(element);
-
-  if (!isUrlSupported(url)) {
+  const kind = metadata.kind ?? 'symbol';
+  if (filterType === 'documentation' && kind === 'sampleCode') {
     return null;
   }
 
-  const description = extractDescription(element);
-  const framework = extractFramework(element, url);
-  const beta = extractBetaStatus(element);
+  const type = KIND_TO_TYPE[kind] ?? 'documentation';
+  const framework = metadata.hierarchy?.split('>')[0]?.trim() || undefined;
+  const description = metadata.description ?? item.excerpt ?? '';
+  const beta = /\bBeta\b/.test(metadata.title) || /\bBeta\b/.test(description);
 
   return {
-    title,
-    url,
-    type: resultType,
+    title: metadata.title,
+    url: metadata.permalink,
+    type,
     description,
     framework,
     beta,
