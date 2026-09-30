@@ -1,10 +1,10 @@
 ---
 trdd-id: 2DDKQU67
 title: Update runtime deps MCP SDK zod cheerio
-column: todo
+column: testing
 status: tasked
 created: 2026-09-30T20:14:33+0200
-updated: 2026-09-30T20:15:18+0200
+updated: 2026-09-30T20:25:30+0200
 current-owner: user
 created-by: user
 task-type: refactor
