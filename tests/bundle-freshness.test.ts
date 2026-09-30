@@ -40,5 +40,5 @@ describe('committed plugin bundle', () => {
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
-  }, 60_000);
+  }, 240_000); // WHY 240s (was 60s): a full esbuild bundle build is CPU-bound and slows under load
 });

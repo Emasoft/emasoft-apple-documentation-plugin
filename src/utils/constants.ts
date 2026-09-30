@@ -190,7 +190,11 @@ export const SAFARI_USER_AGENT_UTILS = {
 
 // Request Configuration
 export const REQUEST_CONFIG = {
-  TIMEOUT: 30000, // 30 seconds
+  // WHY 60s (was 30s): the per-request deadline covers the whole retry sequence, and real
+  // search latency is 5-25s; a CPU peak stalling the event loop for several seconds must not
+  // abort a legitimate in-flight client request. src/index.ts's stdin-EOF forced-exit backstop
+  // must stay strictly longer than this.
+  TIMEOUT: 60000, // 60 seconds
   MAX_RETRIES: 3,
   RETRY_DELAY: 1000, // 1 second
   MAX_CONCURRENT_REQUESTS: 5,

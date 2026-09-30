@@ -23,10 +23,10 @@ describe('Cache System', () => {
     });
 
     it('should respect TTL', async () => {
-      cache.set('key1', 'value1', 100); // 100ms TTL
+      cache.set('key1', 'value1', 500); // 500ms TTL (WHY: 100ms could expire before the first get under a CPU stall)
       expect(cache.get('key1')).toBe('value1');
       
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise(resolve => setTimeout(resolve, 750));
       expect(cache.get('key1')).toBeUndefined();
     });
 
@@ -99,7 +99,7 @@ describe('Cache System', () => {
       testCache.set('key2', 'value2', 50);
       
       // Wait for cleanup to run
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 600));
       
       expect(testCache.get('key1')).toBeUndefined();
       expect(testCache.get('key2')).toBeUndefined();

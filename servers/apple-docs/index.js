@@ -7420,8 +7420,12 @@ var init_constants = __esm({
       // macOS 26.x + Safari 19.x Beta
     };
     REQUEST_CONFIG = {
-      TIMEOUT: 3e4,
-      // 30 seconds
+      // WHY 60s (was 30s): the per-request deadline covers the whole retry sequence, and real
+      // search latency is 5-25s; a CPU peak stalling the event loop for several seconds must not
+      // abort a legitimate in-flight client request. src/index.ts's stdin-EOF forced-exit backstop
+      // must stay strictly longer than this.
+      TIMEOUT: 6e4,
+      // 60 seconds
       MAX_RETRIES: 3,
       RETRY_DELAY: 1e3,
       // 1 second
@@ -85241,7 +85245,7 @@ function setupProcessErrorHandling() {
     abortPreload();
     setTimeout(() => {
       shutdown(0, "stdin end: forced exit after grace period");
-    }, 6e4).unref();
+    }, 12e4).unref();
   });
   process.on("unhandledRejection", (reason) => {
     logger.error("Unhandled Rejection, reason:", reason);

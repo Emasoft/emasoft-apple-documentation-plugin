@@ -122,14 +122,14 @@ describe('UserAgentPool', () => {
     });
 
     test('should recover disabled agents when appropriate', async () => {
-      const config: UserAgentPoolConfig = { disableDuration: 100 }; // 100ms
+      const config: UserAgentPoolConfig = { disableDuration: 500 }; // 500ms (WHY: 100ms could elapse before the "still disabled" assertion under a CPU stall)
       const pool = new UserAgentPool(TEST_USER_AGENTS.slice(0, 1), config);
 
       // Disable the agent
       await pool.markFailure(TEST_USER_AGENTS[0], 403);
 
       // Wait for recovery
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise(resolve => setTimeout(resolve, 750));
 
       // Should be able to get agent again
       const userAgent = await pool.getNext();
@@ -312,7 +312,7 @@ describe('UserAgentPool', () => {
     });
 
     test('should recover disabled agents after timeout', async () => {
-      const config: UserAgentPoolConfig = { disableDuration: 100 }; // 100ms
+      const config: UserAgentPoolConfig = { disableDuration: 500 }; // 500ms (WHY: 100ms could elapse before the "still disabled" assertion under a CPU stall)
       const pool = new UserAgentPool([TEST_USER_AGENTS[0]], config);
 
       // Disable agent
@@ -320,7 +320,7 @@ describe('UserAgentPool', () => {
       expect(pool.getAgentStats().find((s: AgentStats) => s.value === TEST_USER_AGENTS[0])?.isEnabled).toBe(false);
 
       // Wait for recovery
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise(resolve => setTimeout(resolve, 750));
 
       // Trigger recovery by calling getNext
       const userAgent = await pool.getNext();

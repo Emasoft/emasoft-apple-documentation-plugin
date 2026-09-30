@@ -81,7 +81,7 @@ describe('HTTP Client User-Agent Integration', () => {
 
       // The test passes if no errors are thrown during header processing
       expect(true).toBe(true);
-    }, 10000);
+    }, 60000); // WHY 60s (was 10s): real network + CPU peaks
 
     it('should maintain statistics tracking', () => {
       const initialStats = httpClient.getPerformanceStats();
@@ -129,7 +129,7 @@ describe('HTTP Client User-Agent Integration', () => {
         expect((error as Error).message).toBeDefined();
         expect((error as Error).message.length).toBeGreaterThan(0);
       }
-    }, 15000);
+    }, 60000); // WHY 60s (was 15s): real network + CPU peaks
 
     it('should handle HTTP errors correctly', async () => {
       try {
@@ -143,6 +143,6 @@ describe('HTTP Client User-Agent Integration', () => {
         expect((error as Error).message).toBeDefined();
         expect((error as Error).message.length).toBeGreaterThan(0);
       }
-    }, 10000);
+    }, 60000); // WHY 60s (was 10s): real network + CPU peaks
   });
 });

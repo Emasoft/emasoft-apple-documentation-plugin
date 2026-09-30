@@ -48,8 +48,8 @@ describe('standalone plugin bundle', () => {
   function request(id: number, method: string, params?: object): Promise<JsonRpcResponse> {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
-        reject(new Error(`no response to ${method} within 20s. stderr: ${stderr}`));
-      }, 20_000);
+        reject(new Error(`no response to ${method} within 90s. stderr: ${stderr}`));
+      }, 90_000); // WHY 90s (was 20s): a CPU peak can stall the child for many seconds; still fails on a hung server
       waiting.set(id, (response) => {
         clearTimeout(timer);
         resolve(response);
@@ -136,7 +136,7 @@ describe('standalone plugin bundle', () => {
     const text: string = call.result.content[0].text;
     expect(text).toMatch(/\*\*Found 3 videos\*\*/);
     expect(text).toContain('https://developer.apple.com/videos/play/wwdc2024/');
-  }, 30_000);
+  }, 240_000); // WHY 240s (was 30s): three sequential requests each allowed up to 90s
 
   it('does not bundle jsdom (a devDependency used only by dead extractor code)', () => {
     expect(readFileSync(committedBundle, 'utf8')).not.toContain('jsdom');

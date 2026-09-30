@@ -7,8 +7,11 @@ module.exports = {
     '**/__tests__/**/*.ts',
     '**/?(*.)+(spec|test).ts'
   ],
-  testTimeout: 10000, // 10 seconds timeout for all tests
-  maxWorkers: 1, // Run tests serially to avoid network conflicts
+  // WHY 120s (was 10s): a CPU peak (other processes, loaded machine) can stall a test for many
+  // seconds; the default only bounds tests that hang outright, and tests that need a tighter or
+  // longer bound set their own. A genuinely hung test still fails, just later.
+  testTimeout: 120000,
+  maxWorkers: 1, // Run tests serially to avoid network conflicts (and CPU oversubscription)
   forceExit: true, // Force Jest to exit after tests complete
   transform: {
     '^.+\\.ts$': ['ts-jest', {

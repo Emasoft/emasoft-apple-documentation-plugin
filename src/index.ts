@@ -99,10 +99,13 @@ function setupProcessErrorHandling(): void {
   // hold the process open). This unref'd timer only fires as a backstop if some
   // unknown ref'd handle keeps the process alive after stdin EOF — a clean drain
   // exits immediately without waiting for it.
-  // ponytail: fixed 60s ceiling — covers the slowest measured request (search,
-  // ~25s) with margin, and exceeds REQUEST_CONFIG.TIMEOUT (30s) plus slack; but a
-  // retried httpClient call (retries x 30s + backoff) can still exceed it. Track
-  // in-flight requests instead if a tool ever needs longer.
+  // WHY 120s (was 60s): it must stay strictly longer than the longest legitimate in-flight
+  // request. REQUEST_CONFIG.TIMEOUT (60s) is a per-request deadline covering the whole
+  // httpClient retry sequence, so no client request outlives it; 120s leaves a full extra
+  // timeout of slack for a CPU peak that delays timers/flushes. Shorter would risk killing
+  // the process mid-response under load.
+  // ponytail: fixed ceiling rather than tracking in-flight requests; track them if a tool
+  // ever needs to exceed REQUEST_CONFIG.TIMEOUT.
   process.stdin.on('end', () => {
     // The client disconnected: background cache warm-up/framework preload (and their
     // httpClient retry backoff sleeps) no longer serve anyone and must not hold the
@@ -114,7 +117,7 @@ function setupProcessErrorHandling(): void {
     abortPreload();
     setTimeout(() => {
       shutdown(0, 'stdin end: forced exit after grace period');
-    }, 60_000).unref();
+    }, 120_000).unref();
   });
 
   process.on('unhandledRejection', (reason) => {

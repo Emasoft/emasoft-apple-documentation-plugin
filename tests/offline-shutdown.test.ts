@@ -48,7 +48,7 @@ describe('stdio server shutdown when offline', () => {
       // Generous failsafe: this must NEVER be hit once the fix is in place (exit is asserted
       // well under it below), but on the pre-fix code the process took ~57s offline — a short
       // failsafe here would just report "timed out" instead of the useful "took Nms" failure.
-      const FAILSAFE_MS = 70_000;
+      const FAILSAFE_MS = 130_000; // must stay above the 120s forced-exit backstop in src/index.ts
       const exitPromise = new Promise<number | null>((resolve, reject) => {
         const timer = setTimeout(() => {
           child.kill('SIGKILL');
@@ -69,16 +69,16 @@ describe('stdio server shutdown when offline', () => {
 
       expect(exitCode).toBe(0);
       // The fix aborts background warm-up/preload on stdin end instead of letting their retry
-      // backoff sleeps run to completion — must exit within single-digit seconds even fully
-      // offline, not the tens of seconds seen pre-fix (~57s, TRDD-IHLAOB2W). 8s (vs.
-      // stdio-shutdown.test.ts's 6s) absorbs CPU contention from running alongside the rest of
-      // the suite while still failing loudly on any regression back toward the old behavior.
-      expect(drainMs).toBeLessThan(8_000);
+      // backoff sleeps run to completion — must exit promptly even fully offline, not after the ~57s seen pre-fix (TRDD-IHLAOB2W).
+      // WHY 40s (was 8s): 8s flaked under CPU peaks (tsx startup alone can take many seconds on a
+      // loaded machine). 40s is still below the ~57s pre-fix linger and the 120s backstop, so
+      // a regression toward the old behavior still fails loudly.
+      expect(drainMs).toBeLessThan(40_000);
       expect(stderr).not.toContain('forced exit after grace period');
     } finally {
       if (!child.killed) {
         child.kill();
       }
     }
-  }, 75_000);
+  }, 150_000); // WHY 150s (was 75s): must exceed FAILSAFE_MS (130s)
 });

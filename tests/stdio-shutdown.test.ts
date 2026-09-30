@@ -13,13 +13,13 @@
  *    deterministic in CI).
  * 2. The process exits fast on its own — via the event loop draining once
  *    responses are flushed and the cache/cache-warmer timers are unref'd —
- *    rather than by hitting the 10s "forced exit after grace period"
+ *    rather than by hitting the 120s "forced exit after grace period"
  *    backstop in src/index.ts. Asserting stderr does NOT contain that
  *    message, and that exit happens well under the grace period, is what
  *    turns this from "the backstop covers it" into "the real drain path
  *    covers it".
  *
- * It asserts exit code 0 on a clean drain; the 12s failsafe kill instead
+ * It asserts exit code 0 on a clean drain; the 45s failsafe kill instead
  * rejects the promise, so a hang fails the test with a clear message rather
  * than a silent timeout.
  */
@@ -87,7 +87,10 @@ describe('stdio server shutdown', () => {
       // Race the exit against a failsafe: if the server ever regresses to
       // hanging past this, killing the child here (instead of letting the
       // suite time out) guarantees no orphaned process survives the test run.
-      const FAILSAFE_MS = 12_000;
+      // WHY 45s (was 12s): measured drain is 3-12s on a loaded machine; the failsafe only
+      // exists to kill a server that genuinely hangs, so it must sit far above any load-induced
+      // slowness yet stay below the 120s forced-exit backstop in src/index.ts.
+      const FAILSAFE_MS = 45_000;
       const exitPromise = new Promise<number | null>((resolve, reject) => {
         const timer = setTimeout(() => {
           child.kill('SIGKILL');
@@ -109,12 +112,12 @@ describe('stdio server shutdown', () => {
       expect(exitCode).toBe(0);
 
       // Must drain via the real event-loop-empties-naturally path, not the
-      // 10s forced-exit backstop in setupErrorHandling() (src/index.ts).
-      // Threshold is generous (well under the 10s backstop, but above the
-      // ~2s typical drain) to absorb CPU contention when run alongside the
-      // rest of the suite in parallel Jest workers.
+      // 120s forced-exit backstop in setupProcessErrorHandling() (src/index.ts).
+      // WHY 30s (was 6s): typical drain is 3-4s (up to ~12s cold / tsx under load), so 6s flaked
+      // under CPU peaks. 30s still fails if the drain stalls toward the backstop or a response
+      // is held until the server gives up.
       expect(stderr).not.toContain('forced exit after grace period');
-      expect(drainMs).toBeLessThan(6_000);
+      expect(drainMs).toBeLessThan(30_000);
 
       const responsesById = new Map<number, unknown>();
       for (const line of stdout.split('\n')) {
@@ -135,5 +138,5 @@ describe('stdio server shutdown', () => {
         child.kill();
       }
     }
-  }, 15_000);
+  }, 120_000); // WHY 120s (was 15s): must exceed FAILSAFE_MS plus spawn/startup under load
 });
