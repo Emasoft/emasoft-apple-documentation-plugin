@@ -82,6 +82,22 @@ pnpm test -- --verbose
 - Response format is validated
 - Edge cases are thoroughly tested
 
+## Plugin Guard Tests
+
+This repository is a Claude Code plugin whose runtime is one committed bundle
+(`servers/apple-docs/index.js`). These tests protect that delivery path:
+
+- `bundle-freshness.test.ts`: a fresh build of `src/` must be byte-identical to the
+  committed bundle and license file (fails with "run `pnpm build` and commit the bundle").
+- `standalone-bundle.test.ts`: the bundle, copied next to `data/` with no `node_modules`,
+  completes an MCP `initialize`, `tools/list` and an offline WWDC `tools/call`.
+- `plugin-lockfile-guard.test.ts`: no npm or bun lockfile at the repo root (Claude Code
+  would run `npm ci` with every devDependency on each user's machine).
+- `cheerio-usage-guard.test.ts`: `src/` uses only `cheerio.load`, the one member the
+  bundle keeps.
+- `plugin-manifest-consistency.test.ts`: `.claude-plugin/plugin.json`, `package.json` and
+  `pyproject.toml` agree on `version` (and plugin.json and package.json on `name`).
+
 ## Adding New Tests
 
 When adding new features:

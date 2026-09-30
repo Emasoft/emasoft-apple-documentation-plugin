@@ -1,125 +1,240 @@
 name: CI
 
+# Required-context contract (publish.py --install-branch-rules wires the branch
+# ruleset to the bare contexts Lint / Validate / Test):
+#   * "Lint" and "Validate" are produced by jobs named exactly that.
+#   * "Test" is a MATRIX (ubuntu + macOS), so the matrix lanes report
+#     "Test matrix (<os>)", NOT a bare "Test". The aggregate job named exactly
+#     "Test" (needs: [test]) produces the required bare "Test" context and
+#     succeeds only if every lane passed. Do not rename these jobs without also
+#     updating the ruleset.
+#
+# pnpm: pnpm/action-setup reads the exact version from package.json
+# "packageManager" (no version pinned here, so the two cannot drift). The
+# committed bundle servers/apple-docs/index.js embeds pnpm virtual-store folder
+# names in its path comments, so CI must install with the same pnpm the bundle
+# was built with; tests/bundle-freshness.test.ts fails if they disagree.
+# Never use `npm ci` or `cache: npm` here: there is no npm lockfile on purpose
+# (see tests/plugin-lockfile-guard.test.ts).
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  merge_group:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
-    name: Test
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
-
+    # Hard cap so a hung action / network flake does not burn the 360-min default.
+    timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          # Do not persist the checkout token in .git/config (zizmor artipacked).
+          persist-credentials: false
+
+      # Cheap-fail-first: workflow-syntax errors before the slow linters.
+      - name: Lint workflow YAML (actionlint)
+        uses: rhysd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca # v1.7.12
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          node-version-file: .node-version
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run linter
+      - name: ESLint
         run: pnpm run lint
 
-      - name: Run tests
-        run: pnpm run test:ci
+      - name: Type check
+        run: pnpm run typecheck
 
-      - name: Upload coverage reports
-        if: matrix.node-version == '20.x'
-        uses: codecov/codecov-action@v4
+      - name: Mega-Linter
+        uses: oxsecurity/megalinter@9949bad031045f366be2467e00e8371a7328a2e2 # v10.1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: false
+
+      - name: Upload Mega-Linter reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          files: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
+          name: mega-linter-reports
+          path: |
+            megalinter-reports/
+            mega-linter.log
 
-  build:
-    name: Build
+  commitlint:
+    name: Commitlint
     runs-on: ubuntu-latest
-    needs: test
-
+    timeout-minutes: 10
+    # PRs only: push events on main do not need conventional-commit enforcement
+    # (the commits are already merged).
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          version: 9
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Conventional-commits gate
+        # Reads .commitlintrc.json: config-conventional with body-max-line-length
+        # OFF (Dependabot bodies always exceed 100 chars). type-enum and subject
+        # rules still reject a badly-typed human commit.
+        uses: wagoid/commitlint-github-action@b948419dd99f3fd78a6548d48f94e3df7f6bf3ed # v6.2.1
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+  zizmor:
+    # GitHub-Actions-specific static analysis. advanced-security (the action
+    # default) uploads SARIF to code-scanning, which needs security-events: write.
+    name: Workflow Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: 20.x
-          cache: 'pnpm'
+          persist-credentials: false
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    # Validation budget, not a build budget: do not lower it below 25.
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: Build project
-        run: pnpm run build
+      - name: Install uv
+        # enable-cache keeps the cold `uvx --from git+...` build of CPV warm.
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: true
 
-      - name: Check build output
+      - name: Set up Python
+        run: uv python install 3.12
+
+      # Cross-run CPV scan-cache; the key changes whenever the validator's own
+      # source hashes change, restore-keys still hits a same-OS warm cache.
+      - name: Restore CPV scan-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/cpv
+          key: cpv-scan-cache-${{ runner.os }}-${{ hashFiles('**/.cpv-self-hashes.json') }}
+          restore-keys: |
+            cpv-scan-cache-${{ runner.os }}-
+
+      - name: Run plugin validation (remote CPV, --strict)
+        # Fetches CPV from GitHub via uvx, pinned to a tag so a stricter future
+        # CPV release cannot break this gate with no plugin change. Matches the
+        # publish.py local gate so CI and local agree.
+        env:
+          # A fresh-checkout runner already matches the local self-hash manifest;
+          # the GitHub-anchored integrity fetch only adds latency/hang risk.
+          PLUGIN_SKIP_GITHUB_INTEGRITY: "1"
+          # Cap the aggregate repo-lint wall-clock (see CPV issue #162).
+          PLUGIN_REPO_LINT_PHASE_TIMEOUT: "600"
         run: |
-          if [ ! -d "dist" ]; then
-            echo "Build failed: dist directory not found"
-            exit 1
+          set +e
+          PYTHONUNBUFFERED=1 uvx --from git+https://github.com/Emasoft/claude-plugins-validation@v5.22.0 \
+              --with pyyaml \
+              cpv-remote-validate plugin . --strict \
+              2>&1 | tee "$RUNNER_TEMP/cpv-validation-report.txt"
+          exit_code=${PIPESTATUS[0]}
+          set -e
+          if [ "$exit_code" -eq 0 ]; then
+            echo "Validation passed"
+            exit 0
           fi
-
-          if [ ! -d "dist/data" ]; then
-            echo "Build failed: data directory not found in dist"
-            exit 1
+          # CPV verdict exit codes are 1-4. Anything else, or any 1-4 with no
+          # SUMMARY line, means the validator never produced a verdict.
+          if [ "$exit_code" -ge 1 ] && [ "$exit_code" -le 4 ] \
+             && grep -q "SUMMARY: CRITICAL=" "$RUNNER_TEMP/cpv-validation-report.txt"; then
+            echo "::error::Validation failed (exit $exit_code: CRITICAL/MAJOR/MINOR/NIT found)"
+            exit "$exit_code"
           fi
+          echo "::error::CPV validator FAILED TO RUN (exit $exit_code) - infra/network/install failure, NOT a validation verdict."
+          exit 1
 
-          echo "Build successful!"
-          ls -la dist/
-
-  type-check:
-    name: Type Check
-    runs-on: ubuntu-latest
-
+  test:
+    # The test MATRIX. Its display name is "Test matrix" so the lanes report
+    # "Test matrix (<os>)" and NOT a bare "Test"; the bare required context is
+    # produced by the `test-gate` job below. The job ID stays `test`.
+    name: Test matrix
+    # macOS catches darwin-specific regressions (path casing, BSD ps output,
+    # process-group semantics) that an ubuntu-only run misses.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 20.x
-          cache: 'pnpm'
+          node-version-file: .node-version
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run TypeScript type checking
-        run: npx tsc --noEmit
+      - name: Run tests
+        run: pnpm test
 
-  security:
-    name: Security Check
+  test-gate:
+    # Aggregate gate that produces the bare "Test" required-status-check context.
+    # Without it the required "Test" check never reports and a PR stays pending.
+    name: Test
     runs-on: ubuntu-latest
-
+    needs: [test]
+    # always() so the gate runs even when a lane failed and then FAILS (red)
+    # instead of being skipped, which GitHub would treat as neither pass nor fail.
+    if: ${{ always() }}
+    timeout-minutes: 5
+    permissions: {}
+    env:
+      TEST_RESULT: ${{ needs.test.result }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run security audit
-        run: pnpm audit --audit-level=high || true
+      - name: Require all test-matrix lanes to have passed
+        run: |
+          if [ "$TEST_RESULT" = "success" ]; then
+            echo "All test-matrix lanes passed."
+            exit 0
+          fi
+          echo "::error::Test matrix did not pass (result: $TEST_RESULT)"
+          exit 1

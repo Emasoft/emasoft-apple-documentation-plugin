@@ -14,10 +14,11 @@ jest.mock('../src/utils/wwdc-data-source-path.js', () => ({
 const originalConsoleError = console.error;
 
 // Same reason: plugin-version.ts reads the plugin version through import.meta.
-// The mock returns a fixed test value; the real package.json read is exercised
-// by tests/standalone-bundle.test.ts against the real bundle.
+// The mock returns the REAL package.json version (the one source of truth), never a
+// literal that could go stale; tests/index.test.ts asserts the same value and
+// tests/standalone-bundle.test.ts exercises the real read against the real bundle.
 jest.mock('../src/utils/plugin-version.js', () => ({
-  getPluginVersion: () => '1.0.0',
+  getPluginVersion: () => (require('../package.json') as { version: string }).version,
 }));
 
 beforeEach(() => {

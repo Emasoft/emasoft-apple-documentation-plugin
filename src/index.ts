@@ -40,8 +40,8 @@ import { preloadPopularFrameworks, abortPreload } from './utils/preloader.js';
 import { warmUpCaches, schedulePeriodicCacheRefresh, abortWarmUp } from './utils/cache-warmer.js';
 import { logger } from './utils/logger.js';
 import { API_LIMITS, STDIN_EOF_BACKSTOP_MS } from './utils/constants.js';
-
 import { getPluginVersion } from './utils/plugin-version.js';
+
 function isAppError(error: unknown): error is AppError {
   return (
     typeof error === 'object'

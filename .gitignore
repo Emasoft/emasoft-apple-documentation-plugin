@@ -4,7 +4,7 @@ coverage/
 .DS_Store
 *.log
 .env
-.env.local
+.env.*
 .vscode/
 .idea/
 *.swp
@@ -12,19 +12,26 @@ coverage/
 *~
 .claude/
 .kiro/
+.tldr/
 CLAUDE.md
+llm_externalizer_output/
+# Python tooling (scripts/publish.py runs through uv)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+# Mega-Linter (CI) local reports
+megalinter-reports/
+mega-linter.log
 # local agent reports and janitor state (may contain private paths)
 reports/
 reports_dev/
 .janitor/
-docs_dev/
-scripts_dev/
-samples_dev/
-examples_dev/
-tests_dev/
-downloads_dev/
-libs_dev/
-builds_dev/
+.trashcan/
+# dev folders, never published (docs_dev, scripts_dev, tests_dev, samples_dev, ...)
+*_dev/
 # npm/bun lockfiles: a lockfile at the plugin root makes Claude Code run npm ci (all devDependencies) on users' machines; this repo uses pnpm
 package-lock.json
 npm-shrinkwrap.json

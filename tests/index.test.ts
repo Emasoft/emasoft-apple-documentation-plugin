@@ -105,7 +105,9 @@ describe('AppleDeveloperDocsMCPServer', () => {
       expect(Server).toHaveBeenCalledWith(
         {
           name: 'apple-docs-mcp',
-          version: '1.0.0',
+          // The server must report package.json's version: the single source that
+          // tests/plugin-manifest-consistency.test.ts also pins plugin.json to.
+          version: (require('../package.json') as { version: string }).version,
         },
         {
           capabilities: {

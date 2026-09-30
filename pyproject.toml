@@ -1,0 +1,31 @@
+# Tooling configuration for the Python scripts only (scripts/publish.py and its helpers).
+# This is a Node/TypeScript plugin, NOT a Python project: the [project] table below is a
+# virtual placeholder (package = false) so that `uv run` has a project to resolve and
+# scripts/publish.py, the pre-push hook and CPV (which expects a pyproject.toml next to a
+# scripts/*.py tree and compares its version with plugin.json) all work. Its version is
+# bumped by scripts/publish.py together with plugin.json and package.json, which re-syncs
+# uv.lock in the same release commit.
+# Ruff mirrors the canonical CPV plugin settings: 120 columns, rules E/F/W/I, E501 ignored.
+
+[project]
+name = "emasoft-apple-documentation-plugin"
+version = "2.0.0"
+description = "Python tooling of the emasoft-apple-documentation-plugin repo (publish pipeline only)"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["**/fixtures", "**/testdata", "**/__fixtures__"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true

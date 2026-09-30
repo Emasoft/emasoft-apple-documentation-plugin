@@ -1,50 +1,32 @@
-# Branch Protection Rules
+# Branch protection and repository secrets
 
-## Setup Instructions
+## Branch ruleset
 
-To protect the `main` branch, configure the following rules in GitHub:
+The `main` branch is protected by a server-side GitHub ruleset, applied with the
+release script (not by hand in the web UI):
 
-### 1. Go to Settings → Branches
-
-### 2. Add branch protection rule for `main`
-
-**Required status checks:**
-- [x] CI / Test (18.x)
-- [x] CI / Test (20.x)
-- [x] CI / Build
-- [x] CI / Type Check
-- [x] PR Check / PR Validation
-
-**Protection settings:**
-- [x] Require a pull request before merging
-  - [x] Require approvals (1)
-  - [x] Dismiss stale pull request approvals when new commits are pushed
-- [x] Require status checks to pass before merging
-  - [x] Require branches to be up to date before merging
-- [x] Require conversation resolution before merging
-- [x] Do not allow bypassing the above settings
-
-### 3. Additional Settings (Optional)
-
-**Code quality:**
-- [x] Require linear history
-- [x] Include administrators
-- [x] Restrict who can push to matching branches
-
-## Required Secrets
-
-Add these secrets in Settings → Secrets and variables → Actions:
-
-1. **NPM_TOKEN**: Your npm authentication token for publishing
-   - Get it from: https://www.npmjs.com/settings/YOUR_USERNAME/tokens
-   - Create a token with "Automation" type
-
-## Workflow Status Badges
-
-Add these badges to your README.md:
-
-```markdown
-[![CI](https://github.com/kimsungwhee/apple-docs-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/kimsungwhee/apple-docs-mcp/actions/workflows/ci.yml)
-[![npm version](https://badge.fury.io/js/@kimsungwhee%2Fapple-docs-mcp.svg)](https://www.npmjs.com/package/@kimsungwhee/apple-docs-mcp)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+```bash
+uv run python scripts/publish.py --install-branch-rules
 ```
+
+Run it once after the first push, and only after CI has gone green on `main`: the
+ruleset requires the three CI check-runs by their bare names, and a check that has
+never reported leaves every pull request pending forever.
+
+Required status checks (produced by `.github/workflows/ci.yml`):
+
+- `Lint` (actionlint, eslint, tsc, Mega-Linter)
+- `Validate` (CPV remote validation, `--strict`)
+- `Test` (aggregate of the jest matrix on ubuntu and macOS)
+
+Direct pushes to `main` are additionally blocked locally by the `git-hooks/pre-push`
+gate: only `scripts/publish.py` may push the default branch or a release tag.
+
+## Repository secrets
+
+| Secret | Used by | Purpose |
+|---|---|---|
+| `MARKETPLACE_PAT` | `.github/workflows/notify-marketplace.yml` | Personal access token with `repo` scope on the marketplace hub, so a push to `main` can trigger the hub's version sync. Without it the workflow succeeds as a no-op. |
+
+This plugin is **not** published to npm or any other package registry, so there is no
+registry token. `GITHUB_TOKEN` (provided by GitHub) covers everything else.

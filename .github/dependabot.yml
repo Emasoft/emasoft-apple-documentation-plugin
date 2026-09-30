@@ -1,0 +1,33 @@
+# Dependency updates. pnpm projects use the "npm" ecosystem (it reads pnpm-lock.yaml).
+#
+# MAINTAINER NOTES
+# * The plugin ships ONE committed esbuild bundle (servers/apple-docs/index.js) that
+#   inlines @modelcontextprotocol/sdk, cheerio and zod. A bump of any bundled
+#   dependency (or of esbuild) changes the bundle, so the PR fails
+#   tests/bundle-freshness.test.ts until `pnpm build` is run and the regenerated
+#   servers/apple-docs/ files are committed to the PR branch.
+# * A cheerio upgrade must re-verify the load-parse redirect (build + standalone
+#   test): scripts/build-bundle.mjs bundles cheerio's internal dist/esm/load-parse.js
+#   in place of its root entry, and tests/cheerio-usage-guard.test.ts pins src to
+#   cheerio.load only. The build fails loudly if that internal file moved.
+# * Commit prefix chore(deps) is skipped by cliff.toml, so bumps stay out of the changelog.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore(deps)"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore(deps)"

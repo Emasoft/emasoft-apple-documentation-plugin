@@ -1,0 +1,8 @@
+# The committed plugin bundle is what users run and tests/bundle-freshness.test.ts
+# compares it byte for byte with a fresh build: a CRLF checkout (core.autocrlf on
+# Windows) would rewrite its line endings and fail that test.
+servers/** -text
+
+# POSIX shell hook and Python pipeline scripts must keep LF (a CRLF shebang breaks them).
+git-hooks/** text eol=lf
+scripts/*.py text eol=lf
