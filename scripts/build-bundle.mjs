@@ -60,7 +60,19 @@ const cheerioCoreOnly = {
       if (manifest.errors.length > 0) {
         return { errors: manifest.errors };
       }
-      return { path: manifest.path.replace(/package\.json$/, 'dist/esm/load-parse.js') };
+      const loadParse = path.join(path.dirname(manifest.path), 'dist', 'esm', 'load-parse.js');
+      // WHY this check: load-parse.js is a cheerio-internal file hidden by its "exports" map, so a
+      // cheerio upgrade can move it or stop exporting `load` with no signal from tsc or jest (both
+      // see full cheerio). It is a static source check, not an import, so no third-party code runs
+      // at build time; it runs at build time only, the bundle never reads this file at runtime.
+      const moved = 'cheerio internal load-parse.js moved; re-verify the redirect';
+      if (!existsSync(loadParse)) {
+        throw new Error(`${moved} (missing: ${loadParse})`);
+      }
+      if (!/^export\s+(?:const|function)\s+load\b|^export\s*\{[^}]*\bload\b[^}]*\}/m.test(readFileSync(loadParse, 'utf8'))) {
+        throw new Error(`${moved} (${loadParse} no longer exports load)`);
+      }
+      return { path: loadParse };
     });
   },
 };
