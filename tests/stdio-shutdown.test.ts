@@ -25,6 +25,7 @@
  */
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import path from 'node:path';
+import { STDIN_EOF_BACKSTOP_MS } from '../src/utils/constants.js';
 
 describe('stdio server shutdown', () => {
   it('flushes all 20 in-flight responses then exits fast on its own after stdin EOF', async () => {
@@ -91,6 +92,8 @@ describe('stdio server shutdown', () => {
       // exists to kill a server that genuinely hangs, so it must sit far above any load-induced
       // slowness yet stay below the 120s forced-exit backstop in src/index.ts.
       const FAILSAFE_MS = 45_000;
+      // Keeps the comment above true if TIMEOUT (and so the backstop) ever changes.
+      expect(FAILSAFE_MS).toBeLessThan(STDIN_EOF_BACKSTOP_MS);
       const exitPromise = new Promise<number | null>((resolve, reject) => {
         const timer = setTimeout(() => {
           child.kill('SIGKILL');

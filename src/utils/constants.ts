@@ -205,7 +205,7 @@ export const REQUEST_CONFIG = {
 
 // stdin-EOF forced-exit backstop (src/index.ts). WHY derived from TIMEOUT: it must stay
 // strictly longer than the per-request deadline, so it cannot drift below it.
-export const STDIN_EOF_BACKSTOP_MS = REQUEST_CONFIG.TIMEOUT * 2; // 120 seconds
+export const STDIN_EOF_BACKSTOP_MS = REQUEST_CONFIG.TIMEOUT * 2; // 2 x TIMEOUT
 
 // Rate Limiting Configuration
 export const RATE_LIMIT = {

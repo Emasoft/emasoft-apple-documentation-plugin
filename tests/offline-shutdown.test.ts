@@ -10,6 +10,17 @@
  */
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import path from 'node:path';
+import { STDIN_EOF_BACKSTOP_MS } from '../src/utils/constants.js';
+
+// Generous failsafe: this must NEVER be hit once the fix is in place (exit is asserted
+// well under it below), but on the pre-fix code the process took ~57s offline — a short
+// failsafe here would just report "timed out" instead of the useful "took Nms" failure.
+// WHY backstop + 60s, derived (not a literal): under load the child's unref'd backstop timer
+// plus stderr flush can be delayed by more than 10s, so the failsafe needs real margin above
+// the backstop, and it must follow the backstop if TIMEOUT ever changes.
+const FAILSAFE_MS = STDIN_EOF_BACKSTOP_MS + 60_000;
+// WHY failsafe + 30s: the jest timeout must exceed FAILSAFE_MS plus spawn/startup under load.
+const TEST_TIMEOUT_MS = FAILSAFE_MS + 30_000;
 
 describe('stdio server shutdown when offline', () => {
   it('exits fast after stdin EOF even when every background fetch fails', async () => {
@@ -45,10 +56,6 @@ describe('stdio server shutdown when offline', () => {
         },
       }) + '\n';
 
-      // Generous failsafe: this must NEVER be hit once the fix is in place (exit is asserted
-      // well under it below), but on the pre-fix code the process took ~57s offline — a short
-      // failsafe here would just report "timed out" instead of the useful "took Nms" failure.
-      const FAILSAFE_MS = 130_000; // must stay above the 120s forced-exit backstop in src/index.ts
       const exitPromise = new Promise<number | null>((resolve, reject) => {
         const timer = setTimeout(() => {
           child.kill('SIGKILL');
@@ -80,5 +87,5 @@ describe('stdio server shutdown when offline', () => {
         child.kill();
       }
     }
-  }, 150_000); // WHY 150s (was 75s): must exceed FAILSAFE_MS (130s)
+  }, TEST_TIMEOUT_MS);
 });
