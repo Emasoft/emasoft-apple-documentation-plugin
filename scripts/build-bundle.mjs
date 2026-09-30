@@ -23,6 +23,12 @@
  *   drives THIRD_PARTY_LICENSES.txt: one entry per bundled package with its
  *   declared license and the full text of its LICENSE file, because MIT/ISC
  *   require the notice to travel with copies of the code.
+ * - cheerio is redirected to its load-parse.js module: cheerio's root entry
+ *   also re-exports a URL/stream loader that imports undici and
+ *   encoding-sniffer (about 1.7 MB bundled) which src never calls (it only
+ *   uses cheerio.load). load-parse.js exports the very same `load` (parse5
+ *   parser, identical behaviour); cheerio's package "exports" map hides the
+ *   file from a plain import, hence the resolve plugin.
  *
  * Usage: node scripts/build-bundle.mjs [--outfile <path>]
  * The license files are written next to the outfile.
@@ -43,6 +49,22 @@ const outfile = outfileFlag === -1
   ? path.join(root, 'servers', 'apple-docs', 'index.js')
   : path.resolve(args[outfileFlag + 1]);
 
+const cheerioCoreOnly = {
+  name: 'cheerio-core-only',
+  setup(pluginBuild) {
+    pluginBuild.onResolve({ filter: /^cheerio$/ }, async (resolveArgs) => {
+      const manifest = await pluginBuild.resolve('cheerio/package.json', {
+        resolveDir: resolveArgs.resolveDir,
+        kind: resolveArgs.kind,
+      });
+      if (manifest.errors.length > 0) {
+        return { errors: manifest.errors };
+      }
+      return { path: manifest.path.replace(/package\.json$/, 'dist/esm/load-parse.js') };
+    });
+  },
+};
+
 const { metafile } = await build({
   absWorkingDir: root,
   entryPoints: ['src/index.ts'],
@@ -54,6 +76,7 @@ const { metafile } = await build({
   target: 'node20',
   legalComments: 'external',
   logLevel: 'warning',
+  plugins: [cheerioCoreOnly],
   banner: {
     js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
   },

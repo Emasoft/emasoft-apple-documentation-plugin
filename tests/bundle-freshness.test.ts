@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 const repoRoot = path.resolve(__dirname, '..');
-const bundledFiles = ['index.js', 'index.js.LEGAL.txt', 'THIRD_PARTY_LICENSES.txt'];
+const bundledFiles = ['index.js', 'THIRD_PARTY_LICENSES.txt'];
 
 describe('committed plugin bundle', () => {
   it('is byte-identical to a fresh build of src/', () => {
