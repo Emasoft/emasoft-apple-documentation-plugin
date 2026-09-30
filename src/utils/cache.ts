@@ -15,8 +15,9 @@ export class MemoryCache {
     this.maxSize = maxSize;
     this.defaultTTL = defaultTTL;
 
-    // Clean up expired entries every 5 minutes
-    setInterval(() => this.cleanup(), 5 * 60 * 1000);
+    // Clean up expired entries every 5 minutes.
+    // unref() so this timer never keeps the stdio server alive after the client closes stdin.
+    setInterval(() => this.cleanup(), 5 * 60 * 1000).unref();
   }
 
   /**

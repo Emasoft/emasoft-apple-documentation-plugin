@@ -131,8 +131,9 @@ export function getCacheWarmUpStatus(): {
 export function schedulePeriodicCacheRefresh(intervalMs: number = 30 * 60 * 1000): void {
   logger.info(`Scheduling cache refresh every ${intervalMs / 1000 / 60} minutes`);
 
+  // unref() so this timer never keeps the stdio server alive after the client closes stdin.
   setInterval(() => {
     logger.info('Running periodic cache refresh...');
     void warmUpCaches();
-  }, intervalMs);
+  }, intervalMs).unref();
 }

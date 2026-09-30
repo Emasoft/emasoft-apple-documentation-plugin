@@ -419,12 +419,16 @@ export default class AppleDeveloperDocsMCPServer {
       this.shutdown(0, 'SIGTERM');
     });
 
+    // After EOF the event loop drains on its own once in-flight requests finish and
+    // responses flush (the cache/cache-warmer timers are unref'd, so they no longer
+    // hold the process open). This unref'd timer only fires as a backstop if some
+    // unknown ref'd handle lingers.
+    // ponytail: fixed 10s grace period — a long-running request still in flight at
+    // EOF gets cut short; make configurable if that turns out to matter.
     process.stdin.on('end', () => {
-      this.shutdown(0, 'stdin end');
-    });
-
-    process.stdin.on('close', () => {
-      this.shutdown(0, 'stdin close');
+      setTimeout(() => {
+        this.shutdown(0, 'stdin end: forced exit after grace period');
+      }, 10_000).unref();
     });
 
     process.on('unhandledRejection', (reason) => {
@@ -440,9 +444,6 @@ export default class AppleDeveloperDocsMCPServer {
 
   async run() {
     const transport = new StdioServerTransport();
-    transport.onclose = () => {
-      this.shutdown(0, 'transport close');
-    };
 
     await this.server.connect(transport);
 
