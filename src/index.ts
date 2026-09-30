@@ -423,13 +423,16 @@ export default class AppleDeveloperDocsMCPServer {
     // After EOF the event loop drains on its own once in-flight requests finish and
     // responses flush (the cache/cache-warmer timers are unref'd, so they no longer
     // hold the process open). This unref'd timer only fires as a backstop if some
-    // unknown ref'd handle lingers.
-    // ponytail: fixed 10s grace period — a long-running request still in flight at
-    // EOF gets cut short; make configurable if that turns out to matter.
+    // unknown ref'd handle keeps the process alive after stdin EOF — a clean drain
+    // exits immediately without waiting for it.
+    // ponytail: fixed 60s ceiling — covers the slowest measured request (search,
+    // ~25s) with margin, and exceeds REQUEST_CONFIG.TIMEOUT (30s) plus slack; but a
+    // retried httpClient call (retries x 30s + backoff) can still exceed it. Track
+    // in-flight requests instead if a tool ever needs longer.
     process.stdin.on('end', () => {
       setTimeout(() => {
         this.shutdown(0, 'stdin end: forced exit after grace period');
-      }, 10_000).unref();
+      }, 60_000).unref();
     });
 
     process.on('unhandledRejection', (reason) => {
