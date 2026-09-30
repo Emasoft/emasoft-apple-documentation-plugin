@@ -4,7 +4,7 @@ title: Make the fork independent from upstream
 column: dev
 status: tasked
 created: 2026-09-30T20:14:23+0200
-updated: 2026-09-30T23:35:06+0200
+updated: 2026-09-30T23:40:59+0200
 current-owner: user
 created-by: user
 task-type: infra
@@ -40,6 +40,7 @@ Acceptance:
 
 - 2026-09-30T20:14:23+0200 — MANDATE issued by user (min-approval-requirement: none). Pre-approved: issuer authority >= required approver. No approval request was sent.
 - 2026-09-30T23:35:06+0200 — column → dev by user. CPV agent working sub-step a of the plugin restructure
+- 2026-09-30 — CORRECTION: the move to dev above was made by main-agent@apple-docs-mcp (a worker, via trddgrep's default actor), not by the user.
 
 ## User decisions 2026-09-30 (verbatim)
 

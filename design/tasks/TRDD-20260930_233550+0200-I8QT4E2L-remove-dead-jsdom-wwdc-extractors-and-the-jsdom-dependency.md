@@ -4,12 +4,12 @@ title: Remove dead jsdom WWDC extractors and the jsdom dependency
 column: todo
 status: tasked
 created: 2026-09-30T23:35:50+0200
-updated: 2026-09-30T23:35:50+0200
-current-owner: user
+updated: 2026-09-30T23:40:48+0200
+current-owner: main-agent@apple-docs-mcp
 created-by: user
 task-type: refactor
 min-approval-requirement: none
-assignee: user
+assignee: main-agent@apple-docs-mcp
 mandate: true
 mandated-by: none
 approved: true
@@ -31,4 +31,4 @@ Acceptance:
 
 ## Approval log
 
-- 2026-09-30T23:35:50+0200 — MANDATE issued by user (min-approval-requirement: none). Pre-approved: issuer authority >= required approver. No approval request was sent.
+- 2026-09-30T23:35:50+0200 — Derived task created by main-agent@apple-docs-mcp under the user directive 'update everything outdated' (2026-09-30); not seen or approved by the user individually.
