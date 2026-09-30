@@ -22,14 +22,18 @@ import AppleDeveloperDocsMCPServer from '../src/index.js';
 import { handleDownloadAppleDesignResource } from '../src/tools/design-docs.js';
 
 // Mock external dependencies
-jest.mock('../src/utils/http-client.js', () => ({
-  httpClient: {
-    getText: jest.fn().mockResolvedValue('<html><body><ul class="search-results"></ul></body></html>'),
-    get: jest.fn().mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({})
-    })
-  }
+// The search backend is Apple's internal JSON API (src/tools/apple-search-api.ts),
+// fetched via a raw POST -- not httpClient.getText -- since commit e424410 (issue #51, #43).
+jest.mock('../src/tools/apple-search-api.js', () => ({
+  fetchAppleDocsSearch: jest.fn().mockResolvedValue([
+    {
+      title: 'NavigationStack',
+      url: 'https://developer.apple.com/documentation/swiftui/navigationstack',
+      type: 'documentation',
+      description: 'A view that displays a root view and enables you to present additional views over the root view.',
+      framework: 'swiftui',
+    },
+  ]),
 }));
 
 jest.mock('../src/utils/logger.js', () => ({
@@ -319,8 +323,8 @@ describe('Response Format Validation', () => {
 
     it('should handle network errors with proper format', async () => {
       // Mock network failure
-      const { httpClient } = await import('../src/utils/http-client.js');
-      (httpClient.getText as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+      const { fetchAppleDocsSearch } = await import('../src/tools/apple-search-api.js');
+      (fetchAppleDocsSearch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
       const response = await server.searchAppleDocs('SwiftUI', 'all');
       
@@ -452,14 +456,16 @@ describe('Response Format Validation', () => {
     });
 
     it('should handle large responses gracefully', async () => {
-      // Mock a large response
-      const largeHtml = '<html><body><ul class="search-results">' + 
-        '<li class="search-result">'.repeat(100) +
-        '<article><h1>Test Result</h1><p>Description</p></article></li>'.repeat(100) +
-        '</ul></body></html>';
-      
-      const { httpClient } = await import('../src/utils/http-client.js');
-      (httpClient.getText as jest.Mock).mockResolvedValueOnce(largeHtml);
+      // Mock a large set of search results
+      const largeResults = Array.from({ length: 100 }, (_, i) => ({
+        title: `Test Result ${i}`,
+        url: `https://developer.apple.com/documentation/swiftui/testresult${i}`,
+        type: 'documentation',
+        description: 'Description'.repeat(20),
+      }));
+
+      const { fetchAppleDocsSearch } = await import('../src/tools/apple-search-api.js');
+      (fetchAppleDocsSearch as jest.Mock).mockResolvedValueOnce(largeResults);
 
       const response = await server.searchAppleDocs('SwiftUI', 'all');
       
