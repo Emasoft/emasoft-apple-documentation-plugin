@@ -18,7 +18,10 @@ class Logger {
    */
   debug(message: string, ...args: any[]): void {
     if (this.enabled && this.shouldLog(LogLevel.DEBUG)) {
-      console.log(`[DEBUG] ${message}`, ...args);
+      // This server speaks JSON-RPC over stdout; any non-protocol byte on
+      // stdout corrupts the stream and makes MCP clients drop the connection.
+      // stdout is reserved for the MCP JSON-RPC stream — log to stderr instead.
+      console.error(`[DEBUG] ${message}`, ...args);
     }
   }
 
@@ -27,7 +30,8 @@ class Logger {
    */
   info(message: string, ...args: any[]): void {
     if (this.enabled && this.shouldLog(LogLevel.INFO)) {
-      console.log(`[INFO] ${message}`, ...args);
+      // stdout is reserved for the MCP JSON-RPC stream — log to stderr instead.
+      console.error(`[INFO] ${message}`, ...args);
     }
   }
 

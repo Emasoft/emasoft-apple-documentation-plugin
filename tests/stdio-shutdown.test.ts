@@ -19,8 +19,9 @@
  *    turns this from "the backstop covers it" into "the real drain path
  *    covers it".
  *
- * It deliberately does NOT assert anything about the exit code, since a
- * 12s failsafe kill (see below) intentionally does not produce one.
+ * It asserts exit code 0 on a clean drain; the 12s failsafe kill instead
+ * rejects the promise, so a hang fails the test with a clear message rather
+ * than a silent timeout.
  */
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import path from 'node:path';
