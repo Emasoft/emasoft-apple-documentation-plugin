@@ -4,7 +4,7 @@ title: Migrate ESLint 10 and typescript-eslint 8
 column: todo
 status: tasked
 created: 2026-09-30T20:14:49+0200
-updated: 2026-09-30T20:15:21+0200
+updated: 2026-09-30T20:19:35+0200
 current-owner: user
 created-by: user
 task-type: refactor
@@ -15,12 +15,12 @@ mandated-by: user
 approved: true
 approval-judge: user
 approval-datetime: 2026-09-30T20:14:49+0200
-npt: [YP2TDR2R]
+npt: []
 ---
 
 # Migrate ESLint 10 and typescript-eslint 8
 
-eslint 8.57 -> 10.11 requires migrating .eslintrc* to a flat eslint.config.js. typescript-eslint 7 -> 8. Depends on the jest/tsx tooling update (B2) because the flat config and lint scripts interact with the ts-jest/tsx toolchain wiring in package.json scripts, so they should land together to avoid a broken lint+test matrix in between.
+eslint 8.57 -> 10.11 requires migrating .eslintrc* to a flat eslint.config.js. typescript-eslint 7 -> 8.
 
 Acceptance:
 - [ ] eslint.config.js replaces .eslintrc*
@@ -30,3 +30,7 @@ Acceptance:
 ## Approval log
 
 - 2026-09-30T20:14:49+0200 — MANDATE issued by user (min-approval-requirement: none). Pre-approved: issuer authority >= required approver. No approval request was sent.
+
+## Dependency note (2026-09-30)
+
+Dependency note (2026-09-30, orchestrator decision, user delegated): removed npt on YP2TDR2R -- no demonstrated dependency between the ESLint 10 / typescript-eslint 8 migration and the jest/tsx/jsdom tooling update; they can land independently.
