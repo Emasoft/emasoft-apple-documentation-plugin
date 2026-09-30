@@ -2,7 +2,7 @@ packages:
   - '.'
 # esbuild and unrs-resolver are transitive dev-tooling deps whose postinstall
 # build scripts are not needed: tsc, eslint, jest, and the build all pass
-# without running them (verified in CI and locally).
+# without running them (verified locally with pnpm 9 and pnpm 12.6; pnpm 9 ignores allowBuilds).
 allowBuilds:
   esbuild: false
   unrs-resolver: false
