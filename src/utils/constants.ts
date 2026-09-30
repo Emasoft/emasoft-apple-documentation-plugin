@@ -192,8 +192,7 @@ export const SAFARI_USER_AGENT_UTILS = {
 export const REQUEST_CONFIG = {
   // WHY 60s (was 30s): the per-request deadline covers the whole retry sequence, and real
   // search latency is 5-25s; a CPU peak stalling the event loop for several seconds must not
-  // abort a legitimate in-flight client request. src/index.ts's stdin-EOF forced-exit backstop
-  // must stay strictly longer than this.
+  // abort a legitimate in-flight client request.
   TIMEOUT: 60000, // 60 seconds
   MAX_RETRIES: 3,
   RETRY_DELAY: 1000, // 1 second
@@ -203,6 +202,10 @@ export const REQUEST_CONFIG = {
   // Default Safari User-Agent (latest stable)
   DEFAULT_SAFARI_USER_AGENT: SAFARI_USER_AGENTS[19], // macOS 15.1, Safari 18.1, Apple Silicon
 } as const;
+
+// stdin-EOF forced-exit backstop (src/index.ts). WHY derived from TIMEOUT: it must stay
+// strictly longer than the per-request deadline, so it cannot drift below it.
+export const STDIN_EOF_BACKSTOP_MS = REQUEST_CONFIG.TIMEOUT * 2; // 120 seconds
 
 // Rate Limiting Configuration
 export const RATE_LIMIT = {

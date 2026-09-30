@@ -7284,7 +7284,7 @@ var init_logger = __esm({
 });
 
 // src/utils/constants.ts
-var API_LIMITS, SEARCH_DEPTH_LIMITS, CACHE_TTL, CACHE_SIZE, SAFARI_USER_AGENTS, SAFARI_USER_AGENT_CATEGORIES, REQUEST_CONFIG, RATE_LIMIT, PROCESSING_LIMITS, APPLE_URLS, WWDC_CONFIG, ERROR_MESSAGES;
+var API_LIMITS, SEARCH_DEPTH_LIMITS, CACHE_TTL, CACHE_SIZE, SAFARI_USER_AGENTS, SAFARI_USER_AGENT_CATEGORIES, REQUEST_CONFIG, STDIN_EOF_BACKSTOP_MS, RATE_LIMIT, PROCESSING_LIMITS, APPLE_URLS, WWDC_CONFIG, ERROR_MESSAGES;
 var init_constants = __esm({
   "src/utils/constants.ts"() {
     "use strict";
@@ -7422,8 +7422,7 @@ var init_constants = __esm({
     REQUEST_CONFIG = {
       // WHY 60s (was 30s): the per-request deadline covers the whole retry sequence, and real
       // search latency is 5-25s; a CPU peak stalling the event loop for several seconds must not
-      // abort a legitimate in-flight client request. src/index.ts's stdin-EOF forced-exit backstop
-      // must stay strictly longer than this.
+      // abort a legitimate in-flight client request.
       TIMEOUT: 6e4,
       // 60 seconds
       MAX_RETRIES: 3,
@@ -7435,6 +7434,7 @@ var init_constants = __esm({
       DEFAULT_SAFARI_USER_AGENT: SAFARI_USER_AGENTS[19]
       // macOS 15.1, Safari 18.1, Apple Silicon
     };
+    STDIN_EOF_BACKSTOP_MS = REQUEST_CONFIG.TIMEOUT * 2;
     RATE_LIMIT = {
       MAX_REQUESTS_PER_MINUTE: 100,
       WINDOW_MS: 6e4
@@ -85245,7 +85245,7 @@ function setupProcessErrorHandling() {
     abortPreload();
     setTimeout(() => {
       shutdown(0, "stdin end: forced exit after grace period");
-    }, 12e4).unref();
+    }, STDIN_EOF_BACKSTOP_MS).unref();
   });
   process.on("unhandledRejection", (reason) => {
     logger.error("Unhandled Rejection, reason:", reason);

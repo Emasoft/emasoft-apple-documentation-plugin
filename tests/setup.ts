@@ -20,9 +20,7 @@ afterEach(() => {
   console.error = originalConsoleError;
 });
 
-// Global test timeout. WHY 120s (was 30s): must agree with jest.config.cjs testTimeout and
-// tolerate CPU peaks; it only bounds tests that hang outright.
-jest.setTimeout(120000);
+// Global test timeout: single source is jest.config.cjs testTimeout.
 
 // Mock fetch for tests
 global.fetch = jest.fn();

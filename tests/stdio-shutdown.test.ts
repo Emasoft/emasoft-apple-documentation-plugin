@@ -116,7 +116,9 @@ describe('stdio server shutdown', () => {
       // WHY 30s (was 6s): typical drain is 3-4s (up to ~12s cold / tsx under load), so 6s flaked
       // under CPU peaks. 30s still fails if the drain stalls toward the backstop or a response
       // is held until the server gives up.
-      expect(stderr).not.toContain('forced exit after grace period');
+      // No stderr check for the backstop message here: FAILSAFE_MS (45s) is below the server
+      // backstop, so it could never fire; the drain bound + exit code are the discriminators
+      // (offline-shutdown.test.ts keeps the stderr check, its failsafe exceeds the backstop).
       expect(drainMs).toBeLessThan(30_000);
 
       const responsesById = new Map<number, unknown>();

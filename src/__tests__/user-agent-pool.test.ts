@@ -122,7 +122,7 @@ describe('UserAgentPool', () => {
     });
 
     test('should recover disabled agents when appropriate', async () => {
-      const config: UserAgentPoolConfig = { disableDuration: 500 }; // 500ms (WHY: 100ms could elapse before the "still disabled" assertion under a CPU stall)
+      const config: UserAgentPoolConfig = { disableDuration: 500 }; // 500ms (WHY: the 750ms wait below must reliably exceed it despite timer jitter under CPU load)
       const pool = new UserAgentPool(TEST_USER_AGENTS.slice(0, 1), config);
 
       // Disable the agent

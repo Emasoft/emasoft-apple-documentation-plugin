@@ -39,7 +39,7 @@ import { validateInput, ErrorType, createStandardErrorResponse, createToolErrorR
 import { preloadPopularFrameworks, abortPreload } from './utils/preloader.js';
 import { warmUpCaches, schedulePeriodicCacheRefresh, abortWarmUp } from './utils/cache-warmer.js';
 import { logger } from './utils/logger.js';
-import { API_LIMITS } from './utils/constants.js';
+import { API_LIMITS, STDIN_EOF_BACKSTOP_MS } from './utils/constants.js';
 
 function isAppError(error: unknown): error is AppError {
   return (
@@ -99,11 +99,12 @@ function setupProcessErrorHandling(): void {
   // hold the process open). This unref'd timer only fires as a backstop if some
   // unknown ref'd handle keeps the process alive after stdin EOF — a clean drain
   // exits immediately without waiting for it.
-  // WHY 120s (was 60s): it must stay strictly longer than the longest legitimate in-flight
-  // request. REQUEST_CONFIG.TIMEOUT (60s) is a per-request deadline covering the whole
-  // httpClient retry sequence, so no client request outlives it; 120s leaves a full extra
-  // timeout of slack for a CPU peak that delays timers/flushes. Shorter would risk killing
-  // the process mid-response under load.
+  // WHY STDIN_EOF_BACKSTOP_MS (2x TIMEOUT): the backstop must stay strictly
+  // longer than REQUEST_CONFIG.TIMEOUT, the per-request deadline that covers the whole
+  // httpClient retry sequence and the search call (src/tools/apple-search-api.ts:153). The
+  // extra timeout of slack absorbs a CPU peak delaying timers/flushes. The deadline is per
+  // HTTP request, so a tool issuing several sequential requests can still outlive it;
+  // acceptable because the backstop only arms after the client has disconnected.
   // ponytail: fixed ceiling rather than tracking in-flight requests; track them if a tool
   // ever needs to exceed REQUEST_CONFIG.TIMEOUT.
   process.stdin.on('end', () => {
@@ -117,7 +118,7 @@ function setupProcessErrorHandling(): void {
     abortPreload();
     setTimeout(() => {
       shutdown(0, 'stdin end: forced exit after grace period');
-    }, 120_000).unref();
+    }, STDIN_EOF_BACKSTOP_MS).unref();
   });
 
   process.on('unhandledRejection', (reason) => {
