@@ -76,6 +76,8 @@ describe('standalone plugin bundle', () => {
     // Symlink instead of copying 39 MB: path arithmetic from the bundle to
     // ../../data is the same either way.
     symlinkSync(path.join(repoRoot, 'data'), path.join(pluginDir, 'data'), 'dir');
+    // serverInfo.version is read from the plugin-root package.json at runtime.
+    copyFileSync(path.join(repoRoot, 'package.json'), path.join(pluginDir, 'package.json'));
     const cwd = path.join(pluginDir, 'cwd');
     mkdirSync(cwd);
 
@@ -119,6 +121,11 @@ describe('standalone plugin bundle', () => {
       capabilities: {},
       clientInfo: { name: 'standalone-bundle-test', version: '0.0.0' },
     });
+
+    // serverInfo.version must be the package.json version (the one source).
+    const { version } = JSON.parse(readFileSync(path.join(repoRoot, 'package.json'), 'utf8')) as { version: string };
+    expect(init.result?.serverInfo.version).toBe(version);
+
     expect(init.error).toBeUndefined();
     expect(init.result.serverInfo.name).toBe('apple-docs-mcp');
     send({ jsonrpc: '2.0', method: 'notifications/initialized' });

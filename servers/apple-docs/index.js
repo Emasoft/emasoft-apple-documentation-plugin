@@ -54704,6 +54704,20 @@ init_preloader();
 init_cache_warmer();
 init_logger();
 init_constants();
+
+// src/utils/plugin-version.ts
+import { readFileSync } from "fs";
+function getPluginVersion() {
+  const manifest = JSON.parse(
+    readFileSync(new URL("../../package.json", import.meta.url), "utf8")
+  );
+  if (typeof manifest.version !== "string" || manifest.version === "") {
+    throw new Error("package.json at the plugin root has no version string");
+  }
+  return manifest.version;
+}
+
+// src/index.ts
 function isAppError(error62) {
   return typeof error62 === "object" && error62 !== null && "type" in error62 && "message" in error62;
 }
@@ -54783,7 +54797,7 @@ var AppleDeveloperDocsMCPServer = class {
     this.server = new Server(
       {
         name: "apple-docs-mcp",
-        version: "1.0.0"
+        version: getPluginVersion()
       },
       {
         capabilities: {

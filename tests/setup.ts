@@ -12,6 +12,14 @@ jest.mock('../src/utils/wwdc-data-source-path.js', () => ({
 
 // Mock console.error to avoid noise in tests
 const originalConsoleError = console.error;
+
+// Same reason: plugin-version.ts reads the plugin version through import.meta.
+// The mock returns a fixed test value; the real package.json read is exercised
+// by tests/standalone-bundle.test.ts against the real bundle.
+jest.mock('../src/utils/plugin-version.js', () => ({
+  getPluginVersion: () => '1.0.0',
+}));
+
 beforeEach(() => {
   console.error = jest.fn();
 });

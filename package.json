@@ -1,50 +1,30 @@
 {
-  "name": "@kimsungwhee/apple-docs-mcp",
-  "version": "1.0.26",
-  "description": "MCP server for Apple Developer Documentation - Search iOS/macOS/SwiftUI/UIKit docs, WWDC videos, Swift/Objective-C APIs & code examples in Claude, Cursor & AI assistants",
+  "name": "emasoft-apple-documentation-plugin",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Apple Developer Documentation for Claude Code: search iOS/macOS/SwiftUI/UIKit docs, WWDC videos, Swift/Objective-C APIs and code examples through a bundled MCP server",
   "type": "module",
-  "main": "dist/index.js",
-  "bin": {
-    "apple-docs-mcp": "./dist/index.js"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "README.*.md",
-    "LICENSE"
-  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/kimsungwhee/apple-docs-mcp.git"
+    "url": "https://github.com/Emasoft/emasoft-apple-documentation-plugin.git"
   },
   "bugs": {
-    "url": "https://github.com/kimsungwhee/apple-docs-mcp/issues"
+    "url": "https://github.com/Emasoft/emasoft-apple-documentation-plugin/issues"
   },
-  "homepage": "https://github.com/kimsungwhee/apple-docs-mcp#readme",
-  "publishConfig": {
-    "access": "public"
-  },
+  "homepage": "https://github.com/Emasoft/emasoft-apple-documentation-plugin#readme",
   "scripts": {
-    "dev": "tsc --watch",
-
     "build": "node scripts/build-bundle.mjs",
-
-    "clean": "rm -rf dist",
-
     "start": "node servers/apple-docs/index.js",
-
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage --watchAll=false",
-    "prepublishOnly": "pnpm run clean && pnpm run build && pnpm run test:ci",
-    "release:patch": "npm version patch && git push origin main --tags && npm publish",
-    "release:minor": "npm version minor && git push origin main --tags && npm publish",
-    "release:major": "npm version major && git push origin main --tags && npm publish"
+    "test:ci": "jest --ci --coverage --watchAll=false"
   },
   "keywords": [
+    "claude-code",
+    "claude-code-plugin",
     "mcp",
     "apple",
     "developer-documentation",
@@ -55,9 +35,13 @@
     "api-search",
     "framework-documentation",
     "sample-code",
-    "apple-apis"
+    "apple-apis",
+    "wwdc"
   ],
-  "author": "kimsungwhee",
+  "author": {
+    "name": "Emasoft",
+    "email": "713559+Emasoft@users.noreply.github.com"
+  },
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.31.0",
