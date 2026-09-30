@@ -262,11 +262,7 @@ export const WWDC_URLS = {
 export const WWDC_CONFIG = {
   // Year ranges
   EARLIEST_YEAR: 2014,
-  LATEST_YEAR: 2025,
   CODE_TAB_INTRODUCED_YEAR: 2022, // WWDC22 introduced separate code tabs
-
-  // Available years array
-  AVAILABLE_YEARS: ['2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'],
 
   // Default limits
   DEFAULT_VIDEO_LIMIT: 50,

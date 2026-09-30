@@ -16,16 +16,16 @@ Apple Developer Documentation MCP Server - Access Apple's official developer doc
 - 📦 **Downloadable Design Resources**: Download direct Apple-hosted templates, fonts, tools, and archives into a local MCP resource cache
 - 🔧 **Framework Index**: Browse hierarchical API structures for iOS, macOS, watchOS, tvOS, visionOS frameworks
 - 📋 **Technology Catalog**: Explore Apple technologies including SwiftUI, UIKit, Metal, Core ML, Vision, and ARKit
-- 📰 **Documentation Updates**: Track WWDC 2024/2025 announcements, iOS 26, macOS 26, and latest SDK releases
+- 📰 **Documentation Updates**: Track WWDC 2025/2026 announcements, iOS 27, macOS 27, and latest SDK releases
 - 🎯 **Technology Overviews**: Comprehensive guides for Swift, SwiftUI, UIKit, and all Apple development platforms
 - 💻 **Sample Code Library**: Swift and Objective-C code examples for iOS, macOS, and cross-platform development
-- 🎥 **WWDC Video Library**: Search WWDC 2014-2025 sessions with transcripts, Swift/SwiftUI code examples, and resources
+- 🎥 **WWDC Video Library**: Search WWDC 2014-2026 sessions with transcripts, Swift/SwiftUI code examples, and resources
 - 🔗 **Related APIs Discovery**: Find SwiftUI views, UIKit controllers, and framework-specific API relationships
 - 📊 **Platform Compatibility**: iOS 13+, macOS 10.15+, watchOS 6+, tvOS 13+, visionOS compatibility analysis
 - ⚡ **High Performance**: Optimized for Xcode, Swift Playgrounds, and AI-powered development environments
 - 🔄 **Smart UserAgent Pool**: Intelligent UserAgent rotation system with automatic failure recovery and performance monitoring
 - 🌐 **Multi-Platform**: Complete iOS, iPadOS, macOS, watchOS, tvOS, and visionOS documentation support
-- 🏷️ **Beta & Status Tracking**: iOS 26 beta APIs, deprecated UIKit methods, new SwiftUI features tracking
+- 🏷️ **Beta & Status Tracking**: beta and newly released APIs, deprecated UIKit methods, new SwiftUI features tracking
 
 ## 🚀 Quick Start
 
@@ -261,6 +261,11 @@ npm install && npm run build
 
 </details>
 
+### 🩹 Troubleshooting
+
+- **Getting outdated behavior after an update?** `npx` caches package versions. If the plain command fails or behaves like an older version, pin `@latest`: use `npx -y @kimsungwhee/apple-docs-mcp@latest` in your MCP client config (as shown above) to force the latest version.
+- **Client reports `"Client closed"` or `"No server info found"`?** One known cause is that the client's MCP host process can't find `npx` on its `PATH` (common with GUI apps that don't inherit your shell's `PATH`). Run `which npx` in your terminal and use the absolute path it prints (e.g. `/opt/homebrew/bin/npx` on Apple Silicon Homebrew installs) as the `"command"` value in your MCP config instead of the bare `"npx"`.
+
 ## 💬 Usage Examples
 
 ### 🔍 Smart Search
@@ -312,7 +317,7 @@ npm install && npm run build
 
 ### 📋 Technology & Platform Analysis
 ```
-"List all Beta frameworks in iOS 26"
+"List all Beta frameworks in the latest iOS"
 "Show me Graphics & Games technologies"
 "What machine learning frameworks are available?"
 "Analyze platform compatibility for Vision framework"
@@ -350,7 +355,7 @@ npm install && npm run build
 ```
 "Search WWDC videos about SwiftUI"
 "Find WWDC sessions on machine learning"
-"Show me WWDC 2024 videos"
+"Show me WWDC 2026 videos"
 "Search for async/await WWDC talks"
 "Find WWDC videos about Swift concurrency"
 "Show accessibility-focused WWDC sessions"
@@ -472,7 +477,7 @@ Downloaded Apple Design files are cached outside the repository by default. Set 
 
 ## 📦 WWDC Data
 
-All WWDC video data (2014-2025) is **bundled directly in the npm package**, providing:
+All WWDC video data (2014-2026) is **bundled directly in the npm package**, providing:
 
 - ✅ **Zero network latency** - No API calls needed for WWDC content
 - ✅ **100% offline access** - Works without internet connection
@@ -480,9 +485,9 @@ All WWDC video data (2014-2025) is **bundled directly in the npm package**, prov
 - ✅ **Instant responses** - All data is locally available
 
 The package includes:
-- 📹 **1,260+ WWDC session videos** with full transcripts
-- 🏷️ **20 topic categories** for organized browsing
-- 📅 **13 years of content** (2012-2025)
+- 📹 **1,400+ WWDC session videos** with full transcripts
+- 🏷️ **19 topic categories** for organized browsing
+- 📅 **13 years of content** (2014-2026)
 - 💾 **35MB of optimized JSON data**
 
 > **Note**: Keep your package updated to get the latest WWDC content additions.

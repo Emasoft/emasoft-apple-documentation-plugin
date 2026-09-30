@@ -303,12 +303,12 @@ export const TOOL_ERROR_SUGGESTIONS: Record<string, Record<string, string[]>> = 
 
   list_wwdc_videos: {
     [ErrorType.NOT_FOUND]: [
-      'Available years are 2020-2025',
+      'Available years are 2014-2026',
       'Use "all" to see videos from all years',
       'Topic searches are case-insensitive partial matches',
     ],
     [ErrorType.INVALID_INPUT]: [
-      'Year should be a 4-digit string like "2025"',
+      'Year should be a 4-digit string like "2026"',
       'Topic can be any keyword like "SwiftUI" or "Performance"',
     ],
   },

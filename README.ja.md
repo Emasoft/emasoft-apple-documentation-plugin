@@ -6,6 +6,7 @@
 Apple 開発者ドキュメント MCP サーバー - モデルコンテキストプロトコルで Apple 公式開発者ドキュメント、フレームワーク、API、SwiftUI、UIKit、WWDC ビデオにアクセス。AI 自然言語クエリで iOS、macOS、watchOS、tvOS、visionOS ドキュメントを検索。Claude、Cursor、または MCP 対応 AI アシスタントで Swift/Objective-C コード例、API リファレンス、技術ガイドを即座に取得。
 
 [English](README.md) | **日本語** | [한국어](README.ko.md) | [简体中文](README.zh-CN.md)
+> **注**: この日本語版は英語版に遅れて更新されることがあります。最新かつ正確な情報は [英語版 README](README.md) を参照してください。
 
 ## ✨ 機能
 
@@ -13,15 +14,15 @@ Apple 開発者ドキュメント MCP サーバー - モデルコンテキスト
 - 📚 **完全なドキュメントアクセス**: Swift、Objective-C、フレームワークドキュメントのための Apple JSON API への完全アクセス
 - 🔧 **フレームワークインデックス**: iOS、macOS、watchOS、tvOS、visionOS フレームワークの階層 API 構造を閲覧
 - 📋 **テクノロジーカタログ**: SwiftUI、UIKit、Metal、Core ML、Vision、ARKit を含む Apple テクノロジーを探索
-- 📰 **ドキュメント更新**: WWDC 2024/2025 発表、iOS 26、macOS 26、最新 SDK リリースを追跡
+- 📰 **ドキュメント更新**: WWDC 2025/2026 発表、iOS 27、macOS 27、最新 SDK リリースを追跡
 - 🎯 **テクノロジー概要**: Swift、SwiftUI、UIKit、すべての Apple 開発プラットフォームの包括的なガイド
 - 💻 **サンプルコードライブラリ**: iOS、macOS、クロスプラットフォーム開発のための Swift および Objective-C コード例
-- 🎥 **WWDC ビデオライブラリ**: WWDC 2014-2025 セッションを検索、トランスクリプト、Swift/SwiftUI コード例、リソース付き
+- 🎥 **WWDC ビデオライブラリ**: WWDC 2014-2026 セッションを検索、トランスクリプト、Swift/SwiftUI コード例、リソース付き
 - 🔗 **関連 API 発見**: SwiftUI ビュー、UIKit コントローラー、フレームワーク固有の API 関係を検索
 - 📊 **プラットフォーム互換性**: iOS 13+、macOS 10.15+、watchOS 6+、tvOS 13+、visionOS 互換性分析
 - ⚡ **高性能**: Xcode、Swift Playgrounds、AI 駆動開発環境に最適化
 - 🌐 **マルチプラットフォーム**: 完全な iOS、iPadOS、macOS、watchOS、tvOS、visionOS ドキュメントサポート
-- 🏷️ **ベータ & ステータス追跡**: iOS 26 ベータ API、非推奨 UIKit メソッド、新しい SwiftUI 機能を追跡
+- 🏷️ **ベータ & ステータス追跡**: ベータおよび新リリースの API、非推奨 UIKit メソッド、新しい SwiftUI 機能を追跡
 
 ## 🚀 クイックスタート
 
@@ -262,7 +263,7 @@ npm install && npm run build
 
 ### 📋 テクノロジー発見
 ```
-"iOS 26 のすべてのベータフレームワークをリスト"
+"iOS 最新版のすべてのベータフレームワークをリスト"
 "グラフィックス & ゲームテクノロジーを表示"
 "どの機械学習フレームワークが利用可能？"
 "すべての watchOS フレームワークを閲覧"

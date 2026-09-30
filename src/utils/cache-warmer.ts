@@ -63,9 +63,9 @@ async function warmUpUpdatesCache(): Promise<void> {
     // Load recent updates
     await handleGetDocumentationUpdates('all', undefined, undefined, undefined, true, 50);
 
-    // Load WWDC updates
-    await handleGetDocumentationUpdates('wwdc', undefined, '2024', undefined, true, 20);
-    await handleGetDocumentationUpdates('wwdc', undefined, '2023', undefined, true, 20);
+    // Load WWDC updates — warm the two newest years, not a fixed pair that goes stale each WWDC
+    await handleGetDocumentationUpdates('wwdc', undefined, '2026', undefined, true, 20);
+    await handleGetDocumentationUpdates('wwdc', undefined, '2025', undefined, true, 20);
 
     const stats = updatesCache.getStats();
     logger.info(`Updates cache warmed up: ${stats.size} entries`);

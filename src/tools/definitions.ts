@@ -379,7 +379,7 @@ export const toolDefinitions: Tool[] = [
         },
         year: {
           type: 'string',
-          description: 'WWDC year filter ("2025", "2024", etc.). Only for wwdc category.',
+          description: 'WWDC year filter ("2026", "2025", etc.). Only for wwdc category.',
         },
         searchQuery: {
           type: 'string',
@@ -475,7 +475,7 @@ export const toolDefinitions: Tool[] = [
       properties: {
         year: {
           type: 'string',
-          description: 'WWDC year ("2025", "2024", etc.) or "all". Available: 2020-2025. Example: "2025" for latest.',
+          description: 'WWDC year ("2026", "2025", etc.) or "all". Available: 2014-2026. Example: "2026" for latest.',
         },
         topic: {
           type: 'string',
@@ -514,7 +514,7 @@ export const toolDefinitions: Tool[] = [
         },
         year: {
           type: 'string',
-          description: 'Limit to specific year ("2025", "2024", etc.). Leave empty for all years.',
+          description: 'Limit to specific year ("2026", "2025", etc.). Leave empty for all years.',
         },
         language: {
           type: 'string',
@@ -540,7 +540,7 @@ export const toolDefinitions: Tool[] = [
       properties: {
         year: {
           type: 'string',
-          description: 'WWDC year. Example: "2025"',
+          description: 'WWDC year. Example: "2026"',
         },
         videoId: {
           type: 'string',
@@ -578,7 +578,7 @@ export const toolDefinitions: Tool[] = [
         },
         year: {
           type: 'string',
-          description: 'WWDC year filter ("2025", "2024", etc.).',
+          description: 'WWDC year filter ("2026", "2025", etc.).',
         },
         language: {
           type: 'string',
@@ -638,7 +638,7 @@ export const toolDefinitions: Tool[] = [
         },
         year: {
           type: 'string',
-          description: 'Source video year. Example: "2025"',
+          description: 'Source video year. Example: "2026"',
         },
         includeExplicitRelated: {
           type: 'boolean',

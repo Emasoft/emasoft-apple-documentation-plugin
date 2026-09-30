@@ -11,18 +11,24 @@ Apple 개발자 문서 MCP 서버 - 모델 컨텍스트 프로토콜을 통해 A
 
 - 🔍 **스마트 검색**: SwiftUI, UIKit, Foundation, CoreData, ARKit 등 Apple 개발자 문서 지능형 검색
 - 📚 **완전한 문서 액세스**: Swift, Objective-C 및 프레임워크 문서를 위한 Apple JSON API 완전 액세스
+<!-- machine-translated, needs native review -->
+- 🎨 **Apple Design 및 HIG 액세스**: Human Interface Guidelines JSON, Apple Design 페이지 및 Design Resources 카탈로그 항목 읽기
+<!-- machine-translated, needs native review -->
+- 🖼️ **디자인 리소스 미리보기**: Apple 제공 HIG 이미지와 리소스 썸네일을 MCP 이미지 콘텐츠 블록으로 반환
+<!-- machine-translated, needs native review -->
+- 📦 **다운로드 가능한 디자인 리소스**: Apple에서 직접 호스팅하는 템플릿, 폰트, 도구, 아카이브를 로컬 MCP 리소스 캐시에 다운로드
 - 🔧 **프레임워크 인덱스**: iOS, macOS, watchOS, tvOS, visionOS 프레임워크의 계층적 API 구조 탐색
 - 📋 **기술 카탈로그**: SwiftUI, UIKit, Metal, Core ML, Vision, ARKit을 포함한 Apple 기술 탐색
-- 📰 **문서 업데이트**: WWDC 2024/2025 발표, iOS 26, macOS 26 및 최신 SDK 릴리스 추적
+- 📰 **문서 업데이트**: WWDC 2025/2026 발표, iOS 27, macOS 27 및 최신 SDK 릴리스 추적
 - 🎯 **기술 개요**: Swift, SwiftUI, UIKit 및 모든 Apple 개발 플랫폼의 포괄적인 가이드
 - 💻 **샘플 코드 라이브러리**: iOS, macOS 및 크로스 플랫폼 개발을 위한 Swift 및 Objective-C 코드 예제
-- 🎥 **WWDC 비디오 라이브러리**: WWDC 2014-2025 세션 검색, 트랜스크립트, Swift/SwiftUI 코드 예제 및 리소스 포함
+- 🎥 **WWDC 비디오 라이브러리**: WWDC 2014-2026 세션 검색, 트랜스크립트, Swift/SwiftUI 코드 예제 및 리소스 포함
 - 🔗 **관련 API 발견**: SwiftUI 뷰, UIKit 컨트롤러 및 프레임워크별 API 관계 찾기
 - 📊 **플랫폼 호환성**: iOS 13+, macOS 10.15+, watchOS 6+, tvOS 13+, visionOS 호환성 분석
 - ⚡ **고성능**: Xcode, Swift Playgrounds 및 AI 기반 개발 환경에 최적화
 - 🔄 **스마트 UserAgent 풀**: 자동 장애 복구 및 성능 모니터링을 갖춘 지능형 UserAgent 로테이션 시스템
 - 🌐 **멀티플랫폼**: 완전한 iOS, iPadOS, macOS, watchOS, tvOS, visionOS 문서 지원
-- 🏷️ **베타 및 상태 추적**: iOS 26 베타 API, 사용 중단된 UIKit 메서드, 새로운 SwiftUI 기능 추적
+- 🏷️ **베타 및 상태 추적**: 베타 및 신규 출시 API, 사용 중단된 UIKit 메서드, 새로운 SwiftUI 기능 추적
 
 ## 🚀 빠른 시작
 
@@ -61,6 +67,18 @@ claude mcp add apple-docs -- npx -y @kimsungwhee/apple-docs-mcp@latest
 ```
 
 [📖 Claude Code MCP 문서](https://docs.anthropic.com/en/docs/claude-code/mcp)
+
+</details>
+
+<!-- machine-translated, needs native review -->
+<details>
+<summary><strong>🛠️ Autohand Code</strong></summary>
+
+```bash
+autohand mcp add apple-docs npx -y @kimsungwhee/apple-docs-mcp@latest
+```
+
+현재 작업 공간에만 등록하려면 `mcp add` 뒤에 `--scope project`를 추가하세요. 최신 CLI 정보는 [Autohand Code](https://github.com/autohandai/code-cli/)를 참고하세요.
 
 </details>
 
@@ -247,6 +265,12 @@ npm install && npm run build
 
 </details>
 
+<!-- machine-translated, needs native review -->
+### 🩹 문제 해결
+
+- **업데이트 후에도 예전 동작이 계속되나요?** `npx`는 패키지 버전을 캐시합니다. `@latest` 없는 명령이 실패하거나 예전 버전처럼 동작한다면 `@latest`를 고정하세요: MCP 클라이언트 설정에는 항상 `npx -y @kimsungwhee/apple-docs-mcp@latest`를 사용하세요 (위 예시 참고).
+- **클라이언트가 `"Client closed"` 또는 `"No server info found"` 오류를 표시하나요?** 알려진 원인 중 하나는 클라이언트의 MCP 호스트 프로세스가 `PATH`에서 `npx`를 찾지 못하는 것입니다 (셸의 `PATH`를 상속하지 않는 GUI 앱에서 흔함). 터미널에서 `which npx`를 실행해 출력된 절대 경로(예: Apple Silicon Homebrew 환경의 `/opt/homebrew/bin/npx`)를 MCP 설정의 `"command"` 값으로 사용하세요.
+
 ## 💬 사용 예제
 
 ### 🔍 스마트 검색
@@ -263,6 +287,15 @@ npm install && npm run build
 "iOS 18 프레임워크의 새로운 기능은?"
 "Vision 프레임워크 기능에 대해 알려줘"
 "모든 WeatherKit API 보여줘"
+```
+
+<!-- machine-translated, needs native review -->
+### 🎨 Apple Design 및 HIG
+```
+"레이아웃에 대한 Apple Design 문서 검색"
+"iOS 템플릿용 Apple Design Resources 나열"
+"이 resourceId로 Apple Design 리소스 다운로드"
+"레이아웃 HIG 페이지의 Apple Design 예제 보여줘"
 ```
 
 ### 🔧 API 탐색
@@ -283,7 +316,7 @@ npm install && npm run build
 
 ### 📋 기술 발견
 ```
-"iOS 26의 모든 베타 프레임워크 나열"
+"iOS 최신 버전의 모든 베타 프레임워크 나열"
 "그래픽 & 게임 기술 보여줘"
 "어떤 머신러닝 프레임워크가 사용 가능한가?"
 "모든 watchOS 프레임워크 탐색"
@@ -321,7 +354,7 @@ npm install && npm run build
 ```
 "SwiftUI에 대한 WWDC 비디오 검색"
 "머신러닝 WWDC 세션 찾기"
-"WWDC 2024 비디오 보여줘"
+"WWDC 2026 비디오 보여줘"
 "async/await WWDC 강연 검색"
 "Swift 동시성에 대한 WWDC 비디오 찾기"
 "접근성 주제의 WWDC 세션 보여줘"
@@ -365,6 +398,12 @@ npm install && npm run build
 | `get_wwdc_video_details` | WWDC 비디오 상세 정보 및 대본 | 전체 대본, 코드 예제, 리소스, 플랫폼 정보 |
 | `list_wwdc_topics` | 사용 가능한 모든 WWDC 주제 나열 | Swift부터 공간 컴퓨팅까지 19개 주제 카테고리 |
 | `list_wwdc_years` | 사용 가능한 모든 WWDC 연도 나열 | 비디오 개수와 함께 연도 정보 |
+<!-- machine-translated, needs native review -->
+| `search_apple_design_docs` | Apple Design 및 HIG 콘텐츠 검색 | HIG JSON 참조, Design 페이지, Design Resources 카탈로그 |
+| `get_apple_design_content` | Apple Design 및 HIG 페이지 읽기 | HIG JSON 렌더링, `/design/` 페이지용 HTML 폴백 |
+| `list_apple_design_resources` | Apple Design Resources 나열 | 안정적인 리소스 ID, 카테고리/플랫폼/포맷 필터, 미리보기 및 링크 |
+| `download_apple_design_resource` | Apple Design 리소스 직접 다운로드 | 로컬 캐시, MCP `resource_link` 블록, `resources/read` 블롭 액세스 |
+| `get_apple_design_examples` | Apple Design 시각 예제 반환 | base64 데이터와 MIME 타입을 포함한 MCP `image` 블록 |
 
 ## 🏗️ 기술 아키텍처
 
@@ -427,7 +466,7 @@ apple-docs-mcp/
 
 ## 📦 WWDC 데이터
 
-모든 WWDC 비디오 데이터 (2014-2025)는 **npm 패키지에 직접 번들링**되어 다음을 제공합니다:
+모든 WWDC 비디오 데이터 (2014-2026)는 **npm 패키지에 직접 번들링**되어 다음을 제공합니다:
 
 - ✅ **네트워크 지연 없음** - WWDC 콘텐츠에 API 호출 불필요
 - ✅ **100% 오프라인 액세스** - 인터넷 연결 없이 작동
@@ -435,9 +474,9 @@ apple-docs-mcp/
 - ✅ **즉각적인 응답** - 모든 데이터가 로컬에서 사용 가능
 
 포함된 데이터:
-- 📹 **1,260개 이상의 WWDC 세션 비디오** 및 전체 대본
-- 🏷️ **20개 주제 카테고리**로 체계적인 탐색
-- 📅 **13년간의 콘텐츠** (2012-2025)
+- 📹 **1,400개 이상의 WWDC 세션 비디오** 및 전체 대본
+- 🏷️ **19개 주제 카테고리**로 체계적인 탐색
+- 📅 **13년간의 콘텐츠** (2014-2026)
 - 💾 **35MB의 최적화된 JSON 데이터**
 
 > **참고**: 최신 WWDC 콘텐츠를 받으려면 패키지를 업데이트하세요.

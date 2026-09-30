@@ -6,6 +6,7 @@
 Apple 开发者文档 MCP 服务器 - 通过模型上下文协议访问 Apple 官方开发文档、框架、API、SwiftUI、UIKit 和 WWDC 视频。使用 AI 自然语言查询搜索 iOS、macOS、watchOS、tvOS 和 visionOS 文档。在 Claude、Cursor 或任何兼容 MCP 的 AI 助手中即时获取 Swift/Objective-C 代码示例、API 参考和技术指南。
 
 [English](README.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | **简体中文**
+> **注**: 本简体中文版可能落后于英文版更新。最新、最准确的信息请参阅[英文版 README](README.md)。
 
 ## ✨ 功能特性
 
@@ -13,15 +14,15 @@ Apple 开发者文档 MCP 服务器 - 通过模型上下文协议访问 Apple �
 - 📚 **完整文档访问**: 完全访问 Apple JSON API，获取 Swift、Objective-C 和框架文档
 - 🔧 **框架索引**: 浏览 iOS、macOS、watchOS、tvOS、visionOS 框架的分层 API 结构
 - 📋 **技术目录**: 探索包括 SwiftUI、UIKit、Metal、Core ML、Vision 和 ARKit 在内的 Apple 技术
-- 📰 **文档更新**: 跟踪 WWDC 2024/2025 公告、iOS 26、macOS 26 和最新 SDK 发布
+- 📰 **文档更新**: 跟踪 WWDC 2025/2026 公告、iOS 27、macOS 27 和最新 SDK 发布
 - 🎯 **技术概览**: Swift、SwiftUI、UIKit 和所有 Apple 开发平台的综合指南
 - 💻 **示例代码库**: iOS、macOS 和跨平台开发的 Swift 和 Objective-C 代码示例
-- 🎥 **WWDC 视频库**: 搜索 WWDC 2014-2025 会议，包含文字记录、Swift/SwiftUI 代码示例和资源
+- 🎥 **WWDC 视频库**: 搜索 WWDC 2014-2026 会议，包含文字记录、Swift/SwiftUI 代码示例和资源
 - 🔗 **相关 API 发现**: 查找 SwiftUI 视图、UIKit 控制器和框架特定的 API 关系
 - 📊 **平台兼容性**: iOS 13+、macOS 10.15+、watchOS 6+、tvOS 13+、visionOS 兼容性分析
 - ⚡ **高性能**: 针对 Xcode、Swift Playgrounds 和 AI 驱动的开发环境进行优化
 - 🌐 **多平台**: 完整的 iOS、iPadOS、macOS、watchOS、tvOS 和 visionOS 文档支持
-- 🏷️ **Beta 和状态跟踪**: iOS 26 beta API、已弃用的 UIKit 方法、新 SwiftUI 功能跟踪
+- 🏷️ **Beta 和状态跟踪**: Beta 和新发布的 API、已弃用的 UIKit 方法、新 SwiftUI 功能跟踪
 
 ## 🚀 快速开始
 
@@ -262,7 +263,7 @@ npm install && npm run build
 
 ### 📋 技术和平台分析
 ```
-"列出 iOS 26 中的所有 Beta 框架"
+"列出 iOS 最新版本中的所有 Beta 框架"
 "显示图形和游戏技术"
 "有哪些机器学习框架可用？"
 "分析 Vision 框架的平台兼容性"

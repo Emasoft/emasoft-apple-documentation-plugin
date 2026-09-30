@@ -276,7 +276,7 @@ export async function getAvailableYears(): Promise<string[]> {
 
   } catch (error) {
     logger.error('Failed to fetch available years:', error);
-    // Return known years as fallback
-    return ['2025', '2024', '2023', '2022', '2021', '2020'];
+    // Return known years as fallback (kept in sync with the latest WWDC year)
+    return ['2026', '2025', '2024', '2023', '2022', '2021', '2020'];
   }
 }

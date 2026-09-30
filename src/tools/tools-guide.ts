@@ -219,7 +219,7 @@ export const USAGE_TIPS = {
   ACCURACY: [
     'Framework names are case-sensitive in some tools',
     'Use list_technologies to get exact framework identifiers',
-    'WWDC tools have offline data from 2020-2025',
+    'WWDC tools have offline data from 2014-2026',
   ],
 
   // Efficiency tips
