@@ -1,0 +1,33 @@
+---
+trdd-id: Q23MSNKP
+title: Evaluate TypeScript 7 adoption
+column: todo
+status: tasked
+created: 2026-09-30T20:14:50+0200
+updated: 2026-09-30T20:15:28+0200
+current-owner: user
+created-by: user
+task-type: spike
+min-approval-requirement: none
+assignee: user
+mandate: true
+mandated-by: user
+approved: true
+approval-judge: user
+approval-datetime: 2026-09-30T20:14:50+0200
+npt: []
+---
+
+# Evaluate TypeScript 7 adoption
+
+TypeScript 5.8.3 -> 7.0.2 (the new native/go compiler) is a major jump. Depends on B2 (jest/ts-jest/tsx bump) because ts-jest and tsx compatibility with TS7 must be checked before switching, and the spike's verdict only means something once the rest of the toolchain is already current.
+
+Scope: check ts-jest, tsx, and typescript-eslint compatibility with TypeScript 7; if any is unready, stay on the latest compatible 5.x or 6.x instead and record why.
+
+Acceptance:
+- [ ] Compatibility matrix recorded in this card's body or a follow-up note
+- [ ] Decision made: adopt TS7, or pin to latest compatible 5.x/6.x with reason
+
+## Approval log
+
+- 2026-09-30T20:14:50+0200 — MANDATE issued by user (min-approval-requirement: none). Pre-approved: issuer authority >= required approver. No approval request was sent.
