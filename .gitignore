@@ -17,3 +17,11 @@ CLAUDE.md
 reports/
 reports_dev/
 .janitor/
+docs_dev/
+scripts_dev/
+samples_dev/
+examples_dev/
+tests_dev/
+downloads_dev/
+libs_dev/
+builds_dev/
