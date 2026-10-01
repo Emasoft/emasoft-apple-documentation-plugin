@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.1] — 2026-10-01
+
+### Bug Fixes
+
+- Make CI green on the release (notify checkout, validate deps, patched transitive deps) (bebf186)
 ## [2.1.0] — 2026-10-01
 
 ### Bug Fixes
@@ -68,6 +73,7 @@ All notable changes to this project will be documented in this file.
 - Update MCP SDK 1.31.0, zod 4.6.5, cheerio 1.2.0 (TRDD-2DDKQU67) (52351c7)
 - Update jest 30.5.2, ts-jest 29.4.14, tsx 4.23.15 (TRDD-YP2TDR2R) (f5c1fb6)
 - Adopt the CPV canonical publish pipeline, no npm (TRDD-4P6OWTBS step c) (c42c071)
+- Bump version to 2.1.0 (b14d230)
 
 ### Refactor
 
