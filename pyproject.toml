@@ -9,7 +9,7 @@
 
 [project]
 name = "emasoft-apple-documentation-plugin"
-version = "2.1.1"
+version = "2.1.2"
 description = "Python tooling of the emasoft-apple-documentation-plugin repo (publish pipeline only)"
 requires-python = ">=3.12"
 dependencies = []

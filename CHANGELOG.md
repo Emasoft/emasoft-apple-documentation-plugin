@@ -2,11 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.2] — 2026-10-01
+
+### Bug Fixes
+
+- Install node dependencies in the Release workflow's Validate job (9b43b75)
 ## [2.1.1] — 2026-10-01
 
 ### Bug Fixes
 
 - Make CI green on the release (notify checkout, validate deps, patched transitive deps) (bebf186)
+
+### Miscellaneous Tasks
+
+- Bump version to 2.1.1 (055641c)
 ## [2.1.0] — 2026-10-01
 
 ### Bug Fixes
