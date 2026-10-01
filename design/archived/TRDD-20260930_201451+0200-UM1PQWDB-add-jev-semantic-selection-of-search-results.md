@@ -1,10 +1,10 @@
 ---
 trdd-id: UM1PQWDB
 title: Add Jev semantic selection of search results
-column: testing
-status: tasked
+column: complete
+status: archived
 created: 2026-09-30T20:14:51+0200
-updated: 2026-10-01T10:08:22+0200
+updated: 2026-10-01T11:14:02+0200
 current-owner: user
 created-by: user
 task-type: feature
@@ -39,6 +39,7 @@ Acceptance:
 
 - 2026-09-30T20:14:51+0200 — MANDATE issued by user (min-approval-requirement: none). Pre-approved: issuer authority >= required approver. No approval request was sent.
 - 2026-09-30T20:18:54+0200 — column → todo. Research complete: Jev integration approach, revised per user decision to widen recall then narrow to top 1-5 by score.
+- 2026-10-01T11:14:02+0200 — COMPLETE by main-agent@apple-docs-mcp. archived → complete.
 
 ## Design (from research 2026-09-30)
 
