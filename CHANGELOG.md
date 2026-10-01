@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [2.1.0] — 2026-10-01
 
 ### Bug Fixes
 
@@ -13,6 +13,10 @@ All notable changes to this project will be documented in this file.
 - Raise stdin-EOF shutdown backstop from 10s to 60s (5632381)
 - Exit promptly after client disconnect when offline (TRDD-IHLAOB2W) (525ea76)
 - Make server timeouts and tests resilient to CPU peaks (TRDD-0NSMWBTM) (1ea6f82)
+- **lint:** Finish ESLint 10 migration; AppError is a real Error (TRDD-4RXQ5L25) (367d04f)
+- Clear all non-data CPV strict findings (TRDD-4P6OWTBS step e) (1e8640f)
+- Let Jev score every WWDC candidate when select is on (TRDD-UM1PQWDB) (aed74a0)
+- Clear the CPV strict security findings (command-injection shape, sha1) (b1c3c0a)
 
 ### Documentation
 
@@ -29,6 +33,19 @@ All notable changes to this project will be documented in this file.
 - Record plugin restructure decisions in TRDD-4P6OWTBS (ef8bc62)
 - Record restructure plan amendments; add TRDD-I8QT4E2L (d3c7b76)
 - Correct card provenance; disclose TRDD-YP2TDR2R close in d3c7b76 (230aaa0)
+- Rewrite the READMEs for the Claude Code plugin (TRDD-4P6OWTBS step d) (98a8bde)
+- Close TRDD-4RXQ5L25 and TRDD-9SMOD8AH, supersede TRDD-TBK20QL4 (d7b2e11)
+- Close TRDD-I8QT4E2L and TRDD-0NSMWBTM (1929949)
+- Close TRDD-A1DNMJD9; record the CPV blocker on TRDD-4P6OWTBS (c456a82)
+- Add TRDD-GZECHF9J; park TRDD-4P6OWTBS behind it with a runnable probe (e83c1aa)
+- Probe the installed CPV fix, not PR #238 (TRDD-4P6OWTBS) (ea0f086)
+- Probe the latest CPV release, not the local cache (TRDD-4P6OWTBS) (ffca8d0)
+- Document Jev selection; finish review fixes (TRDD-UM1PQWDB) (d7f8a50)
+- Close TRDD-UM1PQWDB; add TRDD-3LSMA9YE and TRDD-BMP1UIS8 (489cdc5)
+- State typical Jev latency, not only the worst case (TRDD-UM1PQWDB) (604ea09)
+- Move TRDD-Q23MSNKP to backburner (blocked upstream) (63cee8e)
+- State typical Jev latency and the on-demand WWDC download in the skill (a406fdd)
+- Track the janitor finding cards in design/ (8cef89e)
 
 ### Features
 
@@ -37,6 +54,10 @@ All notable changes to this project will be documented in this file.
 - Add WWDC 2026 videos (5a72336)
 - Ship the MCP server as a committed esbuild bundle (TRDD-4P6OWTBS step a) (4ea418c)
 - Rename to the Claude Code plugin emasoft-apple-documentation-plugin 2.0.0 (TRDD-4P6OWTBS step b) (66209c9)
+- Route Apple search through httpClient with caching (TRDD-A1DNMJD9) (bfad413)
+- Add the Jev semantic selection core (TRDD-UM1PQWDB phase 1) (842295d)
+- Wire Jev selection into WWDC and Apple docs search (TRDD-UM1PQWDB phase 2) (13a871b)
+- Download WWDC data on demand; add the apple-docs-search skill (9abe2dd)
 
 ### Miscellaneous Tasks
 
@@ -51,6 +72,7 @@ All notable changes to this project will be documented in this file.
 ### Refactor
 
 - Derive stdin-EOF backstop from the request deadline (TRDD-0NSMWBTM) (7296fba)
+- Remove dead jsdom WWDC extractors and jsdom (TRDD-I8QT4E2L) (293134d)
 
 ### Testing
 
@@ -62,6 +84,17 @@ All notable changes to this project will be documented in this file.
 
 - Drop cheerio's unused URL loader from the bundle (TRDD-4P6OWTBS step a2) (5ecbcfa)
 - Guard the cheerio load-parse redirect (TRDD-4P6OWTBS A16) (1be4970)
+- **lint:** Migrate to ESLint 10 flat config with typed linting (TRDD-4RXQ5L25, partial) (2328da5)
+- Require Node 22; release only from v2+ tags (TRDD-9SMOD8AH) (46b695a)
+- Allowlist the bundle control-character re-escape (TRDD-4P6OWTBS) (980694a)
+- Pin the control-character rewrite count; write the bundle atomically (TRDD-4P6OWTBS) (0b31bcf)
+- Set bundle mode explicitly; ignore build temp; extend dependabot note (TRDD-4P6OWTBS) (35ac9be)
+- Enable pnpm supply-chain policy with reviewed exceptions (TRDD-4P6OWTBS) (27736c2)
+- Pin pnpm supply-chain exceptions to exact versions (TRDD-4P6OWTBS) (db99b0a)
+
+### Data
+
+- Redact the sample JWS token in WWDC25 session 221 (TRDD-4P6OWTBS) (ecd5d55)
 ## [1.0.26] — 2025-09-15
 
 ### Bug Fixes

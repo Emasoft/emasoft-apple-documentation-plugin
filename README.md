@@ -1,7 +1,7 @@
 # Emasoft Apple Documentation plugin
 
 <!--BADGES-START-->
-[![Version](https://img.shields.io/badge/version-2.0.0-blue)](https://github.com/Emasoft/emasoft-apple-documentation-plugin/releases)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue)](https://github.com/Emasoft/emasoft-apple-documentation-plugin/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 <!--BADGES-END-->
 
