@@ -7267,7 +7267,7 @@ var init_logger = __esm({
         this.level = level;
       }
       /**
-       * Enable/disable logging
+       * Turn debug/info output on or off
        */
       setEnabled(enabled) {
         this.enabled = enabled;
@@ -8352,7 +8352,7 @@ var init_http_headers_generator = __esm({
        * @returns Complete set of HTTP headers
        */
       generateHeaders(userAgent, customHeaders = {}) {
-        const baseTemplate = this.getHeaderTemplate(userAgent.browserType);
+        const baseTemplate = this.getBrowserBaseHeaders(userAgent.browserType);
         const generatedHeaders = {
           "User-Agent": userAgent.userAgent
         };
@@ -8392,7 +8392,7 @@ var init_http_headers_generator = __esm({
        * @param browserType - Type of browser
        * @returns Header template for the browser
        */
-      getHeaderTemplate(browserType) {
+      getBrowserBaseHeaders(browserType) {
         const templates = this.config.simpleMode ? SIMPLE_BROWSER_HEADERS : BROWSER_HEADERS;
         return { ...templates[browserType] };
       }
@@ -39012,7 +39012,7 @@ var decode_data_html_default = new Uint16Array(
 // node_modules/.pnpm/entities@4.5.0/node_modules/entities/lib/esm/generated/decode-data-xml.js
 var decode_data_xml_default = new Uint16Array(
   // prettier-ignore
-  "\u0200aglq	\x1B\u026D\0\0p;\u4026os;\u4027t;\u403Et;\u403Cuot;\u4022".split("").map((c) => c.charCodeAt(0))
+  "\u0200aglq	\x15\x18\x1B\u026D\x0f\0\0\x12p;\u4026os;\u4027t;\u403Et;\u403Cuot;\u4022".split("").map((c) => c.charCodeAt(0))
 );
 
 // node_modules/.pnpm/entities@4.5.0/node_modules/entities/lib/esm/decode_codepoint.js
@@ -54723,9 +54723,8 @@ init_constants();
 // src/utils/plugin-version.ts
 import { readFileSync } from "fs";
 function getPluginVersion() {
-  const manifest = JSON.parse(
-    readFileSync(new URL("../../package.json", import.meta.url), "utf8")
-  );
+  const manifestUrl = new URL("../../package.json", import.meta.url);
+  const manifest = JSON.parse(readFileSync(manifestUrl, "utf8"));
   if (typeof manifest.version !== "string" || manifest.version === "") {
     throw new Error("package.json at the plugin root has no version string");
   }

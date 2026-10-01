@@ -18,6 +18,9 @@
  *   across machines (a sourcemap would embed machine-specific paths). The
  *   bundle is committed, and tests/bundle-freshness.test.ts fails when it is
  *   stale.
+ * - raw control characters: esbuild prints a few C0 control characters raw in
+ *   string literals (entities' decode tables); the build re-escapes them as
+ *   hex escapes after bundling so index.js stays plain text (see below).
  * - license material: legalComments 'external' writes the license comments
  *   found in the sources to index.js.LEGAL.txt, and the esbuild metafile
  *   drives THIRD_PARTY_LICENSES.txt: one entry per bundled package with its
@@ -93,6 +96,31 @@ const { metafile } = await build({
     js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
   },
 });
+
+// Re-escape raw control characters in the bundle. esbuild prints a few C0
+// control characters raw inside string literals (here 0x0f, 0x12, 0x15, 0x18
+// from the entities package's decode tables) even though the dependency's own
+// source spells them as hex escapes; raw control bytes make scanners and editors
+// treat index.js as binary-ish text (CPV flags it). Outside comments such a
+// character can only sit inside a string, template or regex literal, where the
+// hex escape is the identical character, so behaviour does not change. A raw
+// control character right after a lone backslash would turn into a different
+// escape sequence, so that case fails the build instead of being rewritten.
+// \p{Cc} (Unicode control category) rather than a \x00-\x1f class keeps eslint's
+// no-control-regex quiet.
+const rawControlChar = /(\\*)(\p{Cc})/gu;
+writeFileSync(
+  outfile,
+  readFileSync(outfile, 'utf8').replace(rawControlChar, (match, backslashes, control) => {
+    if (control === '\t' || control === '\n' || control === '\r') {
+      return match;
+    }
+    if (backslashes.length % 2 === 1) {
+      throw new Error(`raw control character 0x${control.charCodeAt(0).toString(16)} follows a lone backslash in ${outfile}`);
+    }
+    return `${backslashes}\\x${control.charCodeAt(0).toString(16).padStart(2, '0')}`;
+  }),
+);
 
 // Package directory of every bundled third-party input: the path up to the
 // LAST node_modules/<name> (or <@scope>/<name>) segment, so pnpm's

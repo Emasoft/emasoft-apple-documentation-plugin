@@ -74,7 +74,7 @@ class Logger {
   }
 
   /**
-   * Enable/disable logging
+   * Turn debug/info output on or off
    */
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;

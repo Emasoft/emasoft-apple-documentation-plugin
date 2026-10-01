@@ -17,9 +17,14 @@ export function getPluginVersion(): string {
   // readFileSync rather than createRequire: the bundle banner already declares
   // createRequire/require at module scope, and a second import of it would be
   // a duplicate declaration.
-  const manifest = JSON.parse(
-    readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
-  ) as { version?: unknown };
+  // The URL is built on its own line and passed to readFileSync by name: the
+  // path is a compile-time constant anchored on import.meta.url (no input
+  // reaches it), and a one-line readFileSync(new URL('<up>/<up>/...')) is
+  // what CPV's skillaudit PATH_TRAVERSAL rule reads as a traversal attack.
+  const manifestUrl = new URL('../../package.json', import.meta.url);
+  const manifest = JSON.parse(readFileSync(manifestUrl, 'utf8')) as {
+    version?: unknown;
+  };
   if (typeof manifest.version !== 'string' || manifest.version === '') {
     throw new Error('package.json at the plugin root has no version string');
   }

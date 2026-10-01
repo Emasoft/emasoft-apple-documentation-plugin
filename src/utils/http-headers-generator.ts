@@ -110,7 +110,7 @@ export class HttpHeadersGenerator {
     customHeaders: Record<string, string> = {},
   ): Record<string, string> {
     // Get base template for browser type
-    const baseTemplate = this.getHeaderTemplate(userAgent.browserType);
+    const baseTemplate = this.getBrowserBaseHeaders(userAgent.browserType);
 
     // Generate dynamic headers
     const generatedHeaders: Record<string, string> = {
@@ -171,7 +171,7 @@ export class HttpHeadersGenerator {
    * @param browserType - Type of browser
    * @returns Header template for the browser
    */
-  private getHeaderTemplate(browserType: BrowserType): HeaderTemplate {
+  private getBrowserBaseHeaders(browserType: BrowserType): HeaderTemplate {
     const templates = this.config.simpleMode ? SIMPLE_BROWSER_HEADERS : BROWSER_HEADERS;
     return { ...templates[browserType] };
   }
