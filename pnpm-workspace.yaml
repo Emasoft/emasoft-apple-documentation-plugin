@@ -1,5 +1,26 @@
 packages:
   - '.'
+# Supply-chain policy (janitor DEP-001 / PKGPOL-001): refuse dependency releases younger than
+# 5 days (7200 min), refuse a version whose publish trust level is lower than an earlier one,
+# refuse transitive deps from git/tarball URLs, and fail the install on unreviewed build scripts.
+minimumReleaseAge: 7200
+trustPolicy: no-downgrade
+blockExoticSubdeps: true
+strictDepBuilds: true
+# Reviewed exceptions for the lockfile as of 2026-10-01 (pnpm install --frozen-lockfile verifies the
+# lockfile against the policy above). Each is a deliberate Dependabot-era upgrade that was published
+# less than 5 days before the first release; the age exceptions stop mattering after 2026-10-04 and
+# SHOULD be deleted then. The trust-downgrade entries are the only versions the lockfile resolves
+# for an old transitive dev dependency (semver 6.x via babel/jest, undici-types 6.x via @types/node 22).
+minimumReleaseAgeExclude:
+  - '@modelcontextprotocol/sdk'
+  - '@hono/node-server'
+  - 'hono'
+  - 'typescript-eslint'
+  - '@typescript-eslint/*'
+trustPolicyExclude:
+  - 'semver@6.3.1'
+  - 'undici-types@6.21.0'
 # esbuild and unrs-resolver are transitive dev-tooling deps whose postinstall
 # build scripts are not needed: tsc, eslint, jest, and the build all pass
 # without running them (verified locally with pnpm 9 and pnpm 12.6; pnpm 9 ignores allowBuilds).
