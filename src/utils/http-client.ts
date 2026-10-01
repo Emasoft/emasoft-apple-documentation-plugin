@@ -298,6 +298,40 @@ class HttpClient {
   }
 
   /**
+   * Make a POST request (string body) with the same queue, rate limit, timeout,
+   * retry/backoff and User-Agent rotation as get(). Returns the raw Response so the
+   * caller can stream the body. The timeout covers the whole retry sequence but its timer
+   * is cleared once headers arrive, so a caller that streams the body must pass its own
+   * `signal` to bound the body read too. Retrying is only safe for idempotent POSTs
+   * (e.g. read-only search queries).
+   */
+  async post(url: string, body: string, options: RequestOptions = {}): Promise<Response> {
+    const {
+      timeout = REQUEST_CONFIG.TIMEOUT,
+      retries = REQUEST_CONFIG.MAX_RETRIES,
+      retryDelay = REQUEST_CONFIG.RETRY_DELAY,
+      headers = {},
+      signal,
+    } = options;
+
+    return this.executeWithQueue(async () => {
+      if (!globalRateLimiter.canMakeRequest()) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      }
+
+      const requestHeaders = await this.generateRequestHeaders(headers, 'application/json');
+      const fetchSignalHolder = createFetchSignal(timeout, () => this.createAbortError(), signal);
+
+      return this.fetchWithRetry(url, {
+        method: 'POST',
+        headers: requestHeaders,
+        body,
+        signal: fetchSignalHolder.signal,
+      }, retries, retryDelay, false, signal).finally(() => fetchSignalHolder.cleanup());
+    });
+  }
+
+  /**
    * Fetch with retry logic, performance monitoring, and User-Agent rotation
    * Each retry attempt uses a fresh User-Agent from the pool
    */

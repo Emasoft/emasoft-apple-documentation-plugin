@@ -70,6 +70,7 @@ Claude Code namespaces the tools of a plugin MCP server, so the tool `search_app
 
 - **The server fails to start, or `/mcp` shows it as failed?** Claude Code launches the server with the command `node`. GUI apps do not always inherit the `PATH` of your shell: run `which node` in a terminal, and make sure that directory is on the `PATH` of the process that starts Claude Code. The plugin needs Node.js 22 or later.
 - **`search_apple_docs` returning nothing, or erroring?** It depends on an undocumented Apple search backend (`devintserv.msc.sbz.apple.com`) that the search page of developer.apple.com uses internally. If Apple changes its response shape, `search_apple_docs` can break until this plugin catches up. `get_apple_doc_content`, `search_framework_symbols` and the WWDC tools do not depend on that endpoint and keep working.
+- **`search_apple_docs` feels slow?** Apple streams the full result set, so a search typically takes 5 to 25 seconds (median about 10). Repeating the same query within 10 minutes is answered from a local cache.
 
 ## Usage
 

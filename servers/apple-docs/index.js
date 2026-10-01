@@ -7509,6 +7509,235 @@ var init_constants = __esm({
   }
 });
 
+// src/utils/cache.ts
+var cache_exports = {};
+__export(cache_exports, {
+  MemoryCache: () => MemoryCache,
+  apiCache: () => apiCache,
+  cached: () => cached2,
+  designContentCache: () => designContentCache,
+  designResourcesCache: () => designResourcesCache,
+  generateEnhancedCacheKey: () => generateEnhancedCacheKey,
+  generateUrlCacheKey: () => generateUrlCacheKey,
+  getCacheInstance: () => getCacheInstance,
+  indexCache: () => indexCache,
+  sampleCodeCache: () => sampleCodeCache,
+  searchCache: () => searchCache,
+  technologiesCache: () => technologiesCache,
+  technologyOverviewsCache: () => technologyOverviewsCache,
+  updatesCache: () => updatesCache,
+  withCache: () => withCache,
+  wwdcDataCache: () => wwdcDataCache
+});
+function generateUrlCacheKey(url2, params) {
+  let key = url2;
+  if (params) {
+    const sortedParams = Object.keys(params).sort().map((k) => `${k}=${JSON.stringify(params[k])}`).join("&");
+    key += `?${sortedParams}`;
+  }
+  return key;
+}
+function generateEnhancedCacheKey(url2, options) {
+  return generateUrlCacheKey(url2, options);
+}
+function cached2(cache, keyGenerator, ttl) {
+  return function(_target, _propertyName, descriptor) {
+    const method = descriptor.value;
+    descriptor.value = async function(...args) {
+      const key = keyGenerator(...args);
+      return cache.getOrSet(
+        key,
+        () => method.apply(this, args),
+        ttl
+      );
+    };
+  };
+}
+function withCache(cache, keyGenerator, ttl) {
+  return function(_target, _propertyName, descriptor) {
+    if (!descriptor) {
+      throw new Error("withCache decorator requires a method descriptor");
+    }
+    const method = descriptor.value;
+    if (!method) {
+      throw new Error("withCache decorator can only be applied to methods");
+    }
+    const isAsync = method.constructor.name === "AsyncFunction";
+    descriptor.value = function(...args) {
+      const key = keyGenerator ? keyGenerator(...args) : JSON.stringify(args);
+      const cached3 = cache.get(key);
+      if (cached3 !== void 0) {
+        return cached3;
+      }
+      const result = method.apply(this, args);
+      if (isAsync || result instanceof Promise) {
+        return Promise.resolve(result).then((data2) => {
+          cache.set(key, data2, ttl);
+          return data2;
+        }).catch((error62) => {
+          throw error62;
+        });
+      } else {
+        cache.set(key, result, ttl);
+        return result;
+      }
+    };
+    return descriptor;
+  };
+}
+function getCacheInstance(name, maxSize, defaultTTL) {
+  if (!cacheInstances.has(name)) {
+    cacheInstances.set(name, new MemoryCache(maxSize, defaultTTL));
+  }
+  return cacheInstances.get(name);
+}
+var MemoryCache, apiCache, searchCache, indexCache, technologiesCache, updatesCache, sampleCodeCache, technologyOverviewsCache, designContentCache, designResourcesCache, wwdcDataCache, cacheInstances;
+var init_cache = __esm({
+  "src/utils/cache.ts"() {
+    "use strict";
+    init_constants();
+    MemoryCache = class {
+      cache = /* @__PURE__ */ new Map();
+      maxSize;
+      defaultTTL;
+      hits = 0;
+      misses = 0;
+      constructor(maxSize = 1e3, defaultTTL = 30 * 60 * 1e3) {
+        this.maxSize = maxSize;
+        this.defaultTTL = defaultTTL;
+        setInterval(() => this.cleanup(), 5 * 60 * 1e3).unref();
+      }
+      /**
+       * Get the current size of the cache
+       */
+      size() {
+        return this.cache.size;
+      }
+      /**
+       * Get all entries as array of [key, value] pairs
+       */
+      entries() {
+        const result = [];
+        const now = Date.now();
+        for (const [key, entry] of this.cache.entries()) {
+          if (now - entry.timestamp <= entry.ttl) {
+            result.push([key, entry.data]);
+          }
+        }
+        return result;
+      }
+      /**
+       * Get value from cache
+       */
+      get(key) {
+        const entry = this.cache.get(key);
+        if (!entry) {
+          this.misses++;
+          return void 0;
+        }
+        if (Date.now() - entry.timestamp > entry.ttl) {
+          this.cache.delete(key);
+          this.misses++;
+          return void 0;
+        }
+        this.hits++;
+        return entry.data;
+      }
+      /**
+       * Set value in cache
+       */
+      set(key, value, ttl) {
+        if (this.cache.size >= this.maxSize) {
+          const firstKey = this.cache.keys().next().value;
+          if (firstKey) {
+            this.cache.delete(firstKey);
+          }
+        }
+        this.cache.set(key, {
+          data: value,
+          timestamp: Date.now(),
+          ttl: ttl ?? this.defaultTTL
+        });
+      }
+      /**
+       * Check if key exists and is not expired
+       */
+      has(key) {
+        return this.get(key) !== void 0;
+      }
+      /**
+       * Delete entry from cache
+       */
+      delete(key) {
+        return this.cache.delete(key);
+      }
+      /**
+       * Clear all cache entries
+       */
+      clear() {
+        this.cache.clear();
+      }
+      /**
+       * Clean up expired entries
+       */
+      cleanup() {
+        const now = Date.now();
+        for (const [key, entry] of this.cache.entries()) {
+          if (now - entry.timestamp > entry.ttl) {
+            this.cache.delete(key);
+          }
+        }
+      }
+      /**
+       * Get cache statistics
+       */
+      getStats() {
+        const total = this.hits + this.misses;
+        const hitRate = total > 0 ? (this.hits / total * 100).toFixed(2) + "%" : "0.00%";
+        return {
+          size: this.cache.size,
+          maxSize: this.maxSize,
+          hitRate,
+          hits: this.hits,
+          misses: this.misses
+        };
+      }
+      /**
+       * Get or set with async function
+       */
+      async getOrSet(key, fetchFn, ttl) {
+        const cached3 = this.get(key);
+        if (cached3 !== void 0) {
+          return cached3;
+        }
+        const data2 = await fetchFn();
+        this.set(key, data2, ttl);
+        return data2;
+      }
+    };
+    apiCache = new MemoryCache(CACHE_SIZE.API_DOCS, CACHE_TTL.API_DOCS);
+    searchCache = new MemoryCache(CACHE_SIZE.SEARCH_RESULTS, CACHE_TTL.SEARCH_RESULTS);
+    indexCache = new MemoryCache(CACHE_SIZE.FRAMEWORK_INDEX, CACHE_TTL.FRAMEWORK_INDEX);
+    technologiesCache = new MemoryCache(CACHE_SIZE.TECHNOLOGIES, CACHE_TTL.TECHNOLOGIES);
+    updatesCache = new MemoryCache(CACHE_SIZE.UPDATES, CACHE_TTL.UPDATES);
+    sampleCodeCache = new MemoryCache(CACHE_SIZE.SAMPLE_CODE, CACHE_TTL.SAMPLE_CODE);
+    technologyOverviewsCache = new MemoryCache(
+      CACHE_SIZE.TECHNOLOGY_OVERVIEWS,
+      CACHE_TTL.TECHNOLOGY_OVERVIEWS
+    );
+    designContentCache = new MemoryCache(
+      CACHE_SIZE.DESIGN_CONTENT,
+      CACHE_TTL.DESIGN_CONTENT
+    );
+    designResourcesCache = new MemoryCache(
+      CACHE_SIZE.DESIGN_RESOURCES,
+      CACHE_TTL.DESIGN_RESOURCES
+    );
+    wwdcDataCache = new MemoryCache(100, 30 * 60 * 1e3);
+    cacheInstances = /* @__PURE__ */ new Map();
+  }
+});
+
 // src/types/error.ts
 var AppError;
 var init_error = __esm({
@@ -7801,235 +8030,6 @@ var init_error_handler = __esm({
         ]
       }
     };
-  }
-});
-
-// src/utils/cache.ts
-var cache_exports = {};
-__export(cache_exports, {
-  MemoryCache: () => MemoryCache,
-  apiCache: () => apiCache,
-  cached: () => cached2,
-  designContentCache: () => designContentCache,
-  designResourcesCache: () => designResourcesCache,
-  generateEnhancedCacheKey: () => generateEnhancedCacheKey,
-  generateUrlCacheKey: () => generateUrlCacheKey,
-  getCacheInstance: () => getCacheInstance,
-  indexCache: () => indexCache,
-  sampleCodeCache: () => sampleCodeCache,
-  searchCache: () => searchCache,
-  technologiesCache: () => technologiesCache,
-  technologyOverviewsCache: () => technologyOverviewsCache,
-  updatesCache: () => updatesCache,
-  withCache: () => withCache,
-  wwdcDataCache: () => wwdcDataCache
-});
-function generateUrlCacheKey(url2, params) {
-  let key = url2;
-  if (params) {
-    const sortedParams = Object.keys(params).sort().map((k) => `${k}=${JSON.stringify(params[k])}`).join("&");
-    key += `?${sortedParams}`;
-  }
-  return key;
-}
-function generateEnhancedCacheKey(url2, options) {
-  return generateUrlCacheKey(url2, options);
-}
-function cached2(cache, keyGenerator, ttl) {
-  return function(_target, _propertyName, descriptor) {
-    const method = descriptor.value;
-    descriptor.value = async function(...args) {
-      const key = keyGenerator(...args);
-      return cache.getOrSet(
-        key,
-        () => method.apply(this, args),
-        ttl
-      );
-    };
-  };
-}
-function withCache(cache, keyGenerator, ttl) {
-  return function(_target, _propertyName, descriptor) {
-    if (!descriptor) {
-      throw new Error("withCache decorator requires a method descriptor");
-    }
-    const method = descriptor.value;
-    if (!method) {
-      throw new Error("withCache decorator can only be applied to methods");
-    }
-    const isAsync = method.constructor.name === "AsyncFunction";
-    descriptor.value = function(...args) {
-      const key = keyGenerator ? keyGenerator(...args) : JSON.stringify(args);
-      const cached3 = cache.get(key);
-      if (cached3 !== void 0) {
-        return cached3;
-      }
-      const result = method.apply(this, args);
-      if (isAsync || result instanceof Promise) {
-        return Promise.resolve(result).then((data2) => {
-          cache.set(key, data2, ttl);
-          return data2;
-        }).catch((error62) => {
-          throw error62;
-        });
-      } else {
-        cache.set(key, result, ttl);
-        return result;
-      }
-    };
-    return descriptor;
-  };
-}
-function getCacheInstance(name, maxSize, defaultTTL) {
-  if (!cacheInstances.has(name)) {
-    cacheInstances.set(name, new MemoryCache(maxSize, defaultTTL));
-  }
-  return cacheInstances.get(name);
-}
-var MemoryCache, apiCache, searchCache, indexCache, technologiesCache, updatesCache, sampleCodeCache, technologyOverviewsCache, designContentCache, designResourcesCache, wwdcDataCache, cacheInstances;
-var init_cache = __esm({
-  "src/utils/cache.ts"() {
-    "use strict";
-    init_constants();
-    MemoryCache = class {
-      cache = /* @__PURE__ */ new Map();
-      maxSize;
-      defaultTTL;
-      hits = 0;
-      misses = 0;
-      constructor(maxSize = 1e3, defaultTTL = 30 * 60 * 1e3) {
-        this.maxSize = maxSize;
-        this.defaultTTL = defaultTTL;
-        setInterval(() => this.cleanup(), 5 * 60 * 1e3).unref();
-      }
-      /**
-       * Get the current size of the cache
-       */
-      size() {
-        return this.cache.size;
-      }
-      /**
-       * Get all entries as array of [key, value] pairs
-       */
-      entries() {
-        const result = [];
-        const now = Date.now();
-        for (const [key, entry] of this.cache.entries()) {
-          if (now - entry.timestamp <= entry.ttl) {
-            result.push([key, entry.data]);
-          }
-        }
-        return result;
-      }
-      /**
-       * Get value from cache
-       */
-      get(key) {
-        const entry = this.cache.get(key);
-        if (!entry) {
-          this.misses++;
-          return void 0;
-        }
-        if (Date.now() - entry.timestamp > entry.ttl) {
-          this.cache.delete(key);
-          this.misses++;
-          return void 0;
-        }
-        this.hits++;
-        return entry.data;
-      }
-      /**
-       * Set value in cache
-       */
-      set(key, value, ttl) {
-        if (this.cache.size >= this.maxSize) {
-          const firstKey = this.cache.keys().next().value;
-          if (firstKey) {
-            this.cache.delete(firstKey);
-          }
-        }
-        this.cache.set(key, {
-          data: value,
-          timestamp: Date.now(),
-          ttl: ttl ?? this.defaultTTL
-        });
-      }
-      /**
-       * Check if key exists and is not expired
-       */
-      has(key) {
-        return this.get(key) !== void 0;
-      }
-      /**
-       * Delete entry from cache
-       */
-      delete(key) {
-        return this.cache.delete(key);
-      }
-      /**
-       * Clear all cache entries
-       */
-      clear() {
-        this.cache.clear();
-      }
-      /**
-       * Clean up expired entries
-       */
-      cleanup() {
-        const now = Date.now();
-        for (const [key, entry] of this.cache.entries()) {
-          if (now - entry.timestamp > entry.ttl) {
-            this.cache.delete(key);
-          }
-        }
-      }
-      /**
-       * Get cache statistics
-       */
-      getStats() {
-        const total = this.hits + this.misses;
-        const hitRate = total > 0 ? (this.hits / total * 100).toFixed(2) + "%" : "0.00%";
-        return {
-          size: this.cache.size,
-          maxSize: this.maxSize,
-          hitRate,
-          hits: this.hits,
-          misses: this.misses
-        };
-      }
-      /**
-       * Get or set with async function
-       */
-      async getOrSet(key, fetchFn, ttl) {
-        const cached3 = this.get(key);
-        if (cached3 !== void 0) {
-          return cached3;
-        }
-        const data2 = await fetchFn();
-        this.set(key, data2, ttl);
-        return data2;
-      }
-    };
-    apiCache = new MemoryCache(CACHE_SIZE.API_DOCS, CACHE_TTL.API_DOCS);
-    searchCache = new MemoryCache(CACHE_SIZE.SEARCH_RESULTS, CACHE_TTL.SEARCH_RESULTS);
-    indexCache = new MemoryCache(CACHE_SIZE.FRAMEWORK_INDEX, CACHE_TTL.FRAMEWORK_INDEX);
-    technologiesCache = new MemoryCache(CACHE_SIZE.TECHNOLOGIES, CACHE_TTL.TECHNOLOGIES);
-    updatesCache = new MemoryCache(CACHE_SIZE.UPDATES, CACHE_TTL.UPDATES);
-    sampleCodeCache = new MemoryCache(CACHE_SIZE.SAMPLE_CODE, CACHE_TTL.SAMPLE_CODE);
-    technologyOverviewsCache = new MemoryCache(
-      CACHE_SIZE.TECHNOLOGY_OVERVIEWS,
-      CACHE_TTL.TECHNOLOGY_OVERVIEWS
-    );
-    designContentCache = new MemoryCache(
-      CACHE_SIZE.DESIGN_CONTENT,
-      CACHE_TTL.DESIGN_CONTENT
-    );
-    designResourcesCache = new MemoryCache(
-      CACHE_SIZE.DESIGN_RESOURCES,
-      CACHE_TTL.DESIGN_RESOURCES
-    );
-    wwdcDataCache = new MemoryCache(100, 30 * 60 * 1e3);
-    cacheInstances = /* @__PURE__ */ new Map();
   }
 });
 
@@ -9191,6 +9191,36 @@ var init_http_client = __esm({
           const appError = handleFetchError(error62, url2);
           throw appError;
         }
+      }
+      /**
+       * Make a POST request (string body) with the same queue, rate limit, timeout,
+       * retry/backoff and User-Agent rotation as get(). Returns the raw Response so the
+       * caller can stream the body. The timeout covers the whole retry sequence but its timer
+       * is cleared once headers arrive, so a caller that streams the body must pass its own
+       * `signal` to bound the body read too. Retrying is only safe for idempotent POSTs
+       * (e.g. read-only search queries).
+       */
+      async post(url2, body, options = {}) {
+        const {
+          timeout = REQUEST_CONFIG.TIMEOUT,
+          retries = REQUEST_CONFIG.MAX_RETRIES,
+          retryDelay = REQUEST_CONFIG.RETRY_DELAY,
+          headers = {},
+          signal
+        } = options;
+        return this.executeWithQueue(async () => {
+          if (!globalRateLimiter.canMakeRequest()) {
+            throw new Error("Rate limit exceeded. Please try again later.");
+          }
+          const requestHeaders = await this.generateRequestHeaders(headers, "application/json");
+          const fetchSignalHolder = createFetchSignal(timeout, () => this.createAbortError(), signal);
+          return this.fetchWithRetry(url2, {
+            method: "POST",
+            headers: requestHeaders,
+            body,
+            signal: fetchSignalHolder.signal
+          }, retries, retryDelay, false, signal).finally(() => fetchSignalHolder.cleanup());
+        });
       }
       /**
        * Fetch with retry logic, performance monitoring, and User-Agent rotation
@@ -34681,7 +34711,9 @@ function formatSearchResultsResponse(results, query, searchUrl, filterType = "al
 
 // src/tools/apple-search-api.ts
 init_constants();
+init_cache();
 init_error_handler();
+init_http_client();
 init_logger();
 
 // src/tools/search-result-parser.ts
@@ -34791,6 +34823,11 @@ async function readJsonlBody(response) {
   return full;
 }
 async function fetchAppleDocsSearch(query, filterType, searchUrl) {
+  const cacheKey = `search:${filterType}:${query}`;
+  const cached3 = searchCache.get(cacheKey);
+  if (cached3) {
+    return cached3;
+  }
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_CONFIG.TIMEOUT);
   try {
@@ -34803,20 +34840,15 @@ async function fetchAppleDocsSearch(query, filterType, searchUrl) {
     if (searchScope) {
       requestBody.searchScope = searchScope;
     }
-    const response = await fetch(SEARCH_API_URL, {
-      method: "POST",
+    const response = await httpClient.post(SEARCH_API_URL, JSON.stringify(requestBody), {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/jsonl",
         Origin: "https://developer.apple.com",
         Referer: searchUrl
       },
-      body: JSON.stringify(requestBody),
       signal: controller.signal
     });
-    if (!response.ok) {
-      throw new Error(`Apple search API returned ${response.status}`);
-    }
     const jsonl = await readJsonlBody(response);
     const rawResults = reconstructResults(jsonl);
     const results = [];
@@ -34834,6 +34866,7 @@ async function fetchAppleDocsSearch(query, filterType, searchUrl) {
         `Apple search response format changed: ${rawResults.length} items, none parseable`
       );
     }
+    searchCache.set(cacheKey, results);
     return results;
   } catch (error62) {
     logger.error("Apple search API request failed:", error62);
@@ -35443,7 +35476,7 @@ init_search_framework_symbols();
 var toolDefinitions = [
   {
     name: "search_apple_docs",
-    description: "Search Apple Developer Documentation for APIs, frameworks, guides, and samples. Best for finding specific APIs, classes, or methods. For browsing sample code projects, use get_sample_code. For WWDC videos, use the dedicated WWDC tools (list_wwdc_videos, search_wwdc_content).",
+    description: "Search Apple Developer Documentation for APIs, frameworks, guides, and samples. Best for finding specific APIs, classes, or methods. Latency: typically 5-25 seconds (median about 10) because Apple streams the full result set; repeated identical queries are cached for 10 minutes. For browsing sample code projects, use get_sample_code. For WWDC videos, use the dedicated WWDC tools (list_wwdc_videos, search_wwdc_content).",
     inputSchema: {
       type: "object",
       properties: {

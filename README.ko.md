@@ -72,6 +72,7 @@ Claude Code는 플러그인 MCP 서버의 도구에 네임스페이스를 붙이
 
 - **서버가 시작되지 않거나 `/mcp`에 실패로 표시되나요?** Claude Code는 `node` 명령으로 서버를 실행합니다. GUI 앱은 셸의 `PATH`를 상속하지 않을 수 있습니다. 터미널에서 `which node`를 실행하고, 해당 디렉터리가 Claude Code를 시작하는 프로세스의 `PATH`에 포함되어 있는지 확인하세요. 플러그인에는 Node.js 22 이상이 필요합니다.
 - **`search_apple_docs`가 아무것도 반환하지 않거나 오류가 나나요?** developer.apple.com의 검색 페이지가 내부적으로 사용하는 비공개 Apple 검색 백엔드(`devintserv.msc.sbz.apple.com`)에 의존합니다. Apple이 응답 형식을 변경하면 이 플러그인이 따라잡을 때까지 `search_apple_docs`가 동작하지 않을 수 있습니다. `get_apple_doc_content`, `search_framework_symbols` 및 WWDC 도구는 이 엔드포인트에 의존하지 않으므로 계속 동작합니다.
+- **`search_apple_docs`가 느린가요?** Apple이 전체 결과를 스트리밍으로 보내므로 검색에는 보통 5~25초(중앙값 약 10초)가 걸립니다. 10분 이내에 같은 쿼리를 반복하면 로컬 캐시에서 응답합니다.
 
 ## 사용 예제
 

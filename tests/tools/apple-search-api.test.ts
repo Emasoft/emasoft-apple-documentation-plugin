@@ -10,6 +10,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { fetchAppleDocsSearch } from '../../src/tools/apple-search-api.js';
+import { searchCache } from '../../src/utils/cache.js';
 
 const fixturesDir = join(__dirname, '..', 'fixtures');
 const loadFixture = (name: string) => readFileSync(join(fixturesDir, name), 'utf-8');
@@ -28,6 +29,9 @@ function mockJsonlResponse(jsonl: string) {
 describe('fetchAppleDocsSearch', () => {
   beforeEach(() => {
     mockFetch.mockReset();
+    // searchCache is a process-wide singleton: without this, the second test using the
+    // same query would be answered from cache and never reach the mocked fetch.
+    searchCache.clear();
   });
 
   it('finds an exact-match symbol (NavigationStack)', async () => {
@@ -62,7 +66,9 @@ describe('fetchAppleDocsSearch', () => {
   });
 
   it('surfaces a fetch error instead of silently returning 0 results', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
+    // 404 is the one status httpClient never retries; a 5xx would sit through the full
+    // 1s+2s+4s backoff before surfacing.
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 404, statusText: 'Not Found' });
 
     await expect(fetchAppleDocsSearch('NavigationStack', 'all', searchUrl)).rejects.toBeDefined();
   });
@@ -88,5 +94,59 @@ describe('fetchAppleDocsSearch', () => {
     await expect(fetchAppleDocsSearch('NavigationStack', 'all', searchUrl)).rejects.toMatchObject(
       { message: expect.stringMatching(/format changed/) },
     );
+  });
+
+  it('sends the query as a POST with a browser User-Agent through httpClient', async () => {
+    mockJsonlResponse(loadFixture('apple-search-navigationstack.jsonl'));
+
+    await fetchAppleDocsSearch('NavigationStack', 'all', searchUrl);
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(url).toBe('https://devintserv.msc.sbz.apple.com/api/v1/query');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body).text).toBe('NavigationStack');
+    expect(init.headers['User-Agent']).toMatch(/Mozilla/);
+    expect(init.headers.Referer).toBe(searchUrl);
+  });
+
+  it('retries after a transient network failure and then succeeds', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('network down'));
+    mockJsonlResponse(loadFixture('apple-search-navigationstack.jsonl'));
+
+    const results = await fetchAppleDocsSearch('NavigationStack', 'all', searchUrl);
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(results.find(r => r.title === 'NavigationStack')).toBeDefined();
+  });
+
+  it('serves a repeated identical query from searchCache without a second network call', async () => {
+    mockJsonlResponse(loadFixture('apple-search-navigationstack.jsonl'));
+
+    const first = await fetchAppleDocsSearch('NavigationStack', 'all', searchUrl);
+    const second = await fetchAppleDocsSearch('NavigationStack', 'all', searchUrl);
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(second).toEqual(first);
+  });
+
+  it('does not share cache entries between different filter types', async () => {
+    mockJsonlResponse(loadFixture('apple-search-navigationstack.jsonl'));
+    mockJsonlResponse(loadFixture('apple-search-navigationstack.jsonl'));
+
+    await fetchAppleDocsSearch('NavigationStack', 'all', searchUrl);
+    await fetchAppleDocsSearch('NavigationStack', 'documentation', searchUrl);
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not cache a failed search', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 404, statusText: 'Not Found' });
+    await expect(fetchAppleDocsSearch('NavigationStack', 'all', searchUrl)).rejects.toBeDefined();
+
+    mockJsonlResponse(loadFixture('apple-search-navigationstack.jsonl'));
+    const results = await fetchAppleDocsSearch('NavigationStack', 'all', searchUrl);
+
+    expect(results.length).toBeGreaterThan(0);
   });
 });

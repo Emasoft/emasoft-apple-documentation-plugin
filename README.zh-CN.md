@@ -72,6 +72,7 @@ Claude Code 会为插件 MCP 服务器的工具添加命名空间，因此工具
 
 - **服务器无法启动，或 `/mcp` 显示失败？** Claude Code 使用命令 `node` 启动服务器。GUI 应用不一定会继承 shell 的 `PATH`：请在终端运行 `which node`，并确认该目录在启动 Claude Code 的进程的 `PATH` 中。插件需要 Node.js 22 或更高版本。
 - **`search_apple_docs` 没有返回结果或报错？** 它依赖 developer.apple.com 搜索页面内部使用的未公开 Apple 搜索后端（`devintserv.msc.sbz.apple.com`）。如果 Apple 更改了响应格式，在本插件跟进之前 `search_apple_docs` 可能无法工作。`get_apple_doc_content`、`search_framework_symbols` 和 WWDC 工具不依赖该端点，仍可正常使用。
+- **`search_apple_docs` 很慢？** Apple 以流式方式返回完整结果集，因此一次搜索通常需要 5 到 25 秒（中位数约 10 秒）。10 分钟内重复相同查询会直接使用本地缓存。
 
 ## 使用示例
 

@@ -72,6 +72,7 @@ Claude Code はプラグインの MCP サーバーのツールに名前空間を
 
 - **サーバーが起動しない、または `/mcp` で失敗と表示される?** Claude Code はコマンド `node` でサーバーを起動します。GUI アプリはシェルの `PATH` を継承しないことがあります。ターミナルで `which node` を実行し、そのディレクトリが Claude Code を起動するプロセスの `PATH` に含まれていることを確認してください。プラグインには Node.js 22 以降が必要です。
 - **`search_apple_docs` が何も返さない、またはエラーになる?** developer.apple.com の検索ページが内部で使用している、非公開の Apple 検索バックエンド (`devintserv.msc.sbz.apple.com`) に依存しています。Apple がレスポンス形式を変更すると、このプラグインが追従するまで `search_apple_docs` は動作しなくなることがあります。`get_apple_doc_content`、`search_framework_symbols`、WWDC ツールはこのエンドポイントに依存せず、引き続き動作します。
+- **`search_apple_docs` が遅い?** Apple は結果全体をストリーミングで返すため、検索には通常 5〜25 秒 (中央値は約 10 秒) かかります。10 分以内に同じクエリを繰り返すと、ローカルキャッシュから返されます。
 
 ## 使用例
 

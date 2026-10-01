@@ -12,7 +12,9 @@
  * HTML or re-implementing the site's own JS rendering.
  */
 import { REQUEST_CONFIG, API_LIMITS } from '../utils/constants.js';
+import { searchCache } from '../utils/cache.js';
 import { handleFetchError } from '../utils/error-handler.js';
+import { httpClient } from '../utils/http-client.js';
 import { logger } from '../utils/logger.js';
 import type { ApiResultItem, SearchResult } from './search-result-parser.js';
 import { parseSearchResult } from './search-result-parser.js';
@@ -25,6 +27,10 @@ import { parseSearchResult } from './search-result-parser.js';
 // notice. That's why this module fails loudly instead of degrading quietly:
 // see the "none parseable" guard in fetchAppleDocsSearch below, which turns a
 // silent 0-results into a thrown error the moment the shape drifts.
+// The host is deliberately hardcoded (no runtime discovery of SEARCH_CONFIG.api):
+// discovery would add a network fetch per server process, and falling back to this
+// host when discovery fails would be a silent fallback. If Apple moves the backend,
+// the request fails loudly with a clear error instead.
 const SEARCH_API_URL = 'https://devintserv.msc.sbz.apple.com/api/v1/query';
 
 interface SearchScope {
@@ -143,12 +149,30 @@ async function readJsonlBody(response: Response): Promise<string> {
  * Throws the same AppError shape httpClient throws on failure (handleFetchError),
  * so callers keep the fail-fast error handling they already have — a failed
  * search must surface an error, never silently look like "0 results".
+ *
+ * The POST goes through httpClient (queue, rate limit, User-Agent rotation, retry
+ * with backoff on network/5xx errors; it throws on any non-2xx). Results are cached
+ * in searchCache. One AbortController bounds the WHOLE call — retries, backoff
+ * sleeps and the streamed body read — to REQUEST_CONFIG.TIMEOUT, which keeps it
+ * under STDIN_EOF_BACKSTOP_MS (2 x TIMEOUT).
+ *
+ * DECISION (streaming partial results): not implemented. The stream is a diff over
+ * ONE growing JSON document (removeLast/append rewrite earlier text), so the results
+ * array is only valid JSON once the final diff is applied — an earlier snapshot can
+ * be rewritten or cut mid-item. And an MCP tools/call returns a single response, so
+ * a partial snapshot could not reach the client sooner anyway.
  */
 export async function fetchAppleDocsSearch(
   query: string,
   filterType: string,
   searchUrl: string,
 ): Promise<SearchResult[]> {
+  const cacheKey = `search:${filterType}:${query}`;
+  const cached = searchCache.get<SearchResult[]>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_CONFIG.TIMEOUT);
 
@@ -163,21 +187,15 @@ export async function fetchAppleDocsSearch(
       requestBody.searchScope = searchScope;
     }
 
-    const response = await fetch(SEARCH_API_URL, {
-      method: 'POST',
+    const response = await httpClient.post(SEARCH_API_URL, JSON.stringify(requestBody), {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/jsonl',
         Origin: 'https://developer.apple.com',
         Referer: searchUrl,
       },
-      body: JSON.stringify(requestBody),
       signal: controller.signal,
     });
-
-    if (!response.ok) {
-      throw new Error(`Apple search API returned ${response.status}`);
-    }
 
     const jsonl = await readJsonlBody(response);
     const rawResults = reconstructResults(jsonl);
@@ -206,6 +224,7 @@ export async function fetchAppleDocsSearch(
       );
     }
 
+    searchCache.set(cacheKey, results);
     return results;
   } catch (error) {
     logger.error('Apple search API request failed:', error);

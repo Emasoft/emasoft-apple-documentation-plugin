@@ -1,10 +1,10 @@
 ---
 trdd-id: A1DNMJD9
 title: Harden search_apple_docs backend call
-column: todo
+column: testing
 status: tasked
 created: 2026-09-30T20:19:50+0200
-updated: 2026-09-30T20:19:50+0200
+updated: 2026-10-01T06:13:09+0200
 current-owner: main-agent@apple-docs-mcp
 created-by: main-agent@apple-docs-mcp
 task-type: bugfix
@@ -45,19 +45,20 @@ partial results before the stream's searchFinished marker, since
 readJsonlBody currently waits for it before fetchAppleDocsSearch resolves.
 
 Acceptance criteria:
-- [ ] (a) httpClient supports POST; fetchAppleDocsSearch uses it; offline test
+- [x] (a) httpClient supports POST; fetchAppleDocsSearch uses it; offline test
       covers a retried request succeeding after a transient failure.
-- [ ] (b) runtime window.SEARCH_CONFIG.api discovery implemented and cached;
+- [ ] (b) DROPPED 2026-10-01: adds an extra network fetch per server process, and a fallback to the hardcoded host on discovery failure would be a silent fallback (fail-fast rule); without discovery a backend move already fails loudly with a clear error. Original text: runtime window.SEARCH_CONFIG.api discovery implemented and cached;
       offline test covers falling back to the hardcoded default when
       discovery fails, and using the discovered host when it succeeds.
-- [ ] (c) search results are read from and written to searchCache with a
+- [x] (c) search results are read from and written to searchCache with a
       sensible TTL/key; offline test covers a cache hit skipping the network
       call.
-- [ ] (d) latency note added to the tool description and README; a decision
+- [x] (d) latency note added to the tool description and README; a decision
       recorded on whether streaming partial results is feasible.
-- [ ] live check: search_apple_docs still returns real results against the
+- [x] live check: search_apple_docs still returns real results against the
       live Apple endpoint after these changes.
 
 ## Approval log
 
 - 2026-09-30T20:19:50+0200 — MANDATE issued by main-agent@apple-docs-mcp (min-approval-requirement: none). Pre-approved: issuer authority >= required approver. No approval request was sent.
+2026-10-01 — (d) streaming decision: partial results NOT implemented (diff stream rewrites one growing JSON doc, results array valid only at the end; MCP tools/call returns one response anyway). Recorded in src/tools/apple-search-api.ts.
