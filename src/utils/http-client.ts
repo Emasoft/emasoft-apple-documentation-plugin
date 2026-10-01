@@ -33,8 +33,8 @@ interface RequestOptions {
   retries?: number;
   /** Delay between retries in milliseconds */
   retryDelay?: number;
-  /** Redirect handling mode for fetch */
-  redirect?: RequestRedirect;
+  /** Redirect handling mode for fetch (explicit union: the DOM RequestRedirect global only existed via @types/jsdom) */
+  redirect?: 'follow' | 'error' | 'manual';
   /** Return manual redirect responses instead of treating them as failed requests */
   allowManualRedirect?: boolean;
   /** Additional headers to include in the request */

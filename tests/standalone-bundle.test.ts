@@ -145,7 +145,7 @@ describe('standalone plugin bundle', () => {
     expect(text).toContain('https://developer.apple.com/videos/play/wwdc2024/');
   }, 240_000); // WHY 240s (was 30s): three sequential requests each allowed up to 90s
 
-  it('does not bundle jsdom (a devDependency used only by dead extractor code)', () => {
+  it('does not bundle jsdom (removed from the project; guards against it creeping back into the shipped server)', () => {
     expect(readFileSync(committedBundle, 'utf8')).not.toContain('jsdom');
   });
 });

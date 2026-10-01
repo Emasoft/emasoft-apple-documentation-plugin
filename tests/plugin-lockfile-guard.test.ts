@@ -2,7 +2,7 @@
  * Claude Code runs `npm ci` (or bun) in the cached copy of a plugin when the
  * plugin ROOT has package.json plus an npm/bun lockfile. This plugin ships a
  * self-contained bundle and needs no install, so such a lockfile would make
- * Claude Code download every devDependency (jest, typescript, jsdom, ...) on
+ * Claude Code download every devDependency (jest, typescript, eslint, ...) on
  * each user's machine. Development uses pnpm; Claude Code ignores
  * pnpm-lock.yaml.
  */
