@@ -4,7 +4,7 @@ title: Make the fork independent from upstream
 column: blocked
 status: tasked
 created: 2026-09-30T20:14:23+0200
-updated: 2026-10-01T06:51:52+0200
+updated: 2026-10-01T06:52:57+0200
 current-owner: user
 created-by: user
 task-type: infra
@@ -20,8 +20,8 @@ unblock-when: [issue:Emasoft/claude-plugins-validation#238 closed]
 review-after: 2026-10-08
 blocked-by: [GZECHF9J]
 npt: [GZECHF9J]
-blocker-probe: sh -c 'grep -rl is_content_scan_excluded "$HOME/.claude/plugins/cache/emasoft-plugins/claude-plugins-validation" 2>/dev/null'
-blocker-holds-if: not-match:cpv_validation_common
+blocker-probe: sh -c 'T=$(gh api repos/Emasoft/claude-plugins-validation/releases/latest --jq .tag_name) && curl -fsSL "https://raw.githubusercontent.com/Emasoft/claude-plugins-validation/$T/scripts/cpv_validation_common.py" | grep -c is_content_scan_excluded'
+blocker-holds-if: not-match:^[1-9]
 ---
 
 # Make the fork independent from upstream
@@ -82,3 +82,4 @@ Supersedes the Restructure plan section above where they conflict (sub-steps, si
 2026-10-01: Phase 1 sub-steps a, a2, b, c, d, e committed (4ea418c..35ac9be). Phase 2 (first push, hub entry, release) blocked on user decisions: data/wwdc CPV findings, first version, MARKETPLACE_PAT, fastedit fallback, janitor pnpm-workspace proposals, env vs userConfig. Janitor applied branch-protection rulesets to the new repo on 2026-10-01 (required checks may block the first push).
 2026-10-01 later: user said 'go'; Phase 2 handed to the CPV agent. Local commits 27736c2 (pnpm policy), ecd5d55 (JWS redaction), db99b0a (pnpm exceptions pinned to exact versions); nothing pushed. BLOCKED on CPV: cpv.exclude_paths is not honored by CPV 5.22.0's content scanners, so data/wwdc fails CPV strict (246 skillaudit hits). Filed Emasoft/claude-plugins-validation#237; fix PR #238 (secret scanning stays on, component dirs protected) is open, not merged; its Validate job fails only because #234 (integrity-gate change, Validate green) must land first. NEXT: user merges #234 then #238 and releases CPV; then CPV agent resumes Phase 2 at step (3) with cpv.exclude_paths [data] in plugin.json. Alternative if the user prefers: ship data/wwdc as one gzip archive.
 Probe repointed 2026-10-01 to the installed CPV code (review of e83c1aa: a merged #238 alone is not a released, installed fix).
+Probe repointed 2026-10-01 to the latest CPV RELEASE source: publish.py and ci.yml pin CPV by tag via uvx, not the local cache. NEXT once it clears: bump the CPV pin from v5.22.0 to that release tag in scripts/publish.py and .github/workflows/ci.yml (every occurrence), add `"cpv": {"exclude_paths": ["data"]}` to .claude-plugin/plugin.json, then resume Phase 2 at step (3).

@@ -27,6 +27,7 @@ Acceptance:
 - [ ] PR #234 reviewed and merged by the user
 - [ ] PR #238 rebased if needed and merged by the user
 - [ ] CPV released with the exclude_paths fix
+- [ ] CPV release tag containing is_content_scan_excluded is published
 - [ ] Local CPV install updated to the released version
 
 ## Approval log
