@@ -1,10 +1,10 @@
 ---
 trdd-id: A1DNMJD9
 title: Harden search_apple_docs backend call
-column: testing
-status: tasked
+column: complete
+status: archived
 created: 2026-09-30T20:19:50+0200
-updated: 2026-10-01T06:13:09+0200
+updated: 2026-10-01T06:48:19+0200
 current-owner: main-agent@apple-docs-mcp
 created-by: main-agent@apple-docs-mcp
 task-type: bugfix
@@ -15,6 +15,7 @@ mandated-by: none
 approved: true
 approval-judge: main-agent@apple-docs-mcp
 approval-datetime: 2026-09-30T20:19:50+0200
+implementation-commits: [bfad413]
 ---
 
 # Harden search_apple_docs backend call
@@ -47,7 +48,7 @@ readJsonlBody currently waits for it before fetchAppleDocsSearch resolves.
 Acceptance criteria:
 - [x] (a) httpClient supports POST; fetchAppleDocsSearch uses it; offline test
       covers a retried request succeeding after a transient failure.
-- [ ] (b) DROPPED 2026-10-01: adds an extra network fetch per server process, and a fallback to the hardcoded host on discovery failure would be a silent fallback (fail-fast rule); without discovery a backend move already fails loudly with a clear error. Original text: runtime window.SEARCH_CONFIG.api discovery implemented and cached;
+- [~] (b) DROPPED 2026-10-01: adds an extra network fetch per server process, and a fallback to the hardcoded host on discovery failure would be a silent fallback (fail-fast rule); without discovery a backend move already fails loudly with a clear error. Original text: runtime window.SEARCH_CONFIG.api discovery implemented and cached;
       offline test covers falling back to the hardcoded default when
       discovery fails, and using the discovered host when it succeeds.
 - [x] (c) search results are read from and written to searchCache with a
@@ -62,3 +63,5 @@ Acceptance criteria:
 
 - 2026-09-30T20:19:50+0200 — MANDATE issued by main-agent@apple-docs-mcp (min-approval-requirement: none). Pre-approved: issuer authority >= required approver. No approval request was sent.
 2026-10-01 — (d) streaming decision: partial results NOT implemented (diff stream rewrites one growing JSON doc, results array valid only at the end; MCP tools/call returns one response anyway). Recorded in src/tools/apple-search-api.ts.
+2026-10-01 — review: adversarial review fork (no human reviewer); findings resolved (retries intact, translations real, median 9.6 s measured, truncated stream throws rather than caching partial results). Item (b) dropped with the recorded reason.
+- 2026-10-01T06:48:19+0200 — COMPLETE by main-agent@apple-docs-mcp. implemented in bfad413; adversarial review findings resolved; (b) dropped.
