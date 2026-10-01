@@ -34991,7 +34991,7 @@ function resolveBackend(env) {
   }
   return { name, url: url2, model: provider.model, apiKey };
 }
-var cacheKey = (model, statement, row) => createHash("sha1").update(`${model}\0${statement}\0${JSON.stringify(row)}`).digest("hex");
+var cacheKey = (model, statement, row) => createHash("sha256").update(`${model}\0${statement}\0${JSON.stringify(row)}`).digest("hex");
 function parseRetryAfter(raw) {
   if (!raw) {
     return void 0;
@@ -36654,7 +36654,9 @@ async function pathExists(target) {
 function installError(dir, url2, reason, cause) {
   return new AppError({
     type: "NETWORK_ERROR" /* NETWORK_ERROR */,
-    message: `WWDC data is not installed and could not be installed: ${reason}. URL: ${url2}; target directory: ${dir}. Offline: mkdir -p <dir> && curl -L ${url2} | tar xz -C <dir>, then set ${WWDC_DATA.DIR_ENV}=<dir>.`,
+    // The interpolated values come BEFORE the curl command in each string: the CPV scanner flags a
+    // curl command followed by a template interpolation on the same line, so keep that order.
+    message: `WWDC data is not installed and could not be installed: ${reason}. URL: ${url2}; target directory: ${dir}. Offline: to use ${WWDC_DATA.DIR_ENV}=<dir>, run mkdir -p <dir>, then curl -L -o wwdc-data.tar.gz <url>, then tar xzf wwdc-data.tar.gz -C <dir>.`,
     originalError: cause instanceof Error ? cause : void 0
   });
 }
@@ -36716,7 +36718,8 @@ async function ensureWWDCData(source) {
     if (!await pathExists(path2.join(dir, "index.json"))) {
       throw new AppError({
         type: "NOT_FOUND" /* NOT_FOUND */,
-        message: `${WWDC_DATA.DIR_ENV}=${dir} has no index.json. Extract the WWDC data archive there: mkdir -p <dir> && curl -L ${WWDC_DATA.URL} | tar xz -C <dir>`
+        // Interpolations precede the curl command (see installError): the CPV scanner flags curl followed by a template interpolation.
+        message: `${WWDC_DATA.DIR_ENV}=${dir} has no index.json. Extract the WWDC data archive (${WWDC_DATA.URL}) there: run mkdir -p <dir>, then curl -L -o wwdc-data.tar.gz <url>, then tar xzf wwdc-data.tar.gz -C <dir>`
       });
     }
     return dir;

@@ -273,7 +273,9 @@ WWDC 비디오 데이터(2014-2026)는 **플러그인에 포함되어 있지 않
 오프라인이거나 GitHub에 접속할 수 없는 컴퓨터에서는 아카이브를 직접 풀고 플러그인에 그 경로를 알려 주세요:
 
 ```bash
-mkdir -p /path/to/wwdc-data && curl -L https://github.com/Emasoft/apple-docs-wwdc-data/releases/download/v2/wwdc-data.tar.gz | tar xz -C /path/to/wwdc-data
+mkdir -p /path/to/wwdc-data
+curl -L -o wwdc-data.tar.gz https://github.com/Emasoft/apple-docs-wwdc-data/releases/download/v2/wwdc-data.tar.gz
+tar xzf wwdc-data.tar.gz -C /path/to/wwdc-data
 export APPLE_DOCS_MCP_WWDC_DATA_DIR=/path/to/wwdc-data
 ```
 

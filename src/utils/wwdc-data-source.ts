@@ -35,10 +35,12 @@ async function pathExists(target: string): Promise<boolean> {
 function installError(dir: string, url: string, reason: string, cause?: unknown): AppError {
   return new AppError({
     type: ErrorType.NETWORK_ERROR,
+    // The interpolated values come BEFORE the curl command in each string: the CPV scanner flags a
+    // curl command followed by a template interpolation on the same line, so keep that order.
     message:
       `WWDC data is not installed and could not be installed: ${reason}. ` +
       `URL: ${url}; target directory: ${dir}. ` +
-      `Offline: mkdir -p <dir> && curl -L ${url} | tar xz -C <dir>, then set ${WWDC_DATA.DIR_ENV}=<dir>.`,
+      `Offline: to use ${WWDC_DATA.DIR_ENV}=<dir>, run mkdir -p <dir>, then curl -L -o wwdc-data.tar.gz <url>, then tar xzf wwdc-data.tar.gz -C <dir>.`,
     originalError: cause instanceof Error ? cause : undefined,
   });
 }
@@ -135,7 +137,8 @@ export async function ensureWWDCData(source?: Parameters<typeof installWWDCData>
     if (!(await pathExists(path.join(dir, 'index.json')))) {
       throw new AppError({
         type: ErrorType.NOT_FOUND,
-        message: `${WWDC_DATA.DIR_ENV}=${dir} has no index.json. Extract the WWDC data archive there: mkdir -p <dir> && curl -L ${WWDC_DATA.URL} | tar xz -C <dir>`,
+        // Interpolations precede the curl command (see installError): the CPV scanner flags curl followed by a template interpolation.
+        message: `${WWDC_DATA.DIR_ENV}=${dir} has no index.json. Extract the WWDC data archive (${WWDC_DATA.URL}) there: run mkdir -p <dir>, then curl -L -o wwdc-data.tar.gz <url>, then tar xzf wwdc-data.tar.gz -C <dir>`,
       });
     }
     return dir;

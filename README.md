@@ -287,7 +287,9 @@ The WWDC video data (2014-2026) is **not shipped with the plugin**. The first ca
 To install the data offline or on a machine without access to GitHub, extract the archive yourself and point the plugin at it:
 
 ```bash
-mkdir -p /path/to/wwdc-data && curl -L https://github.com/Emasoft/apple-docs-wwdc-data/releases/download/v2/wwdc-data.tar.gz | tar xz -C /path/to/wwdc-data
+mkdir -p /path/to/wwdc-data
+curl -L -o wwdc-data.tar.gz https://github.com/Emasoft/apple-docs-wwdc-data/releases/download/v2/wwdc-data.tar.gz
+tar xzf wwdc-data.tar.gz -C /path/to/wwdc-data
 export APPLE_DOCS_MCP_WWDC_DATA_DIR=/path/to/wwdc-data
 ```
 

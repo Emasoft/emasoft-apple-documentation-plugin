@@ -273,7 +273,9 @@ WWDC ビデオデータ (2014-2026) は**プラグインに同梱されていま
 オフライン環境や GitHub に接続できないマシンでは、アーカイブを自分で展開し、プラグインにそのパスを指定してください:
 
 ```bash
-mkdir -p /path/to/wwdc-data && curl -L https://github.com/Emasoft/apple-docs-wwdc-data/releases/download/v2/wwdc-data.tar.gz | tar xz -C /path/to/wwdc-data
+mkdir -p /path/to/wwdc-data
+curl -L -o wwdc-data.tar.gz https://github.com/Emasoft/apple-docs-wwdc-data/releases/download/v2/wwdc-data.tar.gz
+tar xzf wwdc-data.tar.gz -C /path/to/wwdc-data
 export APPLE_DOCS_MCP_WWDC_DATA_DIR=/path/to/wwdc-data
 ```
 

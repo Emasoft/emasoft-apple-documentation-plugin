@@ -282,7 +282,9 @@ WWDC 视频数据 (2014-2026) **不随插件发布**。首次调用 WWDC 工具�
 要离线安装，或在无法访问 GitHub 的机器上安装，请自行解压压缩包并让插件指向它：
 
 ```bash
-mkdir -p /path/to/wwdc-data && curl -L https://github.com/Emasoft/apple-docs-wwdc-data/releases/download/v2/wwdc-data.tar.gz | tar xz -C /path/to/wwdc-data
+mkdir -p /path/to/wwdc-data
+curl -L -o wwdc-data.tar.gz https://github.com/Emasoft/apple-docs-wwdc-data/releases/download/v2/wwdc-data.tar.gz
+tar xzf wwdc-data.tar.gz -C /path/to/wwdc-data
 export APPLE_DOCS_MCP_WWDC_DATA_DIR=/path/to/wwdc-data
 ```
 

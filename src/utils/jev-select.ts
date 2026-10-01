@@ -122,7 +122,7 @@ function resolveBackend(env: NodeJS.ProcessEnv): Backend {
 }
 
 const cacheKey = (model: string, statement: string, row: JevRow): string =>
-  createHash('sha1').update(`${model}\0${statement}\0${JSON.stringify(row)}`).digest('hex');
+  createHash('sha256').update(`${model}\0${statement}\0${JSON.stringify(row)}`).digest('hex');
 
 /** Retry-After in ms: delta-seconds or an HTTP date; undefined when absent or unparsable. */
 function parseRetryAfter(raw: string | null): number | undefined {
