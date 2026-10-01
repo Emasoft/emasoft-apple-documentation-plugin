@@ -313,8 +313,25 @@ The server reads these optional environment variables when it starts. Set them i
 | `DISABLE_SEC_FETCH` | Set to `true` to drop the Sec-Fetch-* headers | Off |
 | `DISABLE_DNT` | Set to `true` to drop the DNT header | Off |
 | `SIMPLE_HEADERS_MODE` | Set to `true` to send minimal request headers | Off |
+| `APPLE_DOCS_MCP_JEV_RERANK` | Set to `1` to turn on Jev semantic selection by default (see below) | Off |
+| `APPLE_DOCS_MCP_JEV_PROVIDER` | Jev provider: `typesafe`, `openrouter` or `gateway`; required when Jev is enabled | None |
+| `TYPESAFE_API_KEY` | API key for the `typesafe` provider | None |
+| `OPENROUTER_API_KEY` | API key for the `openrouter` provider | None |
+| `JEV_GATEWAY_URL`, `JEV_GATEWAY_API_KEY` | URL and API key for the `gateway` provider | None |
 
 The server includes a pool of 12+ pre-configured UserAgent strings (Chrome, Firefox, Safari and Edge on macOS, Windows and Linux) that it rotates with automatic failure recovery.
+
+### Jev semantic selection (optional, paid)
+
+`search_wwdc_content` and `search_apple_docs` can use the Jev relevance-scoring service to narrow their results to the 1-5 that best match the query, each printed with a relevance score. It is off by default. To enable it, set `APPLE_DOCS_MCP_JEV_RERANK=1`, choose a provider with `APPLE_DOCS_MCP_JEV_PROVIDER` and set that provider's key (`TYPESAFE_API_KEY`, `OPENROUTER_API_KEY`, or `JEV_GATEWAY_URL` plus `JEV_GATEWAY_API_KEY`).
+
+- **Parameters:** both tools accept `select` (`true` or `false`; the default follows `APPLE_DOCS_MCP_JEV_RERANK`) and `maxResults` (1-5, default 5, ignored when selection is off). `select: true` while Jev is not enabled is an error. If no result scores above the relevance threshold, the single best result is returned with a "No strong match" warning.
+- **`limit` in `search_wwdc_content`:** with selection on, `limit` is the recall width: that many videos, ranked by match count, are scored by Jev (maximum 256). When `limit` is omitted, every candidate up to 256 is scored. With selection off, `limit` keeps its meaning (default 20, maximum 100). When the scan matched more videos than were scored, the header reads "Selected N of M scored (of T matching)".
+- **What is sent, and to whom:** with selection on, the query and, for each candidate, its title, summary (Apple documentation results only), URL, topics and, for WWDC, an excerpt of its first match (transcript or code) are sent to the provider you chose: `api.typesafe.ai` for `typesafe`, `openrouter.ai` for `openrouter`, or the URL in `JEV_GATEWAY_URL` for `gateway`, together with your API key. Nothing is sent when selection is off.
+- **Cost:** it is a paid service, billed by the provider to your key. Measured order of magnitude: about $0.0001 for about 17 Apple documentation results, about $0.001 for about 90 WWDC candidates, up to about $0.003 at the 256-candidate maximum. A call adds up to about 15 seconds of latency.
+- **Fail fast:** when selection is on, any failure (a missing key, an invalid provider, a network or provider error after retries) returns an error instead of unranked results. Pass `select: false` to get the unfiltered results.
+
+The selection design is ported from [jgrep](https://github.com/kyu1204/jgrep) (MIT).
 
 ## Development
 

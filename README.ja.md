@@ -299,8 +299,25 @@ emasoft-apple-documentation-plugin/
 | `DISABLE_SEC_FETCH` | `true` に設定すると Sec-Fetch-* ヘッダーを送信しない | オフ |
 | `DISABLE_DNT` | `true` に設定すると DNT ヘッダーを送信しない | オフ |
 | `SIMPLE_HEADERS_MODE` | `true` に設定すると最小限のリクエストヘッダーを送信 | オフ |
+| `APPLE_DOCS_MCP_JEV_RERANK` | `1` に設定すると Jev セマンティック選択をデフォルトで有効化 (下記参照) | オフ |
+| `APPLE_DOCS_MCP_JEV_PROVIDER` | Jev プロバイダー: `typesafe`、`openrouter`、`gateway`。Jev を有効にする場合は必須 | なし |
+| `TYPESAFE_API_KEY` | `typesafe` プロバイダー用の API キー | なし |
+| `OPENROUTER_API_KEY` | `openrouter` プロバイダー用の API キー | なし |
+| `JEV_GATEWAY_URL`、`JEV_GATEWAY_API_KEY` | `gateway` プロバイダー用の URL と API キー | なし |
 
 サーバーには 12 種類以上の設定済み UserAgent 文字列 (macOS、Windows、Linux 上の Chrome、Firefox、Safari、Edge) のプールが含まれ、自動障害回復を伴ってローテーションします。
+
+### Jev セマンティック選択 (オプション、有料)
+
+`search_wwdc_content` と `search_apple_docs` は、Jev 関連度スコアリングサービスを使って結果をクエリに最も合致する 1〜5 件に絞り込み、それぞれに関連度スコアを付けて表示できます。デフォルトではオフです。有効にするには、`APPLE_DOCS_MCP_JEV_RERANK=1` を設定し、`APPLE_DOCS_MCP_JEV_PROVIDER` でプロバイダーを選び、そのプロバイダーのキー (`TYPESAFE_API_KEY`、`OPENROUTER_API_KEY`、または `JEV_GATEWAY_URL` と `JEV_GATEWAY_API_KEY`) を設定します。
+
+- **パラメーター:** 両ツールとも `select` (`true` または `false`。デフォルトは `APPLE_DOCS_MCP_JEV_RERANK` に従います) と `maxResults` (1〜5、デフォルト 5、選択がオフのときは無視されます) を受け付けます。Jev が有効でないときの `select: true` はエラーです。関連度のしきい値を超える結果がない場合は、最も良い 1 件が「No strong match」の警告付きで返されます。
+- **`search_wwdc_content` の `limit`:** 選択がオンのとき、`limit` はリコール幅になります。一致数の順に並べた上位その本数のビデオが Jev でスコアリングされます (最大 256)。`limit` を省略すると、256 件までのすべての候補がスコアリングされます。選択がオフのときの `limit` は従来どおりです (デフォルト 20、最大 100)。スキャンで一致したビデオがスコアリングした数より多い場合、ヘッダーは「Selected N of M scored (of T matching)」と表示されます。
+- **送信される内容と送信先:** 選択がオンのとき、クエリと、各候補のタイトル、概要 (Apple ドキュメントの結果のみ)、URL、トピック、さらに WWDC では最初の一致箇所の抜粋 (文字起こしまたはコード) が、選択したプロバイダーに API キーとともに送信されます。送信先は、`typesafe` では `api.typesafe.ai`、`openrouter` では `openrouter.ai`、`gateway` では `JEV_GATEWAY_URL` の URL です。選択がオフのときは何も送信されません。
+- **コスト:** 有料サービスで、プロバイダーがあなたのキーに課金します。実測の目安: Apple ドキュメントの結果約 17 件で約 $0.0001、WWDC の候補約 90 件で約 $0.001、上限の 256 件で最大約 $0.003 です。1 回の呼び出しで最大約 15 秒の遅延が加わります。
+- **フェイルファスト:** 選択がオンのとき、いかなる失敗 (キーの未設定、無効なプロバイダー、リトライ後のネットワークまたはプロバイダーのエラー) も、順位付けされていない結果ではなくエラーを返します。絞り込まれていない結果が必要な場合は `select: false` を渡してください。
+
+選択の設計は [jgrep](https://github.com/kyu1204/jgrep) (MIT) から移植したものです。
 
 ## 開発
 

@@ -7289,6 +7289,9 @@ var init_constants = __esm({
       MAX_SIMILAR_APIS: 15,
       MAX_FRAMEWORK_DEPTH: 10,
       DEFAULT_FRAMEWORK_DEPTH: 3,
+      // search_wwdc_content: default result count, and the maximum when Jev selection is off
+      WWDC_SEARCH_DEFAULT_LIMIT: 20,
+      WWDC_SEARCH_MAX_LIMIT: 100,
       // Default values for various operations
       DEFAULT_FRAMEWORK_SYMBOLS_LIMIT: 50,
       DEFAULT_DOCUMENTATION_UPDATES_LIMIT: 50,
@@ -36552,6 +36555,7 @@ var getAppleDesignExamplesSchema = external_exports.object({
 });
 
 // src/schemas/wwdc.schemas.ts
+init_constants();
 var listWWDCVideosSchema = external_exports.object({
   year: external_exports.string().optional().describe("Filter by WWDC year"),
   topic: external_exports.string().optional().describe("Filter by topic keyword"),
@@ -36564,8 +36568,10 @@ var searchWWDCContentSchema = external_exports.object({
   year: external_exports.string().optional().describe("Filter by WWDC year"),
   language: external_exports.string().optional().describe("Filter code by language"),
   // No zod default: the handler must tell 'limit omitted' (Jev scores every candidate) from an explicit limit.
-  // Max is the Jev cap; the handler rejects limit > 100 when select is off (that cap is not knowable here).
-  limit: external_exports.number().min(1).max(256).optional().describe("Maximum number of results (default 20, max 100). With select on: the recall width scored by Jev (max 256); omitted = every candidate up to 256"),
+  // Max is the Jev cap; the handler rejects limit > WWDC_SEARCH_MAX_LIMIT when select is off (that cap is not knowable here).
+  limit: external_exports.number().min(1).max(JEV_CONFIG.MAX_CANDIDATES).optional().describe(
+    `Maximum number of results (default ${API_LIMITS.WWDC_SEARCH_DEFAULT_LIMIT}, max ${API_LIMITS.WWDC_SEARCH_MAX_LIMIT}). With select on: the recall width scored by Jev (max ${JEV_CONFIG.MAX_CANDIDATES}); omitted = every candidate up to ${JEV_CONFIG.MAX_CANDIDATES}`
+  ),
   select: external_exports.boolean().optional().describe("Jev semantic selection: keep only the best-matching videos. Default follows APPLE_DOCS_MCP_JEV_RERANK; true while it is not enabled is an error"),
   maxResults: external_exports.number().int().min(1).max(5).default(5).describe("With select on: how many videos to return at most (1-5)")
 });
@@ -36684,6 +36690,7 @@ async function loadVideoData(year, videoId) {
 
 // src/tools/wwdc/wwdc-handlers.ts
 init_constants();
+init_error();
 async function loadVideosData(videoFiles) {
   const videos = [];
   for (const file2 of videoFiles) {
@@ -36758,10 +36765,13 @@ async function handleListWWDCVideos(year, topic, hasCode, limit = 50) {
 async function handleSearchWWDCContent(query, searchIn = "both", year, language, limit, select2, maxResults) {
   try {
     const useJev = resolveSelect(select2);
-    if (!useJev && limit !== void 0 && limit > 100) {
-      throw new Error("limit above 100 needs select on (Jev); with select off the maximum is 100");
+    if (!useJev && limit !== void 0 && limit > API_LIMITS.WWDC_SEARCH_MAX_LIMIT) {
+      throw new AppError({
+        type: "INVALID_INPUT" /* INVALID_INPUT */,
+        message: `limit above ${API_LIMITS.WWDC_SEARCH_MAX_LIMIT} needs select on (Jev); with select off the maximum is ${API_LIMITS.WWDC_SEARCH_MAX_LIMIT}`
+      });
     }
-    const effectiveLimit = limit ?? (useJev ? JEV_CONFIG.MAX_CANDIDATES : 20);
+    const effectiveLimit = limit ?? (useJev ? JEV_CONFIG.MAX_CANDIDATES : API_LIMITS.WWDC_SEARCH_DEFAULT_LIMIT);
     const metadata = await loadGlobalMetadata();
     const queryLower = query.toLowerCase();
     const results = [];
@@ -36820,7 +36830,7 @@ async function handleSearchWWDCContent(query, searchIn = "both", year, language,
       }));
       const jev = await selectWithJev(query, rows, { maxResults, source: "wwdc" });
       const selected = jev.selected.map((s) => ({ ...candidates[s.index], score: s.score }));
-      return formatSearchResults2(selected, query, searchIn, jev.noStrongMatch, jev.scored);
+      return formatSearchResults2(selected, query, searchIn, jev.noStrongMatch, { scored: jev.scored, matching: results.length });
     }
     const limitedResults = results.slice(0, effectiveLimit);
     return formatSearchResults2(limitedResults, query, searchIn);
@@ -37004,7 +37014,7 @@ function formatVideoList(videos, year, topic, hasCode) {
   });
   return content;
 }
-function formatSearchResults2(results, query, searchIn, noStrongMatch = false, scored) {
+function formatSearchResults2(results, query, searchIn, noStrongMatch = false, jevCounts) {
   if (results.length === 0) {
     return `No ${searchIn === "code" ? "code" : searchIn === "transcript" ? "transcript" : "content"} found containing "${query}".`;
   }
@@ -37016,8 +37026,11 @@ function formatSearchResults2(results, query, searchIn, noStrongMatch = false, s
   content += `**Found ${results.length} related videos**
 
 `;
-  if (scored !== void 0) {
-    content += `Selected ${results.length} of ${scored} candidates by relevance (Jev)
+  if (jevCounts) {
+    const { scored, matching } = jevCounts;
+    content += matching > scored ? `Selected ${results.length} of ${scored} scored (of ${matching} matching) by relevance (Jev)
+
+` : `Selected ${results.length} of ${scored} candidates by relevance (Jev)
 
 `;
   }

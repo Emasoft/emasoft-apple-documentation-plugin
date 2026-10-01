@@ -299,8 +299,25 @@ emasoft-apple-documentation-plugin/
 | `DISABLE_SEC_FETCH` | `true`로 설정하면 Sec-Fetch-* 헤더 제외 | 꺼짐 |
 | `DISABLE_DNT` | `true`로 설정하면 DNT 헤더 제외 | 꺼짐 |
 | `SIMPLE_HEADERS_MODE` | `true`로 설정하면 최소한의 요청 헤더 전송 | 꺼짐 |
+| `APPLE_DOCS_MCP_JEV_RERANK` | `1`로 설정하면 Jev 시맨틱 선택을 기본으로 켭니다(아래 참조) | 꺼짐 |
+| `APPLE_DOCS_MCP_JEV_PROVIDER` | Jev 제공자: `typesafe`, `openrouter` 또는 `gateway`. Jev를 켤 때 필수 | 없음 |
+| `TYPESAFE_API_KEY` | `typesafe` 제공자용 API 키 | 없음 |
+| `OPENROUTER_API_KEY` | `openrouter` 제공자용 API 키 | 없음 |
+| `JEV_GATEWAY_URL`, `JEV_GATEWAY_API_KEY` | `gateway` 제공자용 URL과 API 키 | 없음 |
 
 서버에는 12개 이상의 사전 구성된 UserAgent 문자열(macOS, Windows, Linux의 Chrome, Firefox, Safari, Edge) 풀이 포함되어 있으며, 자동 장애 복구와 함께 로테이션됩니다.
+
+### Jev 시맨틱 선택(선택 사항, 유료)
+
+`search_wwdc_content`와 `search_apple_docs`는 Jev 관련도 점수 서비스를 사용해 결과를 쿼리와 가장 잘 맞는 1~5개로 좁히고, 각 결과에 관련도 점수를 함께 표시할 수 있습니다. 기본값은 꺼짐입니다. 켜려면 `APPLE_DOCS_MCP_JEV_RERANK=1`을 설정하고, `APPLE_DOCS_MCP_JEV_PROVIDER`로 제공자를 선택한 다음 해당 제공자의 키(`TYPESAFE_API_KEY`, `OPENROUTER_API_KEY`, 또는 `JEV_GATEWAY_URL`과 `JEV_GATEWAY_API_KEY`)를 설정합니다.
+
+- **매개변수:** 두 도구 모두 `select`(`true` 또는 `false`, 기본값은 `APPLE_DOCS_MCP_JEV_RERANK`를 따름)와 `maxResults`(1~5, 기본값 5, 선택이 꺼져 있으면 무시됨)를 받습니다. Jev가 켜져 있지 않을 때 `select: true`는 오류입니다. 관련도 임계값을 넘는 결과가 없으면 가장 좋은 결과 1개가 "No strong match" 경고와 함께 반환됩니다.
+- **`search_wwdc_content`의 `limit`:** 선택이 켜져 있으면 `limit`은 리콜 폭이 됩니다. 일치 횟수 순으로 정렬한 상위 그 개수의 비디오가 Jev로 점수가 매겨집니다(최대 256). `limit`을 생략하면 256개까지의 모든 후보에 점수를 매깁니다. 선택이 꺼져 있으면 `limit`은 기존 의미를 유지합니다(기본값 20, 최대 100). 스캔에서 일치한 비디오가 점수를 매긴 수보다 많으면 헤더에 "Selected N of M scored (of T matching)"이 표시됩니다.
+- **전송되는 내용과 전송 대상:** 선택이 켜져 있으면 쿼리와 각 후보의 제목, 요약(Apple 문서 결과에만 해당), URL, 주제, 그리고 WWDC의 경우 첫 번째 일치 부분의 발췌(스크립트 또는 코드)가 API 키와 함께 선택한 제공자에게 전송됩니다. 전송 대상은 `typesafe`는 `api.typesafe.ai`, `openrouter`는 `openrouter.ai`, `gateway`는 `JEV_GATEWAY_URL`의 URL입니다. 선택이 꺼져 있으면 아무것도 전송되지 않습니다.
+- **비용:** 유료 서비스이며 제공자가 사용자의 키에 요금을 청구합니다. 실측 규모: Apple 문서 결과 약 17개에 약 $0.0001, WWDC 후보 약 90개에 약 $0.001, 최대치인 256개에서 최대 약 $0.003입니다. 호출 한 번에 최대 약 15초의 지연이 추가됩니다.
+- **빠른 실패:** 선택이 켜져 있을 때 어떤 실패(키 누락, 잘못된 제공자, 재시도 후의 네트워크 또는 제공자 오류)든 순위가 매겨지지 않은 결과 대신 오류를 반환합니다. 필터링되지 않은 결과가 필요하면 `select: false`를 전달하세요.
+
+선택 설계는 [jgrep](https://github.com/kyu1204/jgrep)(MIT)에서 이식했습니다.
 
 ## 개발
 

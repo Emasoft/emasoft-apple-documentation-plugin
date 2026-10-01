@@ -195,7 +195,8 @@ describe('search_wwdc_content with Jev selection', () => {
       const text = await handleSearchWWDCContent('concurrency', 'transcript', undefined, undefined, 10);
 
       expect(scoredRows()).toBe(10);
-      expect(text).toContain('Selected 5 of 10 candidates by relevance (Jev)');
+      // limit cut the 30 matching videos to 10 scored: the header must not pass 10 off as the whole match set
+      expect(text).toContain('Selected 5 of 10 scored (of 30 matching) by relevance (Jev)');
     });
 
     it('select off without limit returns exactly 20 results and never calls Jev', async () => {
@@ -208,10 +209,10 @@ describe('search_wwdc_content with Jev selection', () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it('select off rejects a limit above 100', async () => {
+    it('select off rejects a limit above 100 with the cap named in the message', async () => {
       const text = await handleSearchWWDCContent('concurrency', 'transcript', undefined, undefined, 101);
 
-      expect(text).toMatch(/^Error:.*maximum is 100/);
+      expect(text).toBe('Error: Failed to search WWDC content: limit above 100 needs select on (Jev); with select off the maximum is 100');
     });
   });
 });

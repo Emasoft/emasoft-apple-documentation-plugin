@@ -308,8 +308,25 @@ emasoft-apple-documentation-plugin/
 | `DISABLE_SEC_FETCH` | 设为 `true` 以去掉 Sec-Fetch-* 请求头 | 关闭 |
 | `DISABLE_DNT` | 设为 `true` 以去掉 DNT 请求头 | 关闭 |
 | `SIMPLE_HEADERS_MODE` | 设为 `true` 以发送最简请求头 | 关闭 |
+| `APPLE_DOCS_MCP_JEV_RERANK` | 设为 `1` 以默认开启 Jev 语义筛选（见下文） | 关闭 |
+| `APPLE_DOCS_MCP_JEV_PROVIDER` | Jev 提供方：`typesafe`、`openrouter` 或 `gateway`；启用 Jev 时必填 | 无 |
+| `TYPESAFE_API_KEY` | `typesafe` 提供方的 API 密钥 | 无 |
+| `OPENROUTER_API_KEY` | `openrouter` 提供方的 API 密钥 | 无 |
+| `JEV_GATEWAY_URL`、`JEV_GATEWAY_API_KEY` | `gateway` 提供方的 URL 和 API 密钥 | 无 |
 
 服务器包含一个由 12 个以上预配置 UserAgent 字符串（macOS、Windows 和 Linux 上的 Chrome、Firefox、Safari 和 Edge）组成的池，并带有自动故障恢复的轮换。
+
+### Jev 语义筛选（可选，付费）
+
+`search_wwdc_content` 和 `search_apple_docs` 可以使用 Jev 相关度评分服务，把结果缩小为与查询最匹配的 1-5 条，并为每条显示相关度分数。默认关闭。要启用，请设置 `APPLE_DOCS_MCP_JEV_RERANK=1`，用 `APPLE_DOCS_MCP_JEV_PROVIDER` 选择提供方，并设置该提供方的密钥（`TYPESAFE_API_KEY`、`OPENROUTER_API_KEY`，或 `JEV_GATEWAY_URL` 加 `JEV_GATEWAY_API_KEY`）。
+
+- **参数：** 两个工具都接受 `select`（`true` 或 `false`；默认跟随 `APPLE_DOCS_MCP_JEV_RERANK`）和 `maxResults`（1-5，默认 5，关闭筛选时忽略）。Jev 未启用时传 `select: true` 会报错。如果没有结果的分数超过相关度阈值，则返回最佳的 1 条，并附带 “No strong match” 警告。
+- **`search_wwdc_content` 中的 `limit`：** 开启筛选时，`limit` 是召回宽度：按匹配数排序的前这么多个视频会交给 Jev 评分（最多 256）。省略 `limit` 时，会对最多 256 个的全部候选评分。关闭筛选时，`limit` 保持原有含义（默认 20，最大 100）。当扫描匹配的视频多于已评分的数量时，标题行显示 “Selected N of M scored (of T matching)”。
+- **发送的内容及接收方：** 开启筛选时，查询以及每个候选的标题、摘要（仅 Apple 文档结果）、URL、主题，对于 WWDC 还有其首个匹配处的摘录（字幕稿或代码），会连同您的 API 密钥发送给您选择的提供方：`typesafe` 为 `api.typesafe.ai`，`openrouter` 为 `openrouter.ai`，`gateway` 为 `JEV_GATEWAY_URL` 中的 URL。关闭筛选时不会发送任何内容。
+- **费用：** 这是付费服务，由提供方向您的密钥计费。实测数量级：约 17 条 Apple 文档结果约 $0.0001，约 90 个 WWDC 候选约 $0.001，达到 256 个候选上限时最多约 $0.003。每次调用最多增加约 15 秒延迟。
+- **快速失败：** 开启筛选时，任何失败（缺少密钥、提供方无效、重试后仍出现网络或提供方错误）都会返回错误，而不是未排序的结果。如需未过滤的结果，请传 `select: false`。
+
+筛选设计移植自 [jgrep](https://github.com/kyu1204/jgrep)（MIT）。
 
 ## 开发
 

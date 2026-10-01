@@ -11,6 +11,11 @@ export const API_LIMITS = {
   MAX_FRAMEWORK_DEPTH: 10,
   DEFAULT_FRAMEWORK_DEPTH: 3,
 
+
+  // search_wwdc_content: default result count, and the maximum when Jev selection is off
+  WWDC_SEARCH_DEFAULT_LIMIT: 20,
+  WWDC_SEARCH_MAX_LIMIT: 100,
+
   // Default values for various operations
   DEFAULT_FRAMEWORK_SYMBOLS_LIMIT: 50,
   DEFAULT_DOCUMENTATION_UPDATES_LIMIT: 50,
