@@ -323,7 +323,7 @@ emasoft-apple-documentation-plugin/
 - **参数：** 两个工具都接受 `select`（`true` 或 `false`；默认跟随 `APPLE_DOCS_MCP_JEV_RERANK`）和 `maxResults`（1-5，默认 5，关闭筛选时忽略）。Jev 未启用时传 `select: true` 会报错。如果没有结果的分数超过相关度阈值，则返回最佳的 1 条，并附带 “No strong match” 警告。
 - **`search_wwdc_content` 中的 `limit`：** 开启筛选时，`limit` 是召回宽度：按匹配数排序的前这么多个视频会交给 Jev 评分（最多 256）。省略 `limit` 时，会对最多 256 个的全部候选评分。关闭筛选时，`limit` 保持原有含义（默认 20，最大 100）。当扫描匹配的视频多于已评分的数量时，标题行显示 “Selected N of M scored (of T matching)”。
 - **发送的内容及接收方：** 开启筛选时，查询以及每个候选的标题、摘要（仅 Apple 文档结果）、URL、主题，对于 WWDC 还有其首个匹配处的摘录（字幕稿或代码），会连同您的 API 密钥发送给您选择的提供方：`typesafe` 为 `api.typesafe.ai`，`openrouter` 为 `openrouter.ai`，`gateway` 为 `JEV_GATEWAY_URL` 中的 URL。关闭筛选时不会发送任何内容。
-- **费用：** 这是付费服务，由提供方向您的密钥计费。实测数量级：约 17 条 Apple 文档结果约 $0.0001，约 90 个 WWDC 候选约 $0.001，达到 256 个候选上限时最多约 $0.003。每次调用最多增加约 15 秒延迟。
+- **费用：** 这是付费服务，由提供方向您的密钥计费。实测数量级：约 17 条 Apple 文档结果约 $0.0001，约 90 个 WWDC 候选约 $0.001，达到 256 个候选上限时最多约 $0.003。筛选通常增加不到 2 秒延迟；提供方较慢或重试时最多约 15 秒。
 - **快速失败：** 开启筛选时，任何失败（缺少密钥、提供方无效、重试后仍出现网络或提供方错误）都会返回错误，而不是未排序的结果。如需未过滤的结果，请传 `select: false`。
 
 筛选设计移植自 [jgrep](https://github.com/kyu1204/jgrep)（MIT）。
