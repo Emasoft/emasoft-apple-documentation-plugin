@@ -37,6 +37,9 @@ jobs:
     # Single API dispatch — 5 min is generous (issue #90). If we exceed it,
     # the marketplace repo's API is very wrong.
     timeout-minutes: 5
+    # The checkout below needs contents: read; the top-level permissions stay {}.
+    permissions:
+      contents: read
     # Root-cause #9: NO-OP when MARKETPLACE_PAT is not configured. Expose the
     # secret's presence as a boolean (`secrets` is available in a job-level
     # env: mapping); the dispatch/summary steps are then gated on it via
@@ -46,6 +49,15 @@ jobs:
     env:
       HAS_MARKETPLACE_PAT: ${{ secrets.MARKETPLACE_PAT != '' }}
     steps:
+      # The 'Get plugin info' step reads .claude-plugin/plugin.json, so the repo
+      # must be checked out. Gated on the PAT like every other work step, so the
+      # no-PAT path stays a cheap no-op.
+      - name: Check out repository
+        if: env.HAS_MARKETPLACE_PAT == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
       - name: Check marketplace secret
         # Always runs. When the PAT is missing, emit a friendly notice and let
         # the gated steps below skip — the job still ends green. When present,

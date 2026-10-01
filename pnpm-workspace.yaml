@@ -7,6 +7,15 @@ minimumReleaseAge: 7200
 trustPolicy: no-downgrade
 blockExoticSubdeps: true
 strictDepBuilds: true
+
+# Transitive (express via the MCP SDK) versions with published CVEs; force the patched releases.
+# path-to-regexp 8.2.0: CVE-2026-4923, CVE-2026-4926 (fixed in 8.4.0).
+# qs 6.14.0: CVE-2025-15284, CVE-2026-82417, CVE-2026-8723, CVE-2026-2391 (fixed in 6.16.0).
+# Remove an entry once the MCP SDK / express resolve a patched version on their own.
+overrides:
+  path-to-regexp: ^8.4.2
+  qs: ^6.16.0
+
 # Reviewed exceptions for the lockfile as of 2026-10-01 (pnpm install --frozen-lockfile verifies the
 # lockfile against the policy above). Each is a deliberate Dependabot-era upgrade that was published
 # less than 5 days before the first release; the age exceptions stop mattering after 2026-10-04 and
