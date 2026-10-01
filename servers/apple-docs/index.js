@@ -7326,8 +7326,10 @@ var init_constants = __esm({
       // 2 hours
       DESIGN_CONTENT: 2 * 60 * 60 * 1e3,
       // 2 hours
-      DESIGN_RESOURCES: 2 * 60 * 60 * 1e3
+      DESIGN_RESOURCES: 2 * 60 * 60 * 1e3,
       // 2 hours
+      JEV_SCORES: 60 * 60 * 1e3
+      // 1 hour
     };
     CACHE_SIZE = {
       API_DOCS: 500,
@@ -7339,6 +7341,7 @@ var init_constants = __esm({
       TECHNOLOGY_OVERVIEWS: 100,
       DESIGN_CONTENT: 100,
       DESIGN_RESOURCES: 20,
+      JEV_SCORES: 5e3,
       // Default cache configuration
       DEFAULT_CACHE_SIZE: 1e3,
       DEFAULT_CACHE_TTL: 30 * 60 * 1e3
@@ -7521,6 +7524,7 @@ __export(cache_exports, {
   generateUrlCacheKey: () => generateUrlCacheKey,
   getCacheInstance: () => getCacheInstance,
   indexCache: () => indexCache,
+  jevScoreCache: () => jevScoreCache,
   sampleCodeCache: () => sampleCodeCache,
   searchCache: () => searchCache,
   technologiesCache: () => technologiesCache,
@@ -7591,7 +7595,7 @@ function getCacheInstance(name, maxSize, defaultTTL) {
   }
   return cacheInstances.get(name);
 }
-var MemoryCache, apiCache, searchCache, indexCache, technologiesCache, updatesCache, sampleCodeCache, technologyOverviewsCache, designContentCache, designResourcesCache, wwdcDataCache, cacheInstances;
+var MemoryCache, apiCache, searchCache, indexCache, technologiesCache, updatesCache, sampleCodeCache, technologyOverviewsCache, designContentCache, designResourcesCache, wwdcDataCache, jevScoreCache, cacheInstances;
 var init_cache = __esm({
   "src/utils/cache.ts"() {
     "use strict";
@@ -7734,6 +7738,7 @@ var init_cache = __esm({
       CACHE_TTL.DESIGN_RESOURCES
     );
     wwdcDataCache = new MemoryCache(100, 30 * 60 * 1e3);
+    jevScoreCache = new MemoryCache(CACHE_SIZE.JEV_SCORES, CACHE_TTL.JEV_SCORES);
     cacheInstances = /* @__PURE__ */ new Map();
   }
 });

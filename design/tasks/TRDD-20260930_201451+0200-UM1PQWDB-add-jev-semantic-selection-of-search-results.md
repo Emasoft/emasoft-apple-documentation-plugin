@@ -1,10 +1,10 @@
 ---
 trdd-id: UM1PQWDB
 title: Add Jev semantic selection of search results
-column: todo
+column: dev
 status: tasked
 created: 2026-09-30T20:14:51+0200
-updated: 2026-09-30T20:22:19+0200
+updated: 2026-10-01T09:44:32+0200
 current-owner: user
 created-by: user
 task-type: feature
@@ -67,3 +67,13 @@ Orchestrator decision: measure token cost with REAL Apple search result rows bef
 **README disclosure.** The README must state plainly: (1) what is sent to the re-ranking provider when `select` is on — the query text and each candidate's title/snippet/URL, nothing else (no request headers, no user identity); (2) that search **fails**, it does not silently fall back to unranked results, when re-ranking is enabled and the Jev provider is unreachable — fail-fast per CLAUDE.md, not a hidden degrade the caller can't see.
 **jgrep/jevgrep license.** The installed binary at `/opt/homebrew/bin/jgrep` is provided by the **`jevgrep`** npm package (v0.6.0, zero dependencies, "Semantic grep … Powered by TypeSafe Jev"), **license: MIT** (confirmed via `npm view jevgrep license`). MIT permits reuse (including adaptation into this MIT-licensed project) with attribution — a `NOTICE`/README credit line naming `jevgrep` (https://github.com/kyu1204/jgrep) and its MIT license is sufficient; no separate license file duplication is required beyond that attribution. (Note: `npm view jgrep` alone resolves to an unrelated older package by a different author — also MIT, but NOT what is actually installed here; the installed binary is `jevgrep`.)
 **Reproduce jgrep's per-row instruction text verbatim.** jevgrep's model is tuned against its own exact per-row prompt phrasing. When building the re-ranking prompt for Jev, reuse jevgrep's own instruction sentence **exactly**, character-for-character — "Look only at the row with id …" — rather than paraphrasing it, since the underlying model's behavior was tuned against that precise wording and a paraphrase is an unmeasured behavior change.
+
+## Card corrections (advisor 2026-10-01)
+
+- Installed jgrep is the Emasoft/jgrep fork 0.4.0, not jevgrep 0.6.0; upstream is kyu1204/jgrep 0.6.0 (MIT).
+- OpenRouter endpoint is https://openrouter.ai/api/v1/systemone (0.6.0), not /api/alpha/decisions; proven by the live smoke test on 2026-10-01.
+- v1 tools are search_wwdc_content and search_apple_docs; search_framework_symbols moved to its own TRDD (it needs a query parameter first).
+- Dropped under fail-fast: circuit breaker, worker pool, partial-failure isolation, error taxonomy, rate pacing.
+- Row fields are explicit (title, summary, url, topics, evidence); never an id field, it would overwrite the Jev row id.
+- Jev stage: at most 256 candidates, batch 16, one wave (Promise.all), 15 s per-batch deadline including retries, 10 s per attempt.
+- Phase 1 core (src/utils/jev-select.ts, JEV_CONFIG, jevScoreCache, tests) done 2026-10-01; phase 2 wiring (handlers, schemas, definitions, bundle) and README pending.

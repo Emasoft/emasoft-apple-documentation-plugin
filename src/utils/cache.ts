@@ -183,6 +183,10 @@ export const designResourcesCache = new MemoryCache(
 );
 export const wwdcDataCache = new MemoryCache(100, 30 * 60 * 1000); // 30 minutes TTL
 
+
+// Jev relevance scores (number) keyed by sha1(model, match statement, row)
+export const jevScoreCache = new MemoryCache(CACHE_SIZE.JEV_SCORES, CACHE_TTL.JEV_SCORES);
+
 /**
  * Generate cache key for URL-based requests
  */

@@ -1,0 +1,127 @@
+{
+ "query": "SwiftUI NavigationStack",
+ "source": "real search_apple_docs candidate rows, scored live by Jev via OpenRouter on 2026-10-01",
+ "rows": [
+  {
+   "title": "NavigationStack",
+   "summary": "A view that displays a root view and enables you to present additional views over the root view.",
+   "url": "https://developer.apple.com/documentation/swiftui/navigationstack",
+   "topics": "SwiftUI"
+  },
+  {
+   "title": "Understanding the navigation stack",
+   "summary": "Learn about the navigation stack, links, and how to manage navigation types in your app’s structure.",
+   "url": "https://developer.apple.com/documentation/swiftui/understanding-the-navigation-stack",
+   "topics": "SwiftUI"
+  },
+  {
+   "title": "NavigationLink",
+   "summary": "A view that controls a navigation presentation.",
+   "url": "https://developer.apple.com/documentation/swiftui/navigationlink",
+   "topics": "SwiftUI"
+  },
+  {
+   "title": "NavigationPath",
+   "summary": "A type-erased list of data representing the content of a navigation stack.",
+   "url": "https://developer.apple.com/documentation/swiftui/navigationpath",
+   "topics": "SwiftUI"
+  },
+  {
+   "title": "Migrating to new navigation types",
+   "summary": "Improve navigation behavior in your app by replacing navigation views with navigation stacks and navigation split views.",
+   "url": "https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types",
+   "topics": "SwiftUI"
+  },
+  {
+   "title": "init(root:)",
+   "summary": "Creates a navigation stack that manages its own navigation state.",
+   "url": "https://developer.apple.com/documentation/swiftui/navigationstack/init(root:)",
+   "topics": "SwiftUI"
+  },
+  {
+   "title": "init(path:root:)",
+   "summary": "Creates a navigation stack with homogeneous navigation state that you can control.",
+   "url": "https://developer.apple.com/documentation/swiftui/navigationstack/init(path:root:)",
+   "topics": "SwiftUI"
+  },
+  {
+   "title": "init(path:root:)",
+   "summary": "Creates a navigation stack with homogeneous navigation state that you can control.",
+   "url": "https://developer.apple.com/documentation/swiftui/navigationstack/init(path:root:)-3bt4q",
+   "topics": "SwiftUI"
+  },
+  {
+   "title": "init(path:root:)",
+   "summary": "Creates a navigation stack with heterogeneous navigation state that you can control.",
+   "url": "https://developer.apple.com/documentation/swiftui/navigationstack/init(path:root:)-63x0h",
+   "topics": "SwiftUI"
+  },
+  {
+   "title": "navigationTransition(_:)",
+   "summary": "Sets the navigation transition style for this view.",
+   "url": "https://developer.apple.com/documentation/swiftui/view/navigationtransition(_:)",
+   "topics": "SwiftUI"
+  },
+  {
+   "title": "navigationBarBackButtonHidden(_:)",
+   "summary": "Hides the navigation bar back button for the view.",
+   "url": "https://developer.apple.com/documentation/swiftui/view/navigationbarbackbuttonhidden(_:)",
+   "topics": "SwiftUI"
+  },
+  {
+   "title": "StackNavigationViewStyle",
+   "summary": "A navigation view style represented by a view stack that only shows a single top view at a time.",
+   "url": "https://developer.apple.com/documentation/swiftui/stacknavigationviewstyle",
+   "topics": "SwiftUI"
+  },
+  {
+   "title": "Displaying data in lists",
+   "summary": "Visualize collections of data with platform-appropriate appearance.",
+   "url": "https://developer.apple.com/documentation/swiftui/displaying-data-in-lists",
+   "topics": "SwiftUI"
+  },
+  {
+   "title": "Browsing Your Photos",
+   "summary": "",
+   "url": "https://developer.apple.com/tutorials/sample-apps/capturingphotos-browsephotos"
+  },
+  {
+   "title": "Image Gallery",
+   "summary": "",
+   "url": "https://developer.apple.com/tutorials/sample-apps/imagegallery"
+  },
+  {
+   "title": "Editing Grids",
+   "summary": "",
+   "url": "https://developer.apple.com/tutorials/sample-apps/editinggrids"
+  },
+  {
+   "title": "Creating an intuitive and effective UI in watchOS 10",
+   "summary": "Provide an even more streamlined, consistent, and glanceable user experience with new design features.",
+   "url": "https://developer.apple.com/documentation/watchos-apps/creating-an-intuitive-and-effective-ui-in-watchos-10",
+   "topics": "watchOS apps"
+  }
+ ],
+ "scores": [
+  0.9,
+  0.42,
+  0.14,
+  0.22,
+  0.27,
+  0.3,
+  0.39,
+  0.38,
+  0.43,
+  0.21,
+  0.2,
+  0.21,
+  0.08,
+  0.1,
+  0.08,
+  0.07,
+  0.09
+ ],
+ "expectedTitles": [
+  "NavigationStack"
+ ]
+}

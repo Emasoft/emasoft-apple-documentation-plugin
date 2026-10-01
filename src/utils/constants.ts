@@ -46,6 +46,7 @@ export const CACHE_TTL = {
   TECHNOLOGY_OVERVIEWS: 2 * 60 * 60 * 1000, // 2 hours
   DESIGN_CONTENT: 2 * 60 * 60 * 1000, // 2 hours
   DESIGN_RESOURCES: 2 * 60 * 60 * 1000, // 2 hours
+  JEV_SCORES: 60 * 60 * 1000, // 1 hour
 } as const;
 
 // Cache Size Configuration
@@ -59,10 +60,37 @@ export const CACHE_SIZE = {
   TECHNOLOGY_OVERVIEWS: 100,
   DESIGN_CONTENT: 100,
   DESIGN_RESOURCES: 20,
+  JEV_SCORES: 5000,
 
   // Default cache configuration
   DEFAULT_CACHE_SIZE: 1000,
   DEFAULT_CACHE_TTL: 30 * 60 * 1000, // 30 minutes
+} as const;
+
+
+// Jev semantic selection (src/utils/jev-select.ts). Env vars are read at CALL time, not import time.
+export const JEV_CONFIG = {
+  ENABLE_ENV: 'APPLE_DOCS_MCP_JEV_RERANK',
+  PROVIDER_ENV: 'APPLE_DOCS_MCP_JEV_PROVIDER',
+  GATEWAY_URL_ENV: 'JEV_GATEWAY_URL',
+  // OpenRouter URL is the jevgrep 0.6.0 one (the local jgrep fork 0.4.0 still has /api/alpha/decisions).
+  PROVIDERS: {
+    typesafe: { url: 'https://api.typesafe.ai/v1/systemone', model: 'jev-latest', keyEnv: 'TYPESAFE_API_KEY' },
+    openrouter: { url: 'https://openrouter.ai/api/v1/systemone', model: '~typesafe/jev-latest', keyEnv: 'OPENROUTER_API_KEY' },
+    gateway: { url: '', model: 'jev-latest', keyEnv: 'JEV_GATEWAY_API_KEY' }, // url comes from GATEWAY_URL_ENV
+  },
+  APP_TITLE: 'apple-docs-mcp', // X-Title header (OpenRouter attribution)
+  BATCH_SIZE: 16, // rows per request (one question each: 16 pairs, under the 64-pair request limit)
+  MAX_CANDIDATES: 256, // = 16 batches = one wave; larger sets are cut by the caller's own ranking
+  BATCH_DEADLINE_MS: 15000, // per batch, INCLUDING retries
+  ATTEMPT_TIMEOUT_MS: 10000,
+  MAX_RETRIES: 4,
+  RETRY_BASE_MS: 500,
+  RETRY_CAP_MS: 30000,
+  MAX_RESULTS: 5,
+  RELATIVE_CUTOFF: 0.5, // drop rows scoring below this fraction of the top score
+  MAX_GAP: 0.25, // stop at a gap this large between consecutive sorted scores
+  NO_STRONG_MATCH: 0.3, // top score below this: return only the best row, labelled
 } as const;
 
 // Safari User-Agent Constants
