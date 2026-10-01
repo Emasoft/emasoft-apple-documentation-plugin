@@ -60,5 +60,6 @@ Use the `apple-docs` MCP tools instead of answering Apple API questions from mem
 ## Notes
 
 - `search_apple_docs` is slow: typically 5-25 seconds (median about 10). Identical queries are cached for 10 minutes, so do not repeat them.
-- Optional Jev selection: `search_apple_docs` and `search_wwdc_content` accept `select` and `maxResults` (1-5) to return only the best-scoring results, each with a relevance score. It is off unless `APPLE_DOCS_MCP_JEV_RERANK=1` is set; `select: true` while it is not enabled is an error, and it adds a provider call of up to about 15 seconds.
+- Optional Jev selection: `search_apple_docs` and `search_wwdc_content` accept `select` and `maxResults` (1-5) to return only the best-scoring results, each with a relevance score. It is off unless `APPLE_DOCS_MCP_JEV_RERANK=1` is set; `select: true` while it is not enabled is an error, and it typically adds under 2 seconds (at most about 15 when the provider is slow).
+- WWDC tools download their data (about 11 MB) once, on the first WWDC call; later calls are local.
 - `get_sample_code` returns complete projects; `search_apple_docs` with `type: "sample"` returns individual snippets.
