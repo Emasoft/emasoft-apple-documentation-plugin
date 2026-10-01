@@ -36,7 +36,7 @@
  * Usage: node scripts/build-bundle.mjs [--outfile <path>]
  * The license files are written next to the outfile.
  */
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
@@ -116,6 +116,10 @@ const { metafile } = await build({
 // no-control-regex quiet.
 const rawControlChar = /(\\*)(\p{Cc})/gu;
 const allowedControlCodes = new Set([0x0f, 0x12, 0x15, 0x18]);
+// WHY a pinned count: the allowlist proves each code point is safe, not that every occurrence sits
+// in a context where \xNN is the same character. A new occurrence (dependency bump, new source)
+// must be re-verified by hand, so the count is pinned to what was verified: the entities decode table.
+const EXPECTED_CONTROL_REWRITES = 4;
 const bundleText = readFileSync(outfile, 'utf8');
 let rewritten = 0;
 const escapedBundle = bundleText.replace(rawControlChar, (match, backslashes, control) => {
@@ -136,7 +140,15 @@ const escapedBundle = bundleText.replace(rawControlChar, (match, backslashes, co
 if (rewritten > 0 && bundleText.includes('String.raw')) {
   throw new Error('bundle contains String.raw next to re-escaped control characters — \\x would stay literal there; re-verify the escape is safe before building');
 }
-writeFileSync(outfile, escapedBundle);
+if (rewritten !== EXPECTED_CONTROL_REWRITES) {
+  throw new Error(`control-character rewrite count changed (got ${rewritten}, expected ${EXPECTED_CONTROL_REWRITES}): re-verify each occurrence's context — tagged templates reading .raw keep \\xNN literal — then update the constant`);
+}
+// Write beside outfile and rename, so a failed run never leaves a half-processed bundle.
+const processedPath = `${outfile}.tmp`;
+writeFileSync(processedPath, escapedBundle);
+// Keep the committed file mode (the bundle is tracked as executable); a fresh file would be 0644.
+chmodSync(processedPath, statSync(outfile).mode);
+renameSync(processedPath, outfile);
 
 // Package directory of every bundled third-party input: the path up to the
 // LAST node_modules/<name> (or <@scope>/<name>) segment, so pnpm's

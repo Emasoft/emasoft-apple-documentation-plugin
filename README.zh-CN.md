@@ -295,7 +295,7 @@ emasoft-apple-documentation-plugin/
 
 ## 配置
 
-服务器启动时会读取以下可选环境变量。请在启动 Claude Code 的 shell 中 export 它们。这些变量必须设置在启动 Claude Code 的进程的环境中：通过图形界面启动的 Claude Code 看不到在 shell 配置文件中 export 的变量（已在 Claude Code 2.1.285 上验证，官方文档未记载）。
+服务器启动时会读取以下可选环境变量。这些变量必须设置在启动 Claude Code 的进程的环境中，因为通过图形界面启动的 Claude Code 看不到在 shell 配置文件中 export 的变量（已在 Claude Code 2.1.285 上验证，官方文档未记载）。设置方法：在已 export 这些变量的终端中启动 Claude Code；或在 macOS 上运行 `launchctl setenv NAME value`，然后重启 Claude Code（launchctl 设置的值在重启电脑后会失效）。
 
 | 变量 | 描述 | 默认值 |
 |------|------|--------|

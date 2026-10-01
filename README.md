@@ -300,7 +300,7 @@ The plugin includes:
 
 ## Configuration
 
-The server reads these optional environment variables when it starts. Export them in the shell that launches Claude Code. The variables must be set in the environment of the process that starts Claude Code: a Claude Code launched from the GUI does not see variables exported in a shell profile (observed on Claude Code 2.1.285; not documented by Anthropic).
+The server reads these optional environment variables when it starts. Set them in the environment of the process that starts Claude Code, because a Claude Code launched from the GUI does not see variables exported in a shell profile (observed on Claude Code 2.1.285; not documented by Anthropic). To set them, either start Claude Code from a terminal where they are exported, or, on macOS, run `launchctl setenv NAME value` and then restart Claude Code (launchctl values do not survive a reboot).
 
 | Variable | Description | Default |
 |----------|-------------|---------|
