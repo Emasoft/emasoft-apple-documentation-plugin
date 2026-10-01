@@ -4557,8 +4557,8 @@ var require_core = __commonJS({
             return this;
           }
           case "object": {
-            const cacheKey = schemaKeyRef;
-            this._cache.delete(cacheKey);
+            const cacheKey2 = schemaKeyRef;
+            this._cache.delete(cacheKey2);
             let id = schemaKeyRef[this.opts.schemaId];
             if (id) {
               id = (0, resolve_1.normalizeId)(id);
@@ -7278,7 +7278,7 @@ var init_logger = __esm({
 });
 
 // src/utils/constants.ts
-var API_LIMITS, SEARCH_DEPTH_LIMITS, CACHE_TTL, CACHE_SIZE, SAFARI_USER_AGENTS, SAFARI_USER_AGENT_CATEGORIES, REQUEST_CONFIG, STDIN_EOF_BACKSTOP_MS, RATE_LIMIT, PROCESSING_LIMITS, APPLE_URLS, WWDC_CONFIG, ERROR_MESSAGES;
+var API_LIMITS, SEARCH_DEPTH_LIMITS, CACHE_TTL, CACHE_SIZE, JEV_CONFIG, SAFARI_USER_AGENTS, SAFARI_USER_AGENT_CATEGORIES, REQUEST_CONFIG, STDIN_EOF_BACKSTOP_MS, RATE_LIMIT, PROCESSING_LIMITS, APPLE_URLS, WWDC_CONFIG, ERROR_MESSAGES;
 var init_constants = __esm({
   "src/utils/constants.ts"() {
     "use strict";
@@ -7346,6 +7346,39 @@ var init_constants = __esm({
       DEFAULT_CACHE_SIZE: 1e3,
       DEFAULT_CACHE_TTL: 30 * 60 * 1e3
       // 30 minutes
+    };
+    JEV_CONFIG = {
+      ENABLE_ENV: "APPLE_DOCS_MCP_JEV_RERANK",
+      PROVIDER_ENV: "APPLE_DOCS_MCP_JEV_PROVIDER",
+      GATEWAY_URL_ENV: "JEV_GATEWAY_URL",
+      // OpenRouter URL is the jevgrep 0.6.0 one (the local jgrep fork 0.4.0 still has /api/alpha/decisions).
+      PROVIDERS: {
+        typesafe: { url: "https://api.typesafe.ai/v1/systemone", model: "jev-latest", keyEnv: "TYPESAFE_API_KEY" },
+        openrouter: { url: "https://openrouter.ai/api/v1/systemone", model: "~typesafe/jev-latest", keyEnv: "OPENROUTER_API_KEY" },
+        gateway: { url: "", model: "jev-latest", keyEnv: "JEV_GATEWAY_API_KEY" }
+        // url comes from GATEWAY_URL_ENV
+      },
+      APP_TITLE: "apple-docs-mcp",
+      // X-Title header (OpenRouter attribution)
+      BATCH_SIZE: 16,
+      // rows per request (one question each: 16 pairs, under the 64-pair request limit)
+      MAX_CANDIDATES: 256,
+      // = 16 batches = one wave; larger sets are cut by the caller's own ranking
+      BATCH_DEADLINE_MS: 15e3,
+      // per batch, INCLUDING retries
+      ATTEMPT_TIMEOUT_MS: 1e4,
+      MAX_RETRIES: 4,
+      RETRY_BASE_MS: 500,
+      RETRY_CAP_MS: 3e4,
+      MAX_RESULTS: 5,
+      RELATIVE_CUTOFF: 0.5,
+      // drop rows scoring below this fraction of the top score
+      MAX_GAP: 0.25,
+      // stop at a gap this large between consecutive sorted scores
+      NO_STRONG_MATCH: 0.3,
+      // top score below this: return only the best row, labelled
+      DEFAULT_PRICE_PER_MTOK: 0.042
+      // USD per million input tokens (jgrep default); used only when the provider reports no cost
     };
     SAFARI_USER_AGENTS = [
       // macOS Monterey (12.x) + Safari 15.x - 3 versions
@@ -9529,8 +9562,8 @@ var init_http_client = __esm({
 async function handleListTechnologies(category, language, includeBeta = true, limit = API_LIMITS.DEFAULT_TECHNOLOGIES_LIMIT, signal) {
   try {
     logger.info("Fetching technologies list...");
-    const cacheKey = generateUrlCacheKey("technologies", { category, language, includeBeta, limit });
-    const cachedResult = technologiesCache.get(cacheKey);
+    const cacheKey2 = generateUrlCacheKey("technologies", { category, language, includeBeta, limit });
+    const cachedResult = technologiesCache.get(cacheKey2);
     if (cachedResult) {
       logger.debug("Technologies cache hit");
       return cachedResult;
@@ -9544,7 +9577,7 @@ async function handleListTechnologies(category, language, includeBeta = true, li
       limit
     });
     const result = formatTechnologiesList(filteredTechnologies);
-    technologiesCache.set(cacheKey, result);
+    technologiesCache.set(cacheKey2, result);
     return result;
   } catch (error62) {
     const errorMessage = error62 instanceof Error ? error62.message : String(error62);
@@ -10100,8 +10133,8 @@ async function searchFrameworkSymbols(framework, symbolType = "all", namePattern
     const normalizedFramework = normalizeFrameworkName(framework);
     logger.info(`Searching ${symbolType} symbols in ${normalizedFramework} framework`);
     const indexUrl = `${APPLE_URLS.TUTORIALS_DATA}index/${framework.toLowerCase()}`;
-    const cacheKey = generateUrlCacheKey(indexUrl, { framework: normalizedFramework, symbolType, namePattern, language, limit });
-    const cachedResult = indexCache.get(cacheKey);
+    const cacheKey2 = generateUrlCacheKey(indexUrl, { framework: normalizedFramework, symbolType, namePattern, language, limit });
+    const cachedResult = indexCache.get(cacheKey2);
     if (cachedResult) {
       return cachedResult;
     }
@@ -10156,7 +10189,7 @@ async function searchFrameworkSymbols(framework, symbolType = "all", namePattern
         }
       }
     }
-    indexCache.set(cacheKey, result);
+    indexCache.set(cacheKey2, result);
     return result;
   } catch (error62) {
     return `Error searching classes: ${error62 instanceof Error ? error62.message : String(error62)}`;
@@ -10302,7 +10335,7 @@ var init_search_framework_symbols = __esm({
 async function handleGetDocumentationUpdates(category = "all", technology, year, searchQuery, includeBeta = true, limit = 50, signal) {
   try {
     logger.info("Fetching documentation updates...");
-    const cacheKey = generateUrlCacheKey("documentation-updates", {
+    const cacheKey2 = generateUrlCacheKey("documentation-updates", {
       category,
       technology,
       year,
@@ -10310,7 +10343,7 @@ async function handleGetDocumentationUpdates(category = "all", technology, year,
       includeBeta,
       limit
     });
-    const cachedResult = updatesCache.get(cacheKey);
+    const cachedResult = updatesCache.get(cacheKey2);
     if (cachedResult) {
       logger.debug("Updates cache hit");
       return cachedResult;
@@ -10329,7 +10362,7 @@ async function handleGetDocumentationUpdates(category = "all", technology, year,
       limit
     });
     const result = formatUpdatesList(filteredUpdates);
-    updatesCache.set(cacheKey, result);
+    updatesCache.set(cacheKey2, result);
     return result;
   } catch (error62) {
     const errorMessage = error62 instanceof Error ? error62.message : JSON.stringify(error62);
@@ -10509,14 +10542,14 @@ var init_get_documentation_updates = __esm({
 async function handleGetTechnologyOverviews(category, platform = "all", searchQuery, includeSubcategories = true, limit = 50, signal) {
   try {
     logger.info("Fetching technology overviews...");
-    const cacheKey = generateUrlCacheKey("technology-overviews", {
+    const cacheKey2 = generateUrlCacheKey("technology-overviews", {
       category,
       platform,
       searchQuery,
       includeSubcategories,
       limit
     });
-    const cachedResult = technologyOverviewsCache.get(cacheKey);
+    const cachedResult = technologyOverviewsCache.get(cacheKey2);
     if (cachedResult) {
       logger.debug("Technology overviews cache hit");
       return cachedResult;
@@ -10534,7 +10567,7 @@ async function handleGetTechnologyOverviews(category, platform = "all", searchQu
       limit
     });
     const result = formatOverviewsList(filteredOverviews);
-    technologyOverviewsCache.set(cacheKey, result);
+    technologyOverviewsCache.set(cacheKey2, result);
     return result;
   } catch (error62) {
     const errorMessage = error62 instanceof Error ? error62.message : JSON.stringify(error62);
@@ -10885,8 +10918,8 @@ async function preloadPopularFrameworks() {
   const { signal } = controller;
   const preloadPromises = POPULAR_FRAMEWORKS.map(async (framework) => {
     try {
-      const cacheKey = `framework-index-${framework}`;
-      if (indexCache.has(cacheKey)) {
+      const cacheKey2 = `framework-index-${framework}`;
+      if (indexCache.has(cacheKey2)) {
         logger.debug(`Framework ${framework} already cached, skipping...`);
         return;
       }
@@ -10923,8 +10956,8 @@ async function preloadFrameworksByUsage(recentFrameworks) {
 function getPreloadStats() {
   const stats = indexCache.getStats();
   const preloadedFrameworks = POPULAR_FRAMEWORKS.filter((framework) => {
-    const cacheKey = `framework-index-${framework}`;
-    return indexCache.has(cacheKey);
+    const cacheKey2 = `framework-index-${framework}`;
+    return indexCache.has(cacheKey2);
   });
   return {
     preloadedFrameworks,
@@ -34555,7 +34588,7 @@ var StdioServerTransport = class {
 
 // src/tools/search-parser.ts
 init_logger();
-function formatSearchResults(results, query, filterType, searchUrl) {
+function formatSearchResults(results, query, filterType, searchUrl, noStrongMatch = false) {
   let content = "";
   content += "# Apple Documentation Search Results\n\n";
   content += `**Query:** "${query}"
@@ -34565,6 +34598,11 @@ function formatSearchResults(results, query, filterType, searchUrl) {
   content += `**Results found:** ${results.length}
 
 `;
+  if (noStrongMatch) {
+    content += `> **No strong match:** no result scored above the relevance threshold; the best score is ${results[0]?.score?.toFixed(2)}. Treat the result below as a weak guess.
+
+`;
+  }
   const videoSuggestion = getVideoSuggestion(query);
   if (videoSuggestion) {
     content += videoSuggestion;
@@ -34644,6 +34682,10 @@ function formatSingleResult(result, index2) {
   }
   content += `**Type:** ${result.type.replace(/-/g, " ")}
 `;
+  if (result.score !== void 0) {
+    content += `**Relevance score:** ${result.score.toFixed(2)}
+`;
+  }
   if (result.description) {
     content += `**Description:** ${result.description}
 `;
@@ -34694,9 +34736,9 @@ This search covers documentation and samples, but not WWDC videos. For WWDC cont
   }
   return null;
 }
-function formatSearchResultsResponse(results, query, searchUrl, filterType = "all") {
+function formatSearchResultsResponse(results, query, searchUrl, filterType = "all", noStrongMatch = false) {
   try {
-    const formattedContent = formatSearchResults(results, query, filterType, searchUrl);
+    const formattedContent = formatSearchResults(results, query, filterType, searchUrl, noStrongMatch);
     return {
       content: [{
         type: "text",
@@ -34828,8 +34870,8 @@ async function readJsonlBody(response) {
   return full;
 }
 async function fetchAppleDocsSearch(query, filterType, searchUrl) {
-  const cacheKey = `search:${filterType}:${query}`;
-  const cached3 = searchCache.get(cacheKey);
+  const cacheKey2 = `search:${filterType}:${query}`;
+  const cached3 = searchCache.get(cacheKey2);
   if (cached3) {
     return cached3;
   }
@@ -34871,7 +34913,7 @@ async function fetchAppleDocsSearch(query, filterType, searchUrl) {
         `Apple search response format changed: ${rawResults.length} items, none parseable`
       );
     }
-    searchCache.set(cacheKey, results);
+    searchCache.set(cacheKey2, results);
     return results;
   } catch (error62) {
     logger.error("Apple search API request failed:", error62);
@@ -34879,6 +34921,219 @@ async function fetchAppleDocsSearch(query, filterType, searchUrl) {
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+// src/utils/jev-select.ts
+init_constants();
+init_cache();
+init_error();
+import { createHash } from "node:crypto";
+var matchStatement = (query, source = "docs") => source === "wwdc" ? `This WWDC session is what a developer looking for ${JSON.stringify(query)} should watch.` : `This is the result a developer searching Apple developer documentation for ${JSON.stringify(query)} wants.`;
+var RETRYABLE = /* @__PURE__ */ new Set([408, 429, 500, 502, 503, 504, 529]);
+var NO_ESCAPE = "Retry with select: false to get the unfiltered results.";
+function isJevEnabled(env = process.env) {
+  return env[JEV_CONFIG.ENABLE_ENV] === "1";
+}
+function resolveSelect(select2, env = process.env) {
+  const enabled = isJevEnabled(env);
+  if (select2 === true && !enabled) {
+    throw jevError(
+      "INVALID_INPUT" /* INVALID_INPUT */,
+      `select: true requires ${JEV_CONFIG.ENABLE_ENV}=1 and ${JEV_CONFIG.PROVIDER_ENV} to be set.`,
+      ["Omit select, or set select: false."]
+    );
+  }
+  return select2 ?? enabled;
+}
+function jevError(type, message, suggestions = [NO_ESCAPE]) {
+  return new AppError({ type, message: `Jev selection failed: ${message}`, suggestions });
+}
+function resolveBackend(env) {
+  const name = env[JEV_CONFIG.PROVIDER_ENV]?.trim();
+  if (!name || !(name in JEV_CONFIG.PROVIDERS)) {
+    const choices = Object.keys(JEV_CONFIG.PROVIDERS).join("|");
+    throw jevError(
+      "INVALID_INPUT" /* INVALID_INPUT */,
+      `${JEV_CONFIG.ENABLE_ENV}=1 requires ${JEV_CONFIG.PROVIDER_ENV} to be one of ${choices} (got ${name ? `"${name}"` : "nothing"}).`
+    );
+  }
+  const provider = JEV_CONFIG.PROVIDERS[name];
+  const apiKey = env[provider.keyEnv]?.trim();
+  if (!apiKey) {
+    throw jevError("INVALID_INPUT" /* INVALID_INPUT */, `provider "${name}" needs ${provider.keyEnv} to be set.`);
+  }
+  let url2 = provider.url;
+  if (name === "gateway") {
+    url2 = env[JEV_CONFIG.GATEWAY_URL_ENV]?.trim() ?? "";
+    if (!url2) {
+      throw jevError(
+        "INVALID_INPUT" /* INVALID_INPUT */,
+        `provider "gateway" needs ${JEV_CONFIG.GATEWAY_URL_ENV} (the full System One endpoint).`
+      );
+    }
+  }
+  return { name, url: url2, model: provider.model, apiKey };
+}
+var cacheKey = (model, statement, row) => createHash("sha1").update(`${model}\0${statement}\0${JSON.stringify(row)}`).digest("hex");
+function parseRetryAfter(raw) {
+  if (!raw) {
+    return void 0;
+  }
+  const secs = Number(raw);
+  if (Number.isFinite(secs)) {
+    return Math.max(0, secs * 1e3);
+  }
+  const at = Date.parse(raw);
+  return Number.isNaN(at) ? void 0 : Math.max(0, at - Date.now());
+}
+function parseBatch(text3, n, backend) {
+  const malformed = (why) => jevError("API_ERROR" /* API_ERROR */, `${backend.name} returned a malformed response (${why}): ${text3.slice(0, 300)}`);
+  let parsed;
+  try {
+    parsed = JSON.parse(text3);
+  } catch {
+    throw malformed("not JSON");
+  }
+  if (parsed === null || typeof parsed !== "object" || typeof parsed.answers !== "object" || parsed.answers === null) {
+    throw malformed("no answers object");
+  }
+  const scores = [];
+  for (let i = 0; i < n; i++) {
+    const p = parsed.answers[`r${i}.match`]?.noul;
+    if (typeof p !== "number" || Number.isNaN(p)) {
+      throw malformed(`answer r${i}.match missing`);
+    }
+    scores.push(p);
+  }
+  const inputTokens = parsed.usage?.input_tokens ?? 0;
+  const reported = [parsed.cost, parsed.usage?.cost, parsed.cost_usd].find((c) => typeof c === "number");
+  const costUsd = reported ?? inputTokens * JEV_CONFIG.DEFAULT_PRICE_PER_MTOK / 1e6;
+  return { scores, inputTokens, costUsd, costEstimated: reported === void 0 };
+}
+async function postBatch(rows, statement, backend, fetchImpl, sleep) {
+  const questions = {};
+  rows.forEach((_, i) => {
+    questions[`r${i}.match`] = { type: "noul", instructions: `Look only at the row with id "r${i}". ${statement}` };
+  });
+  const body = JSON.stringify({
+    model: backend.model,
+    // id LAST: a stray `id` field on a row must never replace the Jev row id (answers would come back keyed wrongly).
+    state: { rows: rows.map((r, i) => ({ ...r, id: `r${i}` })) },
+    questions
+  });
+  const headers = {
+    Authorization: `Bearer ${backend.apiKey}`,
+    "Content-Type": "application/json",
+    "X-Title": JEV_CONFIG.APP_TITLE
+  };
+  const deadline = Date.now() + JEV_CONFIG.BATCH_DEADLINE_MS;
+  const timedOut = (why) => jevError(
+    "TIMEOUT" /* TIMEOUT */,
+    `${backend.name} batch deadline (${JEV_CONFIG.BATCH_DEADLINE_MS} ms, retries included) exceeded: ${why}`
+  );
+  for (let attempt = 0; ; attempt++) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) {
+      throw timedOut(`before attempt ${attempt + 1}`);
+    }
+    let detail;
+    let retryAfterMs;
+    try {
+      const res = await fetchImpl(backend.url, {
+        method: "POST",
+        headers,
+        body,
+        signal: AbortSignal.timeout(Math.max(1, Math.floor(Math.min(JEV_CONFIG.ATTEMPT_TIMEOUT_MS, remaining))))
+      });
+      const text3 = await res.text();
+      if (res.ok) {
+        return parseBatch(text3, rows.length, backend);
+      }
+      detail = `HTTP ${res.status}: ${text3.slice(0, 300)}`;
+      if (!RETRYABLE.has(res.status)) {
+        const authHint = res.status === 401 || res.status === 403;
+        throw jevError("API_ERROR" /* API_ERROR */, `${backend.name} ${detail}`, [
+          authHint ? `Check ${JEV_CONFIG.PROVIDERS[backend.name].keyEnv}.` : "Check the provider account and request.",
+          NO_ESCAPE
+        ]);
+      }
+      retryAfterMs = parseRetryAfter(res.headers.get("retry-after"));
+    } catch (err) {
+      if (err instanceof AppError) {
+        throw err;
+      }
+      detail = err instanceof Error ? err.message : String(err);
+    }
+    if (attempt >= JEV_CONFIG.MAX_RETRIES) {
+      throw jevError("API_ERROR" /* API_ERROR */, `${backend.name} ${detail} (after ${attempt + 1} attempts)`);
+    }
+    const jitter = Math.random() * Math.min(JEV_CONFIG.RETRY_CAP_MS, JEV_CONFIG.RETRY_BASE_MS * 2 ** attempt);
+    const delay = retryAfterMs ?? jitter;
+    if (delay >= deadline - Date.now()) {
+      throw timedOut(`next retry in ${Math.round(delay)} ms does not fit (${detail})`);
+    }
+    await sleep(delay);
+  }
+}
+function pickTop(scores, maxResults) {
+  const sorted = scores.map((score, index2) => ({ index: index2, score })).sort((a, b) => b.score - a.score || a.index - b.index);
+  const best = sorted[0];
+  if (!best) {
+    return { selected: [], noStrongMatch: false };
+  }
+  if (best.score < JEV_CONFIG.NO_STRONG_MATCH) {
+    return { selected: [best], noStrongMatch: true };
+  }
+  const selected = [best];
+  for (const cand of sorted.slice(1, maxResults)) {
+    const prev2 = selected[selected.length - 1];
+    const tooLow = cand.score < best.score * JEV_CONFIG.RELATIVE_CUTOFF;
+    const bigGap = prev2 !== void 0 && prev2.score - cand.score > JEV_CONFIG.MAX_GAP;
+    if (tooLow || bigGap) {
+      break;
+    }
+    selected.push(cand);
+  }
+  return { selected, noStrongMatch: false };
+}
+async function selectWithJev(query, candidates, opts = {}) {
+  const maxResults = Math.min(Math.max(opts.maxResults ?? JEV_CONFIG.MAX_RESULTS, 1), JEV_CONFIG.MAX_RESULTS);
+  const backend = resolveBackend(opts.env ?? process.env);
+  const fetchImpl = opts.fetchImpl ?? globalThis.fetch;
+  const sleep = opts.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+  const statement = matchStatement(query, opts.source);
+  const rows = candidates.slice(0, JEV_CONFIG.MAX_CANDIDATES);
+  const scores = new Array(rows.length).fill(NaN);
+  const misses = [];
+  rows.forEach((row, i) => {
+    const hit = jevScoreCache.get(cacheKey(backend.model, statement, row));
+    if (hit === void 0) {
+      misses.push(i);
+    } else {
+      scores[i] = hit;
+    }
+  });
+  const batches = [];
+  for (let i = 0; i < misses.length; i += JEV_CONFIG.BATCH_SIZE) {
+    batches.push(misses.slice(i, i + JEV_CONFIG.BATCH_SIZE));
+  }
+  const outcomes = await Promise.all(batches.map(async (idx) => {
+    const out = await postBatch(idx.map((i) => rows[i]), statement, backend, fetchImpl, sleep);
+    idx.forEach((rowIdx, j) => {
+      scores[rowIdx] = out.scores[j];
+      jevScoreCache.set(cacheKey(backend.model, statement, rows[rowIdx]), out.scores[j]);
+    });
+    return out;
+  }));
+  return {
+    ...pickTop(scores, maxResults),
+    scored: rows.length,
+    scores,
+    requests: batches.length,
+    inputTokens: outcomes.reduce((a, o) => a + o.inputTokens, 0),
+    costUsd: outcomes.reduce((a, o) => a + o.costUsd, 0),
+    costEstimated: outcomes.some((o) => o.costEstimated)
+  };
 }
 
 // src/tools/doc-fetcher.ts
@@ -35253,8 +35508,8 @@ async function fetchAppleDocJson(url2, options = {}, maxDepth = 2) {
     if (!jsonApiUrl) {
       throw new Error("Invalid Apple Developer Documentation URL");
     }
-    const cacheKey = generateEnhancedCacheKey(jsonApiUrl, options);
-    const cachedResult = apiCache.get(cacheKey);
+    const cacheKey2 = generateEnhancedCacheKey(jsonApiUrl, options);
+    const cachedResult = apiCache.get(cacheKey2);
     if (cachedResult) {
       logger.debug(`Cache hit for: ${jsonApiUrl}`);
       return cachedResult;
@@ -35276,7 +35531,7 @@ async function fetchAppleDocJson(url2, options = {}, maxDepth = 2) {
       }
     }
     const result = formatJsonDocumentation(jsonData, url2, options);
-    apiCache.set(cacheKey, result);
+    apiCache.set(cacheKey2, result);
     return result;
   } catch (error62) {
     let errorMessage;
@@ -35493,6 +35748,14 @@ var toolDefinitions = [
           type: "string",
           enum: ["all", "documentation", "sample"],
           description: 'Type of content to filter. Use "all" for comprehensive results, "documentation" for API references/guides, "sample" for code snippets. Note: "sample" returns individual code examples, not full projects. For complete sample projects, use get_sample_code instead. Default: "all".'
+        },
+        select: {
+          type: "boolean",
+          description: "Jev semantic selection: score the results against the query and return only the best 1-5, each with a relevance score. Default: on when APPLE_DOCS_MCP_JEV_RERANK=1 is set, otherwise off. select: true while it is not enabled is an error. Adds a Jev provider call (up to about 15 s)."
+        },
+        maxResults: {
+          type: "number",
+          description: "With select on: the most results to return (1-5, default 5). Ignored with select off."
         }
       },
       required: ["query"]
@@ -35992,7 +36255,15 @@ var toolDefinitions = [
         },
         limit: {
           type: "number",
-          description: "Max results (default: 20). Results include context snippets."
+          description: "Max results (default: 20). Results include context snippets. With select on, limit is the recall width: that many videos (ranked by match count) are scored by Jev, and maxResults is how many are returned."
+        },
+        select: {
+          type: "boolean",
+          description: "Jev semantic selection: score the candidate videos against the query and return only the best 1-5, each with a relevance score. Default: on when APPLE_DOCS_MCP_JEV_RERANK=1 is set, otherwise off. select: true while it is not enabled is an error. Adds a Jev provider call (up to about 15 s)."
+        },
+        maxResults: {
+          type: "number",
+          description: "With select on: the most videos to return (1-5, default 5); limit is the recall width. Ignored with select off."
         }
       },
       required: ["query"]
@@ -36152,7 +36423,9 @@ var toolDefinitions = [
 // src/schemas/search.schema.ts
 var searchAppleDocsSchema = external_exports.object({
   query: external_exports.string().describe("Search query for Apple Developer Documentation"),
-  type: external_exports.enum(["all", "documentation", "sample"]).default("all").describe("Type of content to search for (documentation=API reference, sample=code samples)")
+  type: external_exports.enum(["all", "documentation", "sample"]).default("all").describe("Type of content to search for (documentation=API reference, sample=code samples)"),
+  select: external_exports.boolean().optional().describe("Jev semantic selection: keep only the best-matching results. Default follows APPLE_DOCS_MCP_JEV_RERANK; true while it is not enabled is an error"),
+  maxResults: external_exports.number().int().min(1).max(5).default(5).describe("With select on: how many results to return at most (1-5)")
 });
 
 // src/schemas/doc-content.schema.ts
@@ -36285,7 +36558,9 @@ var searchWWDCContentSchema = external_exports.object({
   searchIn: external_exports.enum(["transcript", "code", "both"]).default("both").describe("Where to search"),
   year: external_exports.string().optional().describe("Filter by WWDC year"),
   language: external_exports.string().optional().describe("Filter code by language"),
-  limit: external_exports.number().min(1).max(100).default(20).describe("Maximum number of results")
+  limit: external_exports.number().min(1).max(100).default(20).describe("Maximum number of results (with select on: the recall width scored by Jev)"),
+  select: external_exports.boolean().optional().describe("Jev semantic selection: keep only the best-matching videos. Default follows APPLE_DOCS_MCP_JEV_RERANK; true while it is not enabled is an error"),
+  maxResults: external_exports.number().int().min(1).max(5).default(5).describe("With select on: how many videos to return at most (1-5)")
 });
 var getWWDCVideoSchema = external_exports.object({
   year: external_exports.string().describe("WWDC year"),
@@ -36353,14 +36628,14 @@ async function readBundledFile(filePath) {
   }
 }
 async function fetchData(filePath) {
-  const cacheKey = `wwdc:${filePath}`;
-  const cached3 = wwdcDataCache.get(cacheKey);
+  const cacheKey2 = `wwdc:${filePath}`;
+  const cached3 = wwdcDataCache.get(cacheKey2);
   if (cached3) {
     logger.debug(`Cache hit: ${filePath}`);
     return cached3;
   }
   const data2 = await readBundledFile(filePath);
-  wwdcDataCache.set(cacheKey, data2, WWDC_CONFIG.CACHE_TTL);
+  wwdcDataCache.set(cacheKey2, data2, WWDC_CONFIG.CACHE_TTL);
   return data2;
 }
 async function loadGlobalMetadata() {
@@ -36472,8 +36747,9 @@ async function handleListWWDCVideos(year, topic, hasCode, limit = 50) {
     return `Error: Failed to list WWDC videos: ${errorMessage}`;
   }
 }
-async function handleSearchWWDCContent(query, searchIn = "both", year, language, limit = 20) {
+async function handleSearchWWDCContent(query, searchIn = "both", year, language, limit = 20, select2, maxResults) {
   try {
+    const useJev = resolveSelect(select2);
     const metadata = await loadGlobalMetadata();
     const queryLower = query.toLowerCase();
     const results = [];
@@ -36522,6 +36798,18 @@ async function handleSearchWWDCContent(query, searchIn = "both", year, language,
       }
     }
     results.sort((a, b) => b.matches.length - a.matches.length);
+    if (useJev) {
+      const candidates = results.slice(0, limit);
+      const rows = candidates.map((r) => ({
+        title: r.video.title,
+        url: r.video.url,
+        topics: r.video.topics.join(", "),
+        evidence: r.matches[0]?.context
+      }));
+      const jev = await selectWithJev(query, rows, { maxResults, source: "wwdc" });
+      const selected = jev.selected.map((s) => ({ ...candidates[s.index], score: s.score }));
+      return formatSearchResults2(selected, query, searchIn, jev.noStrongMatch);
+    }
     const limitedResults = results.slice(0, limit);
     return formatSearchResults2(limitedResults, query, searchIn);
   } catch (error62) {
@@ -36704,7 +36992,7 @@ function formatVideoList(videos, year, topic, hasCode) {
   });
   return content;
 }
-function formatSearchResults2(results, query, searchIn) {
+function formatSearchResults2(results, query, searchIn, noStrongMatch = false) {
   if (results.length === 0) {
     return `No ${searchIn === "code" ? "code" : searchIn === "transcript" ? "transcript" : "content"} found containing "${query}".`;
   }
@@ -36716,12 +37004,19 @@ function formatSearchResults2(results, query, searchIn) {
   content += `**Found ${results.length} related videos**
 
 `;
+  if (noStrongMatch) {
+    content += `> **No strong match:** no video scored above the relevance threshold; the best score is ${results[0].score?.toFixed(2)}. Treat the result below as a weak guess.
+
+`;
+  }
   results.forEach((result) => {
     content += `## [${result.video.title}](${result.video.url})
 `;
-    content += `*WWDC${result.video.year} | ${result.matches.length} matches*
-
-`;
+    content += `*WWDC${result.video.year} | ${result.matches.length} matches`;
+    if (result.score !== void 0) {
+      content += ` | relevance score ${result.score.toFixed(2)}`;
+    }
+    content += "*\n\n";
     result.matches.forEach((match) => {
       content += `**${match.type === "code" ? "Code" : "Transcript"}**`;
       if (match.timestamp) {
@@ -37218,7 +37513,7 @@ var toolHandlers = {
   },
   search_apple_docs: async (args, server) => {
     const validatedArgs = searchAppleDocsSchema.parse(args);
-    return await server.searchAppleDocs(validatedArgs.query, validatedArgs.type);
+    return await server.searchAppleDocs(validatedArgs.query, validatedArgs.type, validatedArgs.select, validatedArgs.maxResults);
   },
   get_apple_doc_content: async (args, server) => {
     const validatedArgs = getAppleDocContentSchema.parse(args);
@@ -37371,7 +37666,9 @@ var toolHandlers = {
       validatedArgs.searchIn,
       validatedArgs.year,
       validatedArgs.language,
-      validatedArgs.limit
+      validatedArgs.limit,
+      validatedArgs.select,
+      validatedArgs.maxResults
     );
     return { content: [{ type: "text", text: result }] };
   },
@@ -38229,13 +38526,13 @@ init_http_client();
 init_cache();
 init_framework_mapper();
 async function handleGetSampleCode(framework, beta = "include", searchQuery, limit = 50) {
-  const cacheKey = generateUrlCacheKey("sample-code", {
+  const cacheKey2 = generateUrlCacheKey("sample-code", {
     framework,
     beta,
     searchQuery,
     limit
   });
-  const cachedResult = sampleCodeCache.get(cacheKey);
+  const cachedResult = sampleCodeCache.get(cacheKey2);
   if (cachedResult) {
     return cachedResult;
   }
@@ -38275,7 +38572,7 @@ async function handleGetSampleCode(framework, beta = "include", searchQuery, lim
     totalFound: filteredSampleCodes.length,
     showing: limitedSampleCodes.length
   });
-  sampleCodeCache.set(cacheKey, result);
+  sampleCodeCache.set(cacheKey2, result);
   return result;
 }
 function parseSampleCodes(content, index2) {
@@ -52842,7 +53139,7 @@ var load = getLoad(parse9, (dom, options) => options._useHtmlParser2 ? esm_defau
 init_cache();
 init_constants();
 init_http_client();
-import { createHash, randomUUID } from "node:crypto";
+import { createHash as createHash2, randomUUID } from "node:crypto";
 import { mkdtempSync } from "node:fs";
 import { mkdir, open as open2, readFile, readdir, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -53230,8 +53527,8 @@ async function cancelResponseBody(response) {
   await response.body.cancel().catch(() => void 0);
 }
 async function fetchAppleDesignContent(url2) {
-  const cacheKey = `design-content:${url2}`;
-  const cachedContent = designContentCache.get(cacheKey);
+  const cacheKey2 = `design-content:${url2}`;
+  const cachedContent = designContentCache.get(cacheKey2);
   if (cachedContent) {
     return cachedContent;
   }
@@ -53252,7 +53549,7 @@ ${formatDesignResources(resources)}`;
       content = parseAppleDesignHtmlPage(html3, finalUrl);
     }
   }
-  designContentCache.set(cacheKey, content);
+  designContentCache.set(cacheKey2, content);
   return content;
 }
 async function getDesignResourcesCatalog() {
@@ -54674,10 +54971,10 @@ function normalizeWhitespace(value) {
   return value.replace(/\s+/g, " ").trim();
 }
 function hashString(value) {
-  return createHash("sha256").update(value).digest("hex");
+  return createHash2("sha256").update(value).digest("hex");
 }
 function hashBuffer(value) {
-  return createHash("sha256").update(value).digest("hex");
+  return createHash2("sha256").update(value).digest("hex");
 }
 function getIdentifierTitle(identifier) {
   return identifier.split("/").pop() ?? identifier;
@@ -54895,16 +55192,29 @@ var AppleDeveloperDocsMCPServer = class {
       return await readCachedDesignResource(request.params.uri);
     });
   }
-  async searchAppleDocs(query, type = "all") {
+  async searchAppleDocs(query, type = "all", select2, maxResults) {
     try {
       const queryValidation = validateInput(query, "Search query");
       if (queryValidation) {
         return createToolErrorResponse(queryValidation, "search_apple_docs");
       }
+      const useJev = resolveSelect(select2);
       const searchUrl = `${APPLE_URLS.SEARCH}?q=${encodeURIComponent(query)}`;
       logger.info(`Searching Apple docs for: ${query}`);
-      const results = await fetchAppleDocsSearch(query, type, searchUrl);
-      return formatSearchResultsResponse(results, query, searchUrl, type);
+      let results = await fetchAppleDocsSearch(query, type, searchUrl);
+      let noStrongMatch = false;
+      if (useJev && results.length > 0) {
+        const rows = results.map((r) => ({
+          title: r.title,
+          summary: r.description,
+          url: r.url,
+          topics: r.framework
+        }));
+        const jev = await selectWithJev(query, rows, { maxResults, source: "docs" });
+        results = jev.selected.map((s) => ({ ...results[s.index], score: s.score }));
+        noStrongMatch = jev.noStrongMatch;
+      }
+      return formatSearchResultsResponse(results, query, searchUrl, type, noStrongMatch);
     } catch (error62) {
       if (error62 && typeof error62 === "object" && "type" in error62) {
         return createToolErrorResponse(error62, "search_apple_docs");

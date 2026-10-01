@@ -1,10 +1,10 @@
 ---
 trdd-id: UM1PQWDB
 title: Add Jev semantic selection of search results
-column: dev
+column: testing
 status: tasked
 created: 2026-09-30T20:14:51+0200
-updated: 2026-10-01T09:44:32+0200
+updated: 2026-10-01T10:08:22+0200
 current-owner: user
 created-by: user
 task-type: feature
@@ -30,10 +30,10 @@ Constraints:
 Research on Jev integration feasibility has not started yet.
 
 Acceptance:
-- [ ] Config flag to enable/disable Jev re-ranking
-- [ ] Explicit failure (not silent fallback) when enabled without required credentials
-- [ ] Offline tests using recorded Jev response fixtures
-- [ ] tsc/eslint/jest all pass
+- [x] Config flag to enable/disable Jev re-ranking
+- [x] Explicit failure (not silent fallback) when enabled without required credentials
+- [x] Offline tests using recorded Jev response fixtures
+- [x] tsc/eslint/jest all pass
 
 ## Approval log
 

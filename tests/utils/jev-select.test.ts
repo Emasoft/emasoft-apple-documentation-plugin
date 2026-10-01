@@ -224,3 +224,49 @@ const httpsFetch = ((url: string, init: RequestInit) =>
   expect(fixture.rows[res.selected[0].index].title).toBe('NavigationStack');
   expect(res.inputTokens).toBeGreaterThan(0);
 }, 60000);
+
+describe('match statement, query quoting and cost estimate', () => {
+  it('asks the WWDC statement for source wwdc and keeps the docs statement otherwise', async () => {
+    const fetchImpl = fakeFetch(byNumber);
+    await selectWithJev('AsyncStream', rows(2), { env: OPENROUTER_ENV, fetchImpl, source: 'wwdc' });
+    const wwdc = (JSON.parse(fetchImpl.mock.calls[0][1].body as string) as Sent).questions['r0.match'].instructions;
+    expect(wwdc).toContain('This WWDC session is what a developer looking for "AsyncStream" should watch.');
+
+    const docsFetch = fakeFetch(byNumber);
+    await selectWithJev('AsyncStream', rows(2), { env: OPENROUTER_ENV, fetchImpl: docsFetch });
+    const docs = (JSON.parse(docsFetch.mock.calls[0][1].body as string) as Sent).questions['r0.match'].instructions;
+    expect(docs).toContain('This is the result a developer searching Apple developer documentation for "AsyncStream" wants.');
+  });
+
+  it('does not share cached scores between sources', async () => {
+    const fetchImpl = fakeFetch(byNumber);
+    await selectWithJev('q', rows(2), { env: OPENROUTER_ENV, fetchImpl, source: 'wwdc' });
+    await selectWithJev('q', rows(2), { env: OPENROUTER_ENV, fetchImpl, source: 'docs' });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('JSON-quotes a query containing a double quote', async () => {
+    const fetchImpl = fakeFetch(byNumber);
+    await selectWithJev('say "hi"', rows(1), { env: OPENROUTER_ENV, fetchImpl });
+    const text = (JSON.parse(fetchImpl.mock.calls[0][1].body as string) as Sent).questions['r0.match'].instructions;
+    expect(text).toContain('for "say \\"hi\\"" wants.');
+  });
+
+  it('estimates the cost from input tokens when the provider reports none, and says so', async () => {
+    const noCost: Handler = body => {
+      const answers: Record<string, unknown> = {};
+      body.state.rows.forEach(r => {
+        answers[String(r.id) + '.match'] = { type: 'noul', noul: 0.9 };
+      });
+      return new Response(JSON.stringify({ answers, usage: { input_tokens: 1000000 } }), { status: 200 });
+    };
+    const res = await selectWithJev('q', rows(3), { env: OPENROUTER_ENV, fetchImpl: fakeFetch(noCost) });
+    expect(res.costUsd).toBeCloseTo(0.042);
+    expect(res.costEstimated).toBe(true);
+  });
+
+  it('does not flag a provider-reported cost as estimated', async () => {
+    const res = await selectWithJev('q', rows(3), { env: OPENROUTER_ENV, fetchImpl: fakeFetch(byNumber) });
+    expect(res.costEstimated).toBe(false);
+  });
+});

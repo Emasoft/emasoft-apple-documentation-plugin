@@ -67,7 +67,6 @@ export const CACHE_SIZE = {
   DEFAULT_CACHE_TTL: 30 * 60 * 1000, // 30 minutes
 } as const;
 
-
 // Jev semantic selection (src/utils/jev-select.ts). Env vars are read at CALL time, not import time.
 export const JEV_CONFIG = {
   ENABLE_ENV: 'APPLE_DOCS_MCP_JEV_RERANK',
@@ -91,6 +90,7 @@ export const JEV_CONFIG = {
   RELATIVE_CUTOFF: 0.5, // drop rows scoring below this fraction of the top score
   MAX_GAP: 0.25, // stop at a gap this large between consecutive sorted scores
   NO_STRONG_MATCH: 0.3, // top score below this: return only the best row, labelled
+  DEFAULT_PRICE_PER_MTOK: 0.042, // USD per million input tokens (jgrep default); used only when the provider reports no cost
 } as const;
 
 // Safari User-Agent Constants

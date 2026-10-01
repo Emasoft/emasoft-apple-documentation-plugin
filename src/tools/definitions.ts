@@ -24,6 +24,14 @@ export const toolDefinitions: Tool[] = [
           enum: ['all', 'documentation', 'sample'],
           description: 'Type of content to filter. Use "all" for comprehensive results, "documentation" for API references/guides, "sample" for code snippets. Note: "sample" returns individual code examples, not full projects. For complete sample projects, use get_sample_code instead. Default: "all".',
         },
+        select: {
+          type: 'boolean',
+          description: 'Jev semantic selection: score the results against the query and return only the best 1-5, each with a relevance score. Default: on when APPLE_DOCS_MCP_JEV_RERANK=1 is set, otherwise off. select: true while it is not enabled is an error. Adds a Jev provider call (up to about 15 s).',
+        },
+        maxResults: {
+          type: 'number',
+          description: 'With select on: the most results to return (1-5, default 5). Ignored with select off.',
+        },
       },
       required: ['query'],
     },
@@ -522,7 +530,15 @@ export const toolDefinitions: Tool[] = [
         },
         limit: {
           type: 'number',
-          description: 'Max results (default: 20). Results include context snippets.',
+          description: 'Max results (default: 20). Results include context snippets. With select on, limit is the recall width: that many videos (ranked by match count) are scored by Jev, and maxResults is how many are returned.',
+        },
+        select: {
+          type: 'boolean',
+          description: 'Jev semantic selection: score the candidate videos against the query and return only the best 1-5, each with a relevance score. Default: on when APPLE_DOCS_MCP_JEV_RERANK=1 is set, otherwise off. select: true while it is not enabled is an error. Adds a Jev provider call (up to about 15 s).',
+        },
+        maxResults: {
+          type: 'number',
+          description: 'With select on: the most videos to return (1-5, default 5); limit is the recall width. Ignored with select off.',
         },
       },
       required: ['query'],

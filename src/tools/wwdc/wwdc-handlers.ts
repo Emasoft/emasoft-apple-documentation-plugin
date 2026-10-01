@@ -10,6 +10,7 @@ import {
   loadYearIndex,
   loadVideoData,
 } from '../../utils/wwdc-data-source.js';
+import { selectWithJev, resolveSelect, type JevRow } from '../../utils/jev-select.js';
 
 /**
  * Helper function to load multiple video data files
@@ -140,13 +141,18 @@ export async function handleSearchWWDCContent(
   year?: string,
   language?: string,
   limit: number = 20,
+  select?: boolean,
+  maxResults?: number,
 ): Promise<string> {
   try {
+    // Fail before the scan when select: true cannot be honoured.
+    const useJev = resolveSelect(select);
     const metadata = await loadGlobalMetadata();
     const queryLower = query.toLowerCase();
     const results: Array<{
       video: WWDCVideo & { year: string };
       matches: Array<{ type: 'transcript' | 'code'; context: string; timestamp?: string }>;
+      score?: number;
     }> = [];
 
     // Determine years to search
@@ -213,6 +219,22 @@ export async function handleSearchWWDCContent(
 
     // Sort by match count
     results.sort((a, b) => b.matches.length - a.matches.length);
+
+    if (useJev) {
+      // limit is the recall width: the Jev stage scores the top `limit` videos by match count and keeps <= maxResults.
+      // A failure propagates to the catch below as an error result, never an unranked fallback.
+      const candidates = results.slice(0, limit);
+      // Explicit fields only: spreading the video would leak its `id` over the Jev row id.
+      const rows: JevRow[] = candidates.map(r => ({
+        title: r.video.title,
+        url: r.video.url,
+        topics: r.video.topics.join(', '),
+        evidence: r.matches[0]?.context,
+      }));
+      const jev = await selectWithJev(query, rows, { maxResults, source: 'wwdc' });
+      const selected = jev.selected.map(s => ({ ...candidates[s.index], score: s.score }));
+      return formatSearchResults(selected, query, searchIn, jev.noStrongMatch);
+    }
 
     // Apply limit
     const limitedResults = results.slice(0, limit);
@@ -505,9 +527,11 @@ function formatSearchResults(
   results: Array<{
     video: WWDCVideo & { year: string };
     matches: Array<{ type: 'transcript' | 'code'; context: string; timestamp?: string }>;
+    score?: number;
   }>,
   query: string,
   searchIn: string,
+  noStrongMatch: boolean = false,
 ): string {
   if (results.length === 0) {
     return `No ${searchIn === 'code' ? 'code' : searchIn === 'transcript' ? 'transcript' : 'content'} found containing "${query}".`;
@@ -517,10 +541,17 @@ function formatSearchResults(
   content += `**Search Query:** "${query}"\n`;
   content += `**Search Scope:** ${searchIn === 'code' ? 'Code' : searchIn === 'transcript' ? 'Transcript' : 'All Content'}\n`;
   content += `**Found ${results.length} related videos**\n\n`;
+  if (noStrongMatch) {
+    content += `> **No strong match:** no video scored above the relevance threshold; the best score is ${results[0].score?.toFixed(2)}. Treat the result below as a weak guess.\n\n`;
+  }
 
   results.forEach(result => {
     content += `## [${result.video.title}](${result.video.url})\n`;
-    content += `*WWDC${result.video.year} | ${result.matches.length} matches*\n\n`;
+    content += `*WWDC${result.video.year} | ${result.matches.length} matches`;
+    if (result.score !== undefined) {
+      content += ` | relevance score ${result.score.toFixed(2)}`;
+    }
+    content += '*\n\n';
 
     result.matches.forEach(match => {
       content += `**${match.type === 'code' ? 'Code' : 'Transcript'}**`;

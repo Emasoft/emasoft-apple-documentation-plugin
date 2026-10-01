@@ -39,10 +39,14 @@ export interface JevResult {
   requests: number;
   inputTokens: number;
   costUsd: number;
+  /** True when at least one batch reported no cost and it was estimated from inputTokens. */
+  costEstimated: boolean;
 }
 
 export interface JevOptions {
   maxResults?: number;
+  /** Which match statement to ask: Apple documentation results (default) or WWDC sessions. */
+  source?: JevSource;
   env?: NodeJS.ProcessEnv;
   fetchImpl?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
@@ -50,18 +54,39 @@ export interface JevOptions {
 
 type ProviderName = keyof typeof JEV_CONFIG.PROVIDERS;
 interface Backend { name: ProviderName; url: string; model: string; apiKey: string }
-interface BatchOutcome { scores: number[]; inputTokens: number; costUsd: number }
+interface BatchOutcome { scores: number[]; inputTokens: number; costUsd: number; costEstimated: boolean }
 
 // One constant, measured on real rows (see TRDD-UM1PQWDB). postBatch adds jgrep's per-row
 // "Look only at the row with id" prefix verbatim.
-export const matchStatement = (query: string): string =>
-  `This is the result a developer searching Apple developer documentation for "${query}" wants.`;
+export type JevSource = 'docs' | 'wwdc';
+
+// JSON.stringify quotes the query so a `"` inside it cannot break the instruction.
+export const matchStatement = (query: string, source: JevSource = 'docs'): string =>
+  source === 'wwdc'
+    ? `This WWDC session is what a developer looking for ${JSON.stringify(query)} should watch.`
+    : `This is the result a developer searching Apple developer documentation for ${JSON.stringify(query)} wants.`;
 
 const RETRYABLE = new Set([408, 429, 500, 502, 503, 504, 529]);
 const NO_ESCAPE = 'Retry with select: false to get the unfiltered results.';
 
 export function isJevEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
   return env[JEV_CONFIG.ENABLE_ENV] === '1';
+}
+
+/**
+ * Resolves a tool's `select` argument: explicit true while Jev is not enabled is an error
+ * (never a silent unranked result); undefined follows the env switch.
+ */
+export function resolveSelect(select: boolean | undefined, env: NodeJS.ProcessEnv = process.env): boolean {
+  const enabled = isJevEnabled(env);
+  if (select === true && !enabled) {
+    throw jevError(
+      ErrorType.INVALID_INPUT,
+      `select: true requires ${JEV_CONFIG.ENABLE_ENV}=1 and ${JEV_CONFIG.PROVIDER_ENV} to be set.`,
+      ['Omit select, or set select: false.'],
+    );
+  }
+  return select ?? enabled;
 }
 
 function jevError(type: ErrorType, message: string, suggestions: string[] = [NO_ESCAPE]): AppError {
@@ -137,8 +162,11 @@ function parseBatch(text: string, n: number, backend: Backend): BatchOutcome {
     }
     scores.push(p);
   }
-  const cost = [parsed.cost, parsed.usage?.cost, parsed.cost_usd].find((c): c is number => typeof c === 'number');
-  return { scores, inputTokens: parsed.usage?.input_tokens ?? 0, costUsd: cost ?? 0 };
+  const inputTokens = parsed.usage?.input_tokens ?? 0;
+  const reported = [parsed.cost, parsed.usage?.cost, parsed.cost_usd].find((c): c is number => typeof c === 'number');
+  // Never report 0 as if free: with no provider cost, estimate from tokens at jgrep's default price.
+  const costUsd = reported ?? (inputTokens * JEV_CONFIG.DEFAULT_PRICE_PER_MTOK) / 1e6;
+  return { scores, inputTokens, costUsd, costEstimated: reported === undefined };
 }
 
 async function postBatch(
@@ -218,7 +246,6 @@ async function postBatch(
 }
 
 /** Relative cutoff, gap stop and no-strong-match rule over scores (see TRDD-UM1PQWDB). */
-/** Relative cutoff, gap stop and no-strong-match rule over scores (see TRDD-UM1PQWDB). */
 export function pickTop(scores: number[], maxResults: number): { selected: JevSelection[]; noStrongMatch: boolean } {
   const sorted = scores
     .map((score, index) => ({ index, score }))
@@ -248,7 +275,7 @@ export async function selectWithJev(query: string, candidates: JevRow[], opts: J
   const backend = resolveBackend(opts.env ?? process.env);
   const fetchImpl = opts.fetchImpl ?? globalThis.fetch; // resolved per call: tests replace global.fetch
   const sleep = opts.sleep ?? ((ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms)));
-  const statement = matchStatement(query);
+  const statement = matchStatement(query, opts.source);
   // Recall cut, not a selection fallback: the caller's own ranking decides which 256 survive.
   const rows = candidates.slice(0, JEV_CONFIG.MAX_CANDIDATES);
 
@@ -284,5 +311,6 @@ export async function selectWithJev(query: string, candidates: JevRow[], opts: J
     requests: batches.length,
     inputTokens: outcomes.reduce((a, o) => a + o.inputTokens, 0),
     costUsd: outcomes.reduce((a, o) => a + o.costUsd, 0),
+    costEstimated: outcomes.some(o => o.costEstimated),
   };
 }

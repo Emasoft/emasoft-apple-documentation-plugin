@@ -142,7 +142,7 @@ export const toolHandlers: Record<string, ToolHandler> = {
 
   search_apple_docs: async (args, server) => {
     const validatedArgs = searchAppleDocsSchema.parse(args);
-    return await server.searchAppleDocs(validatedArgs.query, validatedArgs.type);
+    return await server.searchAppleDocs(validatedArgs.query, validatedArgs.type, validatedArgs.select, validatedArgs.maxResults);
   },
 
   get_apple_doc_content: async (args, server) => {
@@ -313,6 +313,8 @@ export const toolHandlers: Record<string, ToolHandler> = {
       validatedArgs.year,
       validatedArgs.language,
       validatedArgs.limit,
+      validatedArgs.select,
+      validatedArgs.maxResults,
     );
     return { content: [{ type: 'text', text: result }] };
   },

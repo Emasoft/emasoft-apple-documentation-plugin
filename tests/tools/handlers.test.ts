@@ -114,7 +114,7 @@ describe('Tool Handlers', () => {
       const args = { query: 'SwiftUI', type: 'all' };
       const result = await handleToolCall('search_apple_docs', args, mockServer);
 
-      expect(mockServer.searchAppleDocs).toHaveBeenCalledWith('SwiftUI', 'all');
+      expect(mockServer.searchAppleDocs).toHaveBeenCalledWith('SwiftUI', 'all', undefined, 5);
       expect(result).toEqual({
         content: [{ type: 'text', text: 'Search results' }],
       });

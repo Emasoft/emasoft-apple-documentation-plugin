@@ -9,6 +9,7 @@ export function formatSearchResults(
   query: string,
   filterType: string,
   searchUrl: string,
+  noStrongMatch: boolean = false,
 ): string {
   let content = '';
 
@@ -17,6 +18,9 @@ export function formatSearchResults(
   content += `**Query:** "${query}"\n`;
   content += `**Filter:** ${filterType}\n`;
   content += `**Results found:** ${results.length}\n\n`;
+  if (noStrongMatch) {
+    content += `> **No strong match:** no result scored above the relevance threshold; the best score is ${results[0]?.score?.toFixed(2)}. Treat the result below as a weak guess.\n\n`;
+  }
 
   // Check if query might be video-related
   const videoSuggestion = getVideoSuggestion(query);
@@ -132,6 +136,9 @@ function formatSingleResult(result: SearchResult, index: number): string {
     content += `**Framework:** ${result.framework}\n`;
   }
   content += `**Type:** ${result.type.replace(/-/g, ' ')}\n`;
+  if (result.score !== undefined) {
+    content += `**Relevance score:** ${result.score.toFixed(2)}\n`;
+  }
 
   // Add description
   if (result.description) {
@@ -198,9 +205,10 @@ export function formatSearchResultsResponse(
   query: string,
   searchUrl: string,
   filterType: string = 'all',
+  noStrongMatch: boolean = false,
 ): { content: Array<{ type: string; text: string }> } {
   try {
-    const formattedContent = formatSearchResults(results, query, filterType, searchUrl);
+    const formattedContent = formatSearchResults(results, query, filterType, searchUrl, noStrongMatch);
 
     return {
       content: [{

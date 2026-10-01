@@ -11,6 +11,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { formatSearchResultsResponse } from './tools/search-parser.js';
 import { fetchAppleDocsSearch } from './tools/apple-search-api.js';
+import { selectWithJev, resolveSelect, type JevRow } from './utils/jev-select.js';
 import { fetchAppleDocJson } from './tools/doc-fetcher.js';
 import { handleListTechnologies } from './tools/list-technologies.js';
 import { searchFrameworkSymbols } from './tools/search-framework-symbols.js';
@@ -241,13 +242,15 @@ export default class AppleDeveloperDocsMCPServer {
     });
   }
 
-  public async searchAppleDocs(query: string, type: string = 'all') {
+  public async searchAppleDocs(query: string, type: string = 'all', select?: boolean, maxResults?: number) {
     try {
       // 输入验证
       const queryValidation = validateInput(query, 'Search query');
       if (queryValidation) {
         return createToolErrorResponse(queryValidation, 'search_apple_docs');
       }
+      // Fail before the slow Apple fetch when select: true cannot be honoured.
+      const useJev = resolveSelect(select);
 
       // 创建 Apple Developer Documentation 搜索 URL（仅用于展示/回退链接，实际请求走 JSON API）
       const searchUrl = `${APPLE_URLS.SEARCH}?q=${encodeURIComponent(query)}`;
@@ -256,10 +259,24 @@ export default class AppleDeveloperDocsMCPServer {
 
       // 获取搜索结果：developer.apple.com/search 现在是客户端渲染的，HTML 里不再包含结果
       // (issue #51, #43)，改为直接调用该页面自己使用的内部 JSON 搜索接口。
-      const results = await fetchAppleDocsSearch(query, type, searchUrl);
+      let results = await fetchAppleDocsSearch(query, type, searchUrl);
+
+      // Jev selection: a failure propagates to the catch below as a tool error, never an unranked fallback.
+      let noStrongMatch = false;
+      if (useJev && results.length > 0) {
+        const rows: JevRow[] = results.map(r => ({
+          title: r.title,
+          summary: r.description,
+          url: r.url,
+          topics: r.framework,
+        }));
+        const jev = await selectWithJev(query, rows, { maxResults, source: 'docs' });
+        results = jev.selected.map(s => ({ ...results[s.index], score: s.score }));
+        noStrongMatch = jev.noStrongMatch;
+      }
 
       // 格式化并返回搜索结果
-      return formatSearchResultsResponse(results, query, searchUrl, type);
+      return formatSearchResultsResponse(results, query, searchUrl, type, noStrongMatch);
     } catch (error) {
       if (error && typeof error === 'object' && 'type' in error) {
         return createToolErrorResponse(error as any, 'search_apple_docs');

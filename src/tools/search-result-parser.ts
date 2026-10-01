@@ -16,6 +16,8 @@ export interface SearchResult {
   description: string;
   framework?: string;
   beta?: boolean;
+  /** Jev relevance score in [0,1]; present only when select ran. */
+  score?: number;
 }
 
 /**
