@@ -1,10 +1,10 @@
 ---
 trdd-id: 4P6OWTBS
 title: Make the fork independent from upstream
-column: dev
+column: blocked
 status: tasked
 created: 2026-09-30T20:14:23+0200
-updated: 2026-10-01T06:48:23+0200
+updated: 2026-10-01T06:50:48+0200
 current-owner: user
 created-by: user
 task-type: infra
@@ -15,6 +15,13 @@ mandated-by: user
 approved: true
 approval-judge: user
 approval-datetime: 2026-09-30T20:14:23+0200
+pre-block-column: dev
+unblock-when: [issue:Emasoft/claude-plugins-validation#238 closed]
+review-after: 2026-10-08
+blocked-by: [GZECHF9J]
+npt: [GZECHF9J]
+blocker-probe: gh pr view 238 --repo Emasoft/claude-plugins-validation --json state --jq .state
+blocker-holds-if: not-match:MERGED
 ---
 
 # Make the fork independent from upstream
@@ -41,6 +48,7 @@ Acceptance:
 - 2026-09-30T20:14:23+0200 — MANDATE issued by user (min-approval-requirement: none). Pre-approved: issuer authority >= required approver. No approval request was sent.
 - 2026-09-30T23:35:06+0200 — column → dev by user. CPV agent working sub-step a of the plugin restructure
 - 2026-09-30 — CORRECTION: the move to dev above was made by main-agent@apple-docs-mcp (a worker, via trddgrep's default actor), not by the user.
+- 2026-10-01T06:49:33+0200 — column → blocked. waiting on the user: merge CPV #234 then #238 and release CPV
 
 ## User decisions 2026-09-30 (verbatim)
 
