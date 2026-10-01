@@ -1,10 +1,10 @@
 ---
 trdd-id: TBK20QL4
 title: Update GitHub Actions to current majors
-column: todo
-status: tasked
+column: superseded
+status: archived
 created: 2026-09-30T20:14:51+0200
-updated: 2026-09-30T20:15:19+0200
+updated: 2026-10-01T05:05:11+0200
 current-owner: user
 created-by: user
 task-type: infra
@@ -16,6 +16,7 @@ approved: true
 approval-judge: user
 approval-datetime: 2026-09-30T20:14:51+0200
 npt: []
+superseded-by: [4P6OWTBS]
 ---
 
 # Update GitHub Actions to current majors
@@ -32,3 +33,4 @@ Acceptance:
 ## Approval log
 
 - 2026-09-30T20:14:51+0200 — MANDATE issued by user (min-approval-requirement: none). Pre-approved: issuer authority >= required approver. No approval request was sent.
+- 2026-10-01T05:05:11+0200 — SUPERSEDED by main-agent@apple-docs-mcp. Superseded by CPV pipeline commit c42c071 (ci/release/notify-marketplace workflows replaced; actions pinned to SHA at current majors; permissions {} top-level), verified in .github/workflows and 46b695a.

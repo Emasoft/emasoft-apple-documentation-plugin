@@ -4,7 +4,7 @@ title: Make the fork independent from upstream
 column: dev
 status: tasked
 created: 2026-09-30T20:14:23+0200
-updated: 2026-09-30T23:40:59+0200
+updated: 2026-10-01T05:05:19+0200
 current-owner: user
 created-by: user
 task-type: infra
@@ -68,3 +68,7 @@ A9. Phase 2 prerequisites: MARKETPLACE_PAT secret on the new repo for notify-mar
 A10. Sub-step a details: the standalone test spawns the bundle with explicit minimal env { PATH, HOME } (no NODE_ENV, no JEST_WORKER_ID) and a cwd that is a separate empty temp dir with no data/, because getWWDCDataDirectory() takes its test branch (cwd/data/wwdc) under NODE_ENV=test or JEST_WORKER_ID and a child inherits both from jest, which would pass despite a broken production path. tmp/data may symlink to <repo>/data instead of copying 39 MB. esbuild: single output file, no code splitting (import.meta.url must be the bundle's own URL); if CJS deps fail with 'Dynamic require of X is not supported' add banner import { createRequire } from 'module'; const require = createRequire(import.meta.url);. Freshness check builds to a TEMP outfile and compares bytes with the committed bundle and legal-comments file, never rewriting the committed bundle during tests.
 A11. Sub-step d: README must state the requirement of node (>= the .node-version major) on the user's PATH because Claude Code's native installer does not ship Node, and the install size (~39 MB WWDC data per installed version).
 Supersedes the Restructure plan section above where they conflict (sub-steps, single root data/, ESM bundle).
+
+## STATE
+
+2026-10-01: Phase 1 sub-steps a, a2, b, c, d, e committed (4ea418c..35ac9be). Phase 2 (first push, hub entry, release) blocked on user decisions: data/wwdc CPV findings, first version, MARKETPLACE_PAT, fastedit fallback, janitor pnpm-workspace proposals, env vs userConfig. Janitor applied branch-protection rulesets to the new repo on 2026-10-01 (required checks may block the first push).

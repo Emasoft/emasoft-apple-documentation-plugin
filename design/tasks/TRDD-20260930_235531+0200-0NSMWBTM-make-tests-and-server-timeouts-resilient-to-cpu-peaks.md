@@ -4,7 +4,7 @@ title: Make tests and server timeouts resilient to CPU peaks
 column: dev
 status: tasked
 created: 2026-09-30T23:55:31+0200
-updated: 2026-09-30T23:55:31+0200
+updated: 2026-10-01T05:05:18+0200
 current-owner: main-agent@apple-docs-mcp
 created-by: main-agent@apple-docs-mcp
 task-type: bugfix
@@ -15,6 +15,7 @@ mandated-by: none
 approved: true
 approval-judge: main-agent@apple-docs-mcp
 approval-datetime: 2026-09-30T23:55:31+0200
+implementation-commits: [1ea6f82, 7296fba, 1027a63]
 ---
 
 # Make tests and server timeouts resilient to CPU peaks
@@ -24,3 +25,5 @@ USER DIRECTIVE (verbatim, 2026-09-30): "make those tests and code parts more res
 ## Approval log
 
 - 2026-09-30T23:55:31+0200 — MANDATE issued by main-agent@apple-docs-mcp (min-approval-requirement: none). Pre-approved: issuer authority >= required approver. No approval request was sent.
+2026-10-01 — Closed by orchestrator-assigned board maintenance. ai_review = adversarial review fork; no human reviewed. Acceptance verified against repo state and recorded evidence. Card had no acceptance boxes; evidence: 539/539 x3 plus one run with all 14 cores loaded; later suites 553/553.
+2026-10-01 — Correction: NOT closed. trddgrep refuses archiving as complete because the card has no acceptance checklist; stays in dev until a checklist is written.

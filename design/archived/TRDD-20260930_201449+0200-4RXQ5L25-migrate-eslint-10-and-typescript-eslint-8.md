@@ -1,10 +1,10 @@
 ---
 trdd-id: 4RXQ5L25
 title: Migrate ESLint 10 and typescript-eslint 8
-column: testing
-status: tasked
+column: complete
+status: archived
 created: 2026-09-30T20:14:49+0200
-updated: 2026-10-01T02:28:57+0200
+updated: 2026-10-01T05:05:10+0200
 current-owner: user
 created-by: user
 task-type: refactor
@@ -16,6 +16,7 @@ approved: true
 approval-judge: user
 approval-datetime: 2026-09-30T20:14:49+0200
 npt: []
+implementation-commits: [2328da5, 367d04f]
 ---
 
 # Migrate ESLint 10 and typescript-eslint 8
@@ -23,13 +24,15 @@ npt: []
 eslint 8.57 -> 10.11 requires migrating .eslintrc* to a flat eslint.config.js. typescript-eslint 7 -> 8.
 
 Acceptance:
-- [ ] eslint.config.js replaces .eslintrc*
-- [ ] npx eslint . --quiet passes with zero errors
-- [ ] typescript-eslint bumped to 8.x
+- [x] eslint.config.js replaces .eslintrc*
+- [x] npx eslint . --quiet passes with zero errors
+- [x] typescript-eslint bumped to 8.x
 
 ## Approval log
 
 - 2026-09-30T20:14:49+0200 — MANDATE issued by user (min-approval-requirement: none). Pre-approved: issuer authority >= required approver. No approval request was sent.
+2026-10-01 — Closed by orchestrator-assigned board maintenance. ai_review = adversarial review fork; no human reviewed. Acceptance verified against repo state and recorded evidence.
+- 2026-10-01T05:05:10+0200 — COMPLETE by main-agent@apple-docs-mcp. acceptance met; ai_review by adversarial fork, no human.
 
 ## Dependency note (2026-09-30)
 

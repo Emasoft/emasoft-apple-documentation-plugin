@@ -1,10 +1,10 @@
 ---
 trdd-id: 9SMOD8AH
 title: Update Node types and engine
-column: testing
-status: tasked
+column: complete
+status: archived
 created: 2026-09-30T20:14:35+0200
-updated: 2026-10-01T02:31:30+0200
+updated: 2026-10-01T05:05:11+0200
 current-owner: user
 created-by: user
 task-type: infra
@@ -16,6 +16,7 @@ approved: true
 approval-judge: user
 approval-datetime: 2026-09-30T20:14:35+0200
 npt: []
+implementation-commits: [46b695a]
 ---
 
 # Update Node types and engine
@@ -23,13 +24,15 @@ npt: []
 Bump @types/node 20 -> 26; add an explicit package.json engines.node field matching the CI node-version; align CI workflow node-version with it.
 
 Acceptance:
-- [ ] @types/node bumped
-- [ ] package.json engines.node present and matches CI
-- [ ] tsc --noEmit passes
+- [x] @types/node bumped
+- [x] package.json engines.node present and matches CI
+- [x] tsc --noEmit passes
 
 ## Approval log
 
 - 2026-09-30T20:14:35+0200 — MANDATE issued by user (min-approval-requirement: none). Pre-approved: issuer authority >= required approver. No approval request was sent.
+2026-10-01 — Closed by orchestrator-assigned board maintenance. ai_review = adversarial review fork; no human reviewed. Acceptance verified against repo state and recorded evidence.
+- 2026-10-01T05:05:11+0200 — COMPLETE by main-agent@apple-docs-mcp. acceptance met; ai_review by adversarial fork, no human.
 
 ## Results
 
