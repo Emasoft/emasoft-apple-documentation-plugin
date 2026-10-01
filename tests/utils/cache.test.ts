@@ -25,7 +25,7 @@ describe('Cache System', () => {
     it('should respect TTL', async () => {
       cache.set('key1', 'value1', 500); // 500ms TTL (WHY: 100ms could expire before the first get under a CPU stall)
       expect(cache.get('key1')).toBe('value1');
-      
+
       await new Promise(resolve => setTimeout(resolve, 750));
       expect(cache.get('key1')).toBeUndefined();
     });
@@ -62,7 +62,7 @@ describe('Cache System', () => {
       cache.set('key2', 'value2');
       cache.set('key3', 'value3');
       cache.set('key4', 'value4'); // Should evict key1
-      
+
       expect(cache.get('key1')).toBeUndefined();
       expect(cache.get('key2')).toBe('value2');
       expect(cache.get('key3')).toBe('value3');
@@ -82,7 +82,7 @@ describe('Cache System', () => {
       cache.set('key1', 'value1');
       cache.set('key2', 'value2');
       const entries = cache.entries();
-      
+
       expect(entries).toHaveLength(2);
       expect(entries.find(e => e[0] === 'key1')?.[1]).toBe('value1');
       expect(entries.find(e => e[0] === 'key2')?.[1]).toBe('value2');
@@ -90,20 +90,20 @@ describe('Cache System', () => {
 
     it('should handle cleanup of expired entries', async () => {
       const cleanupSpy = jest.spyOn(cache as any, 'cleanup');
-      
+
       // Create a new cache with shorter cleanup interval
       const testCache = new MemoryCache(10, 1000);
-      
+
       // Set some entries with short TTL
       testCache.set('key1', 'value1', 50);
       testCache.set('key2', 'value2', 50);
-      
+
       // Wait for cleanup to run
       await new Promise(resolve => setTimeout(resolve, 600));
-      
+
       expect(testCache.get('key1')).toBeUndefined();
       expect(testCache.get('key2')).toBeUndefined();
-      
+
       testCache.clear();
     });
   });
@@ -130,7 +130,7 @@ describe('Cache System', () => {
     it('should use provided configuration', () => {
       const cache = getCacheInstance('test-custom', 5, 500);
       expect(cache).toBeInstanceOf(MemoryCache);
-      
+
       // Test max size
       for (let i = 1; i <= 6; i++) {
         cache.set(`key${i}`, `value${i}`);
@@ -147,7 +147,7 @@ describe('Cache System', () => {
     beforeEach(() => {
       mockFunction = jest.fn();
       const cache = new MemoryCache(10, 1000);
-      
+
       // Create a simple class to test the decorator
       class TestClass {
         @withCache(cache, (arg1: string, arg2: number) => `${arg1}-${arg2}`)
@@ -155,19 +155,19 @@ describe('Cache System', () => {
           return mockFunction(arg1, arg2);
         }
       }
-      
+
       const instance = new TestClass();
       decoratedFunction = instance.testMethod.bind(instance);
     });
 
     it('should cache function results', async () => {
       mockFunction.mockResolvedValue('result1');
-      
+
       // First call should execute the function
       const result1 = await decoratedFunction('test', 1);
       expect(result1).toBe('result1');
       expect(mockFunction).toHaveBeenCalledTimes(1);
-      
+
       // Second call with same args should return cached result
       const result2 = await decoratedFunction('test', 1);
       expect(result2).toBe('result1');
@@ -176,22 +176,22 @@ describe('Cache System', () => {
 
     it('should use different cache keys for different arguments', async () => {
       mockFunction.mockResolvedValueOnce('result1').mockResolvedValueOnce('result2');
-      
+
       const result1 = await decoratedFunction('test', 1);
       expect(result1).toBe('result1');
-      
+
       const result2 = await decoratedFunction('test', 2);
       expect(result2).toBe('result2');
-      
+
       expect(mockFunction).toHaveBeenCalledTimes(2);
     });
 
     it('should handle function errors', async () => {
       mockFunction.mockRejectedValue(new Error('Test error'));
-      
+
       await expect(decoratedFunction('test', 1)).rejects.toThrow('Test error');
       expect(mockFunction).toHaveBeenCalledTimes(1);
-      
+
       // Error should not be cached
       await expect(decoratedFunction('test', 1)).rejects.toThrow('Test error');
       expect(mockFunction).toHaveBeenCalledTimes(2);
@@ -200,16 +200,16 @@ describe('Cache System', () => {
     it('should work with synchronous functions', () => {
       const cache = new MemoryCache(10, 1000);
       const syncMock = jest.fn().mockReturnValue('sync result');
-      
+
       class TestClass {
         @withCache(cache, (arg: string) => arg)
         testMethod(arg: string): string {
           return syncMock(arg);
         }
       }
-      
+
       const instance = new TestClass();
-      
+
       expect(instance.testMethod('test')).toBe('sync result');
       expect(instance.testMethod('test')).toBe('sync result');
       expect(syncMock).toHaveBeenCalledTimes(1);
@@ -218,16 +218,16 @@ describe('Cache System', () => {
     it('should use default key generator when not provided', () => {
       const cache = new MemoryCache(10, 1000);
       const mock = jest.fn().mockResolvedValue('result');
-      
+
       class TestClass {
         @withCache(cache)
         async testMethod(arg1: any, arg2: any): Promise<string> {
           return mock(arg1, arg2);
         }
       }
-      
+
       const instance = new TestClass();
-      
+
       // Should work with default key generator
       instance.testMethod({ id: 1 }, ['a', 'b']).then(result => {
         expect(result).toBe('result');

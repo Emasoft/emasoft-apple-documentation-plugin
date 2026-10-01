@@ -55,7 +55,7 @@ describe('fetchAppleDocJson', () => {
 
     it('should use cache when available', async () => {
       const cachedContent = {
-        content: [{ type: 'text', text: '# Cached Documentation' }]
+        content: [{ type: 'text', text: '# Cached Documentation' }],
       };
       (apiCache.get as jest.Mock).mockReturnValue(cachedContent);
 

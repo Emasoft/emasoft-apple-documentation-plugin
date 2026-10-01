@@ -8,7 +8,7 @@ import { JSDOM } from 'jsdom';
 
 // Mock http client
 jest.mock('../../../src/utils/http-client');
-const mockHttpClient = httpClient as jest.Mocked<typeof httpClient>;
+const mockHttpClient = httpClient;
 
 describe('WWDC Content Extractor', () => {
   beforeEach(() => {
@@ -236,7 +236,7 @@ struct ContentView: View {
       hasCode: false,
       topics: ['Essentials'], // Default topic
       resources: {
-        resourceLinks: []
+        resourceLinks: [],
       },
       relatedVideos: undefined,
     });
@@ -246,7 +246,7 @@ struct ContentView: View {
     mockHttpClient.get.mockRejectedValue(new Error('404 Not Found'));
 
     await expect(extractWWDCVideoContent('https://developer.apple.com/videos/play/wwdc2025/99999/', '99999', '2025')).rejects.toThrow(
-      '404 Not Found'
+      '404 Not Found',
     );
   });
 
@@ -277,7 +277,7 @@ struct ContentView: View {
     const result = await extractWWDCVideoContent('https://developer.apple.com/videos/play/wwdc2025/10006/', '10006', '2025');
 
     expect(result.codeExamples[0].code).toBe(
-      '// This is a comment\nfunc example() {\n    print("Hello")\n}'
+      '// This is a comment\nfunc example() {\n    print("Hello")\n}',
     );
   });
 

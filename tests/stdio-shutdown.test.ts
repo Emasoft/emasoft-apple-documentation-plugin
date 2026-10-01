@@ -126,10 +126,14 @@ describe('stdio server shutdown', () => {
 
       const responsesById = new Map<number, unknown>();
       for (const line of stdout.split('\n')) {
-        if (!line.trim()) continue;
+        if (!line.trim()) {
+          continue;
+        }
         try {
           const msg = JSON.parse(line);
-          if (typeof msg?.id === 'number') responsesById.set(msg.id, msg);
+          if (typeof msg?.id === 'number') {
+            responsesById.set(msg.id, msg);
+          }
         } catch {
           // non-JSON log line on stdout; ignore
         }

@@ -29,7 +29,7 @@ jest.mock('../../src/utils/wwdc-data-source.js', () => ({
 
 // Mock the doc-fetcher module
 jest.mock('../../src/tools/doc-fetcher.js', () => ({
-  fetchAppleDocJson: mockFetchAppleDocJson
+  fetchAppleDocJson: mockFetchAppleDocJson,
 }));
 
 // Mock external dependencies
@@ -39,9 +39,9 @@ jest.mock('../../src/utils/http-client.js', () => ({
     getJson: jest.fn().mockResolvedValue({}),
     get: jest.fn().mockResolvedValue({
       ok: true,
-      json: jest.fn().mockResolvedValue({})
-    })
-  }
+      json: jest.fn().mockResolvedValue({}),
+    }),
+  },
 }));
 
 jest.mock('../../src/utils/logger.js', () => ({
@@ -49,18 +49,18 @@ jest.mock('../../src/utils/logger.js', () => ({
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    debug: jest.fn()
-  }
+    debug: jest.fn(),
+  },
 }));
 
 jest.mock('../../src/utils/cache.js', () => ({
   apiCache: {
     get: jest.fn().mockReturnValue(null),
     set: jest.fn(),
-    has: jest.fn().mockReturnValue(false)
+    has: jest.fn().mockReturnValue(false),
   },
   generateUrlCacheKey: jest.fn().mockReturnValue('test-cache-key'),
-  generateEnhancedCacheKey: jest.fn().mockReturnValue('test-enhanced-cache-key')
+  generateEnhancedCacheKey: jest.fn().mockReturnValue('test-enhanced-cache-key'),
 }));
 
 // Import the server after mocks are set up
@@ -68,7 +68,7 @@ import AppleDeveloperDocsMCPServer from '../../src/index.js';
 
 describe('getAppleDocContent Nested Response Regression Tests', () => {
   let server: AppleDeveloperDocsMCPServer;
-  
+
   beforeEach(() => {
     server = new AppleDeveloperDocsMCPServer();
     jest.clearAllMocks();
@@ -80,8 +80,8 @@ describe('getAppleDocContent Nested Response Regression Tests', () => {
       mockFetchAppleDocJson.mockResolvedValue({
         content: [{
           type: 'text',
-          text: 'Mock documentation content for UIViewController'
-        }]
+          text: 'Mock documentation content for UIViewController',
+        }],
       });
 
       const response = await server.getAppleDocContent('https://developer.apple.com/documentation/uikit/uiviewcontroller');
@@ -108,7 +108,7 @@ describe('getAppleDocContent Nested Response Regression Tests', () => {
           includeReferences: false,
           includeSimilarApis: false,
           includePlatformAnalysis: false,
-        }
+        },
       );
     });
 
@@ -117,8 +117,8 @@ describe('getAppleDocContent Nested Response Regression Tests', () => {
       mockFetchAppleDocJson.mockResolvedValue({
         content: [{
           type: 'text',
-          text: 'Enhanced documentation content with related APIs and platform analysis'
-        }]
+          text: 'Enhanced documentation content with related APIs and platform analysis',
+        }],
       });
 
       const response = await server.getAppleDocContent(
@@ -126,7 +126,7 @@ describe('getAppleDocContent Nested Response Regression Tests', () => {
         true,  // includeRelatedApis
         true,  // includeReferences
         true,  // includeSimilarApis
-        true   // includePlatformAnalysis
+        true,   // includePlatformAnalysis
       );
 
       // Verify correct response structure
@@ -149,7 +149,7 @@ describe('getAppleDocContent Nested Response Regression Tests', () => {
           includeReferences: true,
           includeSimilarApis: true,
           includePlatformAnalysis: true,
-        }
+        },
       );
     });
 
@@ -158,9 +158,9 @@ describe('getAppleDocContent Nested Response Regression Tests', () => {
       mockFetchAppleDocJson.mockResolvedValue({
         content: [{
           type: 'text',
-          text: 'Error: Failed to get Apple doc content: Network error\n\nPlease try accessing the documentation directly at: https://developer.apple.com/documentation/invalid'
+          text: 'Error: Failed to get Apple doc content: Network error\n\nPlease try accessing the documentation directly at: https://developer.apple.com/documentation/invalid',
         }],
-        isError: true
+        isError: true,
       });
 
       const response = await server.getAppleDocContent('https://developer.apple.com/documentation/invalid');
@@ -182,15 +182,15 @@ describe('getAppleDocContent Nested Response Regression Tests', () => {
 
   describe('Specific regression scenarios', () => {
     it('should detect if handleAsyncOperation wrapper is incorrectly used', async () => {
-      // This test simulates what would happen if someone accidentally 
+      // This test simulates what would happen if someone accidentally
       // re-introduced handleAsyncOperation wrapper to getAppleDocContent
 
       // Mock fetchAppleDocJson to return MCP format
       const correctMcpResponse = {
         content: [{
           type: 'text',
-          text: 'Correct MCP response from fetchAppleDocJson'
-        }]
+          text: 'Correct MCP response from fetchAppleDocJson',
+        }],
       };
 
       mockFetchAppleDocJson.mockResolvedValue(correctMcpResponse);
@@ -199,10 +199,10 @@ describe('getAppleDocContent Nested Response Regression Tests', () => {
 
       // If handleAsyncOperation was incorrectly applied, we would get:
       // { content: [{ type: 'text', text: '{"content":[{"type":"text","text":"..."}]}' }] }
-      // 
+      //
       // Let's verify this doesn't happen:
       const textContent = response.content[0].text;
-      
+
       // Try to parse the text as JSON - if it succeeds and contains 'content' array,
       // it means the MCP response was stringified (indicating double-wrapping)
       let parsedContent;
@@ -258,8 +258,8 @@ describe('getAppleDocContent Nested Response Regression Tests', () => {
       mockFetchAppleDocJson.mockResolvedValue({
         content: [{
           type: 'text',
-          text: largeContent
-        }]
+          text: largeContent,
+        }],
       });
 
       const response = await server.getAppleDocContent('https://developer.apple.com/documentation/foundation');
@@ -286,8 +286,8 @@ This contains **bold** text, \`code\`, and [links](https://example.com).
       mockFetchAppleDocJson.mockResolvedValue({
         content: [{
           type: 'text',
-          text: specialContent
-        }]
+          text: specialContent,
+        }],
       });
 
       const response = await server.getAppleDocContent('https://developer.apple.com/documentation/swift');
@@ -300,29 +300,29 @@ This contains **bold** text, \`code\`, and [links](https://example.com).
     it('should detect the specific nested structure that was causing the original bug', async () => {
       // Test to catch the specific error structure that was reported:
       // ClaudeAiToolResultRequest.content.0.text.text: Input should be a valid string
-      
+
       mockFetchAppleDocJson.mockResolvedValue({
         content: [{
           type: 'text',
-          text: 'Valid documentation content'
-        }]
+          text: 'Valid documentation content',
+        }],
       });
 
       const response = await server.getAppleDocContent('https://developer.apple.com/documentation/uikit/uiviewcontroller');
 
       // The original bug would have created a structure like:
       // { content: [{ type: 'text', text: { content: [{ type: 'text', text: 'actual content' }] } }] }
-      
+
       const textContent = response.content[0].text;
-      
+
       // Ensure text is a string, not an object
       expect(typeof textContent).toBe('string');
-      
+
       // Ensure text doesn't have nested properties that would cause validation errors
       expect(textContent).not.toHaveProperty('text');
       expect(textContent).not.toHaveProperty('content');
       expect(textContent).not.toHaveProperty('type');
-      
+
       // Verify the actual content
       expect(textContent).toBe('Valid documentation content');
     });

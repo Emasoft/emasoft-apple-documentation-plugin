@@ -18,14 +18,14 @@ describe('searchFrameworkSymbols', () => {
     it('should search for classes in UIKit framework', async () => {
       // Mock cache miss
       (indexCache.get as jest.Mock).mockReturnValue(null);
-      
+
       // Mock HTTP response
       (httpClient.getJson as jest.Mock).mockResolvedValue(mockData.frameworkIndex);
 
       const result = await searchFrameworkSymbols('uikit', 'class', undefined, 'swift', 10);
 
       expect(httpClient.getJson).toHaveBeenCalledWith(
-        'https://developer.apple.com/tutorials/data/index/uikit', undefined
+        'https://developer.apple.com/tutorials/data/index/uikit', undefined,
       );
       expect(result).toContain('UIView');
       expect(result).toContain('UIViewController');
@@ -80,7 +80,7 @@ describe('searchFrameworkSymbols', () => {
 
       (indexCache.get as jest.Mock).mockReturnValue(null);
       (httpClient.getJson as jest.Mock).mockResolvedValue(
-        createTestFrameworkIndex(manyItems)
+        createTestFrameworkIndex(manyItems),
       );
 
       const result = await searchFrameworkSymbols('uikit', 'class', undefined, 'swift', 5);
@@ -146,9 +146,9 @@ describe('searchFrameworkSymbols', () => {
               beta: false,
               deprecated: false,
               children: [],
-            }
-          ]
-        }
+            },
+          ],
+        },
       });
 
       const result = await searchFrameworkSymbols('uikit', 'macro', undefined, 'swift', 10);
@@ -221,7 +221,7 @@ describe('searchFrameworkSymbols', () => {
 
       // All should call the same lowercase URL
       expect(httpClient.getJson).toHaveBeenCalledWith(
-        'https://developer.apple.com/tutorials/data/index/uikit', undefined
+        'https://developer.apple.com/tutorials/data/index/uikit', undefined,
       );
       expect(httpClient.getJson).toHaveBeenCalledTimes(3);
     });

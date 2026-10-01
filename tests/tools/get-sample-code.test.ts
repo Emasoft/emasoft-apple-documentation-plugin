@@ -167,7 +167,7 @@ describe('handleGetSampleCode', () => {
     expect(result).toContain('Found 4 sample code projects');
     expect(result).toContain('Landmarks: Building an app with Liquid Glass');
     expect(result).toContain('Understanding StoreKit workflows');
-    
+
     // Featured samples might not always be shown depending on the implementation
     if (result.includes('⭐ Featured Samples')) {
       expect(result).toContain('Featured Samples');
@@ -189,7 +189,7 @@ describe('handleGetSampleCode', () => {
     const result = await handleGetSampleCode('SwiftUI');
 
     expect(result).toContain('Framework: SwiftUI');
-    
+
     // The framework filtering might not work perfectly with the test data
     // So let's just check that it shows the framework filter was applied
     if (result.includes('No sample code projects found')) {

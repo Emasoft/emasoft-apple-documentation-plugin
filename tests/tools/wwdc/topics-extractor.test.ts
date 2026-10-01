@@ -7,7 +7,7 @@ import { httpClient } from '../../../src/utils/http-client';
 
 // Mock http client
 jest.mock('../../../src/utils/http-client');
-const mockHttpClient = httpClient as jest.Mocked<typeof httpClient>;
+const mockHttpClient = httpClient;
 
 describe('WWDC Topics Extractor', () => {
   beforeEach(() => {

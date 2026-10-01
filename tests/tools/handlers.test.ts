@@ -34,7 +34,7 @@ describe('Tool Handlers', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Create a mock server with all required methods
     mockServer = {
       searchAppleDocs: jest.fn().mockResolvedValue({
@@ -113,7 +113,7 @@ describe('Tool Handlers', () => {
     it('should handle search_apple_docs tool', async () => {
       const args = { query: 'SwiftUI', type: 'all' };
       const result = await handleToolCall('search_apple_docs', args, mockServer);
-      
+
       expect(mockServer.searchAppleDocs).toHaveBeenCalledWith('SwiftUI', 'all');
       expect(result).toEqual({
         content: [{ type: 'text', text: 'Search results' }],
@@ -127,7 +127,7 @@ describe('Tool Handlers', () => {
         includeReferences: false,
       };
       const result = await handleToolCall('get_apple_doc_content', args, mockServer);
-      
+
       expect(mockServer.getAppleDocContent).toHaveBeenCalledWith(
         'https://developer.apple.com/documentation/swiftui',
         true,
@@ -306,18 +306,18 @@ describe('Tool Handlers', () => {
     it('should handle list_technologies with optional parameters', async () => {
       const handler = toolHandlers.list_technologies;
       const args = { category: 'games', language: 'swift', includeBeta: false };
-      
+
       await handler(args, mockServer);
-      
+
       expect(mockServer.listTechnologies).toHaveBeenCalledWith('games', 'swift', false, 200);
     });
 
     it('should handle list_technologies with limit parameter', async () => {
       const handler = toolHandlers.list_technologies;
       const args = { category: 'ui', limit: 10 };
-      
+
       await handler(args, mockServer);
-      
+
       expect(mockServer.listTechnologies).toHaveBeenCalledWith('ui', undefined, true, 10);
     });
 
@@ -330,9 +330,9 @@ describe('Tool Handlers', () => {
         language: 'swift',
         limit: 100,
       };
-      
+
       await handler(args, mockServer);
-      
+
       expect(mockServer.searchFrameworkSymbols).toHaveBeenCalledWith(
         'swiftui',
         'struct',
@@ -352,9 +352,9 @@ describe('Tool Handlers', () => {
         includeBeta: true,
         limit: 50,
       };
-      
+
       await handler(args, mockServer);
-      
+
       expect(mockServer.getDocumentationUpdates).toHaveBeenCalledWith(
         'wwdc',
         'SwiftUI',

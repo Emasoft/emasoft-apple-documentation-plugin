@@ -21,9 +21,9 @@ describe('process-level listener guard', () => {
       stdinEnd: process.stdin.listenerCount('end'),
     };
 
-    // eslint-disable-next-line no-new -- constructing for its listener-registration side effect
+
     new AppleDeveloperDocsMCPServer();
-    // eslint-disable-next-line no-new
+
     new AppleDeveloperDocsMCPServer();
 
     const after = {

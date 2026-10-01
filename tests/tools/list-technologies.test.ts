@@ -34,19 +34,19 @@ describe('list-technologies', () => {
                   tags: [],
                   languages: ['swift'],
                   destination: {
-                    identifier: 'doc://com.apple.documentation/documentation/swiftui'
-                  }
+                    identifier: 'doc://com.apple.documentation/documentation/swiftui',
+                  },
                 },
                 {
-                  title: 'UIKit', 
+                  title: 'UIKit',
                   identifier: 'uikit',
                   tags: [],
                   languages: ['swift', 'occ'],
                   destination: {
-                    identifier: 'doc://com.apple.documentation/documentation/uikit'
-                  }
-                }
-              ]
+                    identifier: 'doc://com.apple.documentation/documentation/uikit',
+                  },
+                },
+              ],
             },
             {
               name: 'App Frameworks',
@@ -57,14 +57,14 @@ describe('list-technologies', () => {
                   tags: [],
                   languages: ['swift', 'occ'],
                   destination: {
-                    identifier: 'doc://com.apple.documentation/documentation/foundation'
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      ]
+                    identifier: 'doc://com.apple.documentation/documentation/foundation',
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
     };
 
     it('should list all technologies without filters', async () => {
@@ -73,7 +73,7 @@ describe('list-technologies', () => {
       const result = await handleListTechnologies();
 
       expect(mockHttpClient.getJson).toHaveBeenCalledWith(
-        'https://developer.apple.com/tutorials/data/documentation/technologies.json', undefined
+        'https://developer.apple.com/tutorials/data/documentation/technologies.json', undefined,
       );
       expect(result).toContain('# Apple Developer Technologies');
       expect(result).toContain('## Featured');
@@ -117,8 +117,8 @@ describe('list-technologies', () => {
                     tags: [],
                     languages: ['swift'],
                     destination: {
-                      identifier: 'doc://com.apple.documentation/documentation/swiftui'
-                    }
+                      identifier: 'doc://com.apple.documentation/documentation/swiftui',
+                    },
                   },
                   {
                     title: 'Core Foundation',
@@ -126,14 +126,14 @@ describe('list-technologies', () => {
                     tags: [],
                     languages: ['occ'],
                     destination: {
-                      identifier: 'doc://com.apple.documentation/documentation/corefoundation'
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+                      identifier: 'doc://com.apple.documentation/documentation/corefoundation',
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       mockHttpClient.getJson.mockResolvedValue(mockResponseWithLanguage);
@@ -159,8 +159,8 @@ describe('list-technologies', () => {
                     tags: ['Beta'],
                     languages: ['swift'],
                     destination: {
-                      identifier: 'doc://com.apple.documentation/documentation/swiftui'
-                    }
+                      identifier: 'doc://com.apple.documentation/documentation/swiftui',
+                    },
                   },
                   {
                     title: 'UIKit',
@@ -168,14 +168,14 @@ describe('list-technologies', () => {
                     tags: [],
                     languages: ['swift', 'occ'],
                     destination: {
-                      identifier: 'doc://com.apple.documentation/documentation/uikit'
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+                      identifier: 'doc://com.apple.documentation/documentation/uikit',
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       mockHttpClient.getJson.mockResolvedValue(mockResponseWithBeta);
@@ -198,7 +198,7 @@ describe('list-technologies', () => {
       mockHttpClient.getJson.mockRejectedValue(new Error('Network error'));
 
       const result = await handleListTechnologies();
-      
+
       expect(result).toContain('Error: Failed to list technologies:');
       expect(result).toContain('Network error');
     });
@@ -226,14 +226,14 @@ describe('list-technologies', () => {
                     tags: ['Graphics', 'Games'],
                     languages: ['swift', 'occ'],
                     destination: {
-                      identifier: 'doc://com.apple.documentation/documentation/metal'
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+                      identifier: 'doc://com.apple.documentation/documentation/metal',
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       mockHttpClient.getJson.mockResolvedValue(detailedResponse);
@@ -258,21 +258,21 @@ describe('list-technologies', () => {
                     title: 'SwiftUI',
                     identifier: 'swiftui',
                     tags: ['UI'],
-                    languages: ['swift']
+                    languages: ['swift'],
                   },
                   {
                     title: 'UIKit',
                     identifier: 'uikit',
                     tags: ['UI'],
-                    languages: ['swift', 'occ']
+                    languages: ['swift', 'occ'],
                   },
                   {
                     title: 'AppKit',
                     identifier: 'appkit',
                     tags: ['UI'],
-                    languages: ['swift', 'occ']
-                  }
-                ]
+                    languages: ['swift', 'occ'],
+                  },
+                ],
               },
               {
                 name: 'Data Frameworks',
@@ -281,19 +281,19 @@ describe('list-technologies', () => {
                     title: 'Core Data',
                     identifier: 'coredata',
                     tags: ['Data'],
-                    languages: ['swift', 'occ']
+                    languages: ['swift', 'occ'],
                   },
                   {
                     title: 'CloudKit',
                     identifier: 'cloudkit',
                     tags: ['Data'],
-                    languages: ['swift', 'occ']
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+                    languages: ['swift', 'occ'],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       mockHttpClient.getJson.mockResolvedValue(limitTestResponse);
@@ -304,12 +304,12 @@ describe('list-technologies', () => {
       // Should contain first 2 technologies
       expect(result).toContain('SwiftUI');
       expect(result).toContain('UIKit');
-      
+
       // Should NOT contain the 3rd and beyond technologies
       expect(result).not.toContain('AppKit');
       expect(result).not.toContain('Core Data');
       expect(result).not.toContain('CloudKit');
-      
+
       // Should show correct count
       expect(result).toContain('Found 2 technologies');
     });
@@ -324,19 +324,19 @@ describe('list-technologies', () => {
                 name: 'Group A',
                 technologies: [
                   { title: 'Tech 1', identifier: 'tech1', tags: [], languages: ['swift'] },
-                  { title: 'Tech 2', identifier: 'tech2', tags: [], languages: ['swift'] }
-                ]
+                  { title: 'Tech 2', identifier: 'tech2', tags: [], languages: ['swift'] },
+                ],
               },
               {
                 name: 'Group B',
                 technologies: [
                   { title: 'Tech 3', identifier: 'tech3', tags: [], languages: ['swift'] },
-                  { title: 'Tech 4', identifier: 'tech4', tags: [], languages: ['swift'] }
-                ]
-              }
-            ]
-          }
-        ]
+                  { title: 'Tech 4', identifier: 'tech4', tags: [], languages: ['swift'] },
+                ],
+              },
+            ],
+          },
+        ],
       };
 
       mockHttpClient.getJson.mockResolvedValue(multiGroupResponse);
@@ -348,10 +348,10 @@ describe('list-technologies', () => {
       expect(result).toContain('Tech 1');
       expect(result).toContain('Tech 2');
       expect(result).toContain('Tech 3');
-      
+
       // Should NOT contain the 4th technology
       expect(result).not.toContain('Tech 4');
-      
+
       // Should show correct count
       expect(result).toContain('Found 3 technologies');
     });

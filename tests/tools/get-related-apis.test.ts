@@ -84,9 +84,9 @@ describe('get-related-apis', () => {
 
       expect(mockConvertToJsonApiUrl).toHaveBeenCalledWith(mockApiUrl);
       expect(mockHttpClient.getJson).toHaveBeenCalledWith(
-        'https://developer.apple.com/documentation/swiftui/view.json'
+        'https://developer.apple.com/documentation/swiftui/view.json',
       );
-      
+
       expect(result).toContain('# Related APIs for view');
       expect(result).toContain('**Found 5 related APIs:**');
       expect(result).toContain('## Inherits From');
@@ -152,7 +152,7 @@ describe('get-related-apis', () => {
       mockConvertToJsonApiUrl.mockReturnValue(null);
 
       const result = await handleGetRelatedApis('invalid-url');
-      
+
       expect(result).toContain('Error: Failed to get related APIs:');
       expect(result).toContain('Invalid Apple Developer Documentation URL');
     });
@@ -161,7 +161,7 @@ describe('get-related-apis', () => {
       mockHttpClient.getJson.mockRejectedValue(new Error('Network error'));
 
       const result = await handleGetRelatedApis(mockApiUrl);
-      
+
       expect(result).toContain('Error: Failed to get related APIs:');
       expect(result).toContain('Network error');
     });
@@ -178,7 +178,7 @@ describe('get-related-apis', () => {
       const complexResponse = {
         identifier: 'swiftui/view',
         title: 'View',
-        metadata: { 
+        metadata: {
           roleHeading: 'Protocol',
           platforms: [
             { name: 'iOS', introducedAt: '13.0' },

@@ -28,15 +28,15 @@ describe('Error Handler', () => {
       const error = {
         type: 'NETWORK_ERROR',
         message: 'Network error occurred',
-        suggestions: ['Check connection', 'Try again']
+        suggestions: ['Check connection', 'Try again'],
       };
 
       const response = {
         isError: true,
         content: [{
           type: 'text',
-          text: `Error: ${error.message}\n\nSuggestions:\n• ${error.suggestions.join('\n• ')}`
-        }]
+          text: `Error: ${error.message}\n\nSuggestions:\n• ${error.suggestions.join('\n• ')}`,
+        }],
       };
 
       expect(response.isError).toBe(true);
@@ -48,15 +48,15 @@ describe('Error Handler', () => {
     it('should create error response without suggestions', () => {
       const error = {
         type: 'UNKNOWN',
-        message: 'Unknown error'
+        message: 'Unknown error',
       };
 
       const response = {
         isError: true,
         content: [{
           type: 'text',
-          text: `Error: ${error.message}`
-        }]
+          text: `Error: ${error.message}`,
+        }],
       };
 
       expect(response.isError).toBe(true);
@@ -81,11 +81,11 @@ describe('Error Handler', () => {
       };
 
       expect(validateInput('valid input', 'Test Field')).toBeNull();
-      
+
       const emptyResult = validateInput('', 'Test Field');
       expect(emptyResult?.type).toBe('INVALID_INPUT');
       expect(emptyResult?.message).toContain('Test Field is required');
-      
+
       const shortResult = validateInput('ab', 'Test Field', 3);
       expect(shortResult?.type).toBe('INVALID_INPUT');
       expect(shortResult?.message).toContain('must be at least 3 character(s)');

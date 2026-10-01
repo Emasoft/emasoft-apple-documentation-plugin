@@ -29,7 +29,7 @@ async function readBundledFile(filePath: string): Promise<string> {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`Failed to read bundled data: ${filePath}`, error);
-    throw new Error(`Failed to load WWDC data from ${filePath}: ${errorMessage}`);
+    throw new Error(`Failed to load WWDC data from ${filePath}: ${errorMessage}`, { cause: error });
   }
 }
 
@@ -64,7 +64,7 @@ export async function loadGlobalMetadata(): Promise<GlobalMetadata> {
     return JSON.parse(data);
   } catch (error) {
     logger.error('Failed to load global metadata', error);
-    throw new Error('Failed to load WWDC metadata. Please ensure the package is properly installed.');
+    throw new Error('Failed to load WWDC metadata. Please ensure the package is properly installed.', { cause: error });
   }
 }
 
@@ -77,7 +77,7 @@ export async function loadTopicIndex(topicId: string): Promise<TopicIndex> {
     return JSON.parse(data);
   } catch (error) {
     logger.error(`Failed to load topic index: ${topicId}`, error);
-    throw new Error(`Topic not found: ${topicId}`);
+    throw new Error(`Topic not found: ${topicId}`, { cause: error });
   }
 }
 
@@ -90,7 +90,7 @@ export async function loadYearIndex(year: string): Promise<YearIndex> {
     return JSON.parse(data);
   } catch (error) {
     logger.error(`Failed to load year index: ${year}`, error);
-    throw new Error(`Year not found: ${year}`);
+    throw new Error(`Year not found: ${year}`, { cause: error });
   }
 }
 
@@ -103,7 +103,7 @@ export async function loadVideoData(year: string, videoId: string): Promise<WWDC
     return JSON.parse(data);
   } catch (error) {
     logger.error(`Failed to load video: ${year}-${videoId}`, error);
-    throw new Error(`Video not found: ${year}-${videoId}`);
+    throw new Error(`Video not found: ${year}-${videoId}`, { cause: error });
   }
 }
 
@@ -116,7 +116,7 @@ export async function loadAllVideos(): Promise<WWDCVideo[]> {
     return JSON.parse(data);
   } catch (error) {
     logger.error('Failed to load all videos', error);
-    throw new Error('Failed to load WWDC video list');
+    throw new Error('Failed to load WWDC video list', { cause: error });
   }
 }
 

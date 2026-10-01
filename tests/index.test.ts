@@ -114,7 +114,7 @@ describe('AppleDeveloperDocsMCPServer', () => {
             tools: {},
             resources: {},
           },
-        }
+        },
       );
     });
 
@@ -123,31 +123,31 @@ describe('AppleDeveloperDocsMCPServer', () => {
 
       // Should register tools and resources request handlers
       expect(mockServer.setRequestHandler).toHaveBeenCalledTimes(4);
-      
+
       // First call should be for ListToolsRequestSchema
       expect(mockServer.setRequestHandler).toHaveBeenNthCalledWith(
         1,
         ListToolsRequestSchema,
-        expect.any(Function)
+        expect.any(Function),
       );
-      
+
       // Second call should be for CallToolRequestSchema
       expect(mockServer.setRequestHandler).toHaveBeenNthCalledWith(
         2,
         CallToolRequestSchema,
-        expect.any(Function)
+        expect.any(Function),
       );
 
       expect(mockServer.setRequestHandler).toHaveBeenNthCalledWith(
         3,
         ListResourcesRequestSchema,
-        expect.any(Function)
+        expect.any(Function),
       );
 
       expect(mockServer.setRequestHandler).toHaveBeenNthCalledWith(
         4,
         ReadResourceRequestSchema,
-        expect.any(Function)
+        expect.any(Function),
       );
     });
   });

@@ -41,11 +41,11 @@ describe('WWDC Data Source', () => {
 
     it('should handle errors gracefully', async () => {
       (loadGlobalMetadata as jest.Mock).mockRejectedValue(
-        new Error('Failed to load WWDC metadata. Please ensure the package is properly installed.')
+        new Error('Failed to load WWDC metadata. Please ensure the package is properly installed.'),
       );
 
       await expect(loadGlobalMetadata()).rejects.toThrow(
-        'Failed to load WWDC metadata'
+        'Failed to load WWDC metadata',
       );
     });
   });
@@ -68,11 +68,11 @@ describe('WWDC Data Source', () => {
 
     it('should handle non-existent topic', async () => {
       (loadTopicIndex as jest.Mock).mockRejectedValue(
-        new Error('Topic not found: invalid-topic')
+        new Error('Topic not found: invalid-topic'),
       );
 
       await expect(loadTopicIndex('invalid-topic')).rejects.toThrow(
-        'Topic not found: invalid-topic'
+        'Topic not found: invalid-topic',
       );
     });
   });
@@ -95,11 +95,11 @@ describe('WWDC Data Source', () => {
 
     it('should handle non-existent year', async () => {
       (loadYearIndex as jest.Mock).mockRejectedValue(
-        new Error('Year not found: 2099')
+        new Error('Year not found: 2099'),
       );
 
       await expect(loadYearIndex('2099')).rejects.toThrow(
-        'Year not found: 2099'
+        'Year not found: 2099',
       );
     });
   });
@@ -124,11 +124,11 @@ describe('WWDC Data Source', () => {
 
     it('should handle non-existent video', async () => {
       (loadVideoData as jest.Mock).mockRejectedValue(
-        new Error('Video not found: 2024-99999')
+        new Error('Video not found: 2024-99999'),
       );
 
       await expect(loadVideoData('2024', '99999')).rejects.toThrow(
-        'Video not found: 2024-99999'
+        'Video not found: 2024-99999',
       );
     });
   });
@@ -158,11 +158,11 @@ describe('WWDC Data Source', () => {
 
     it('should handle loading error', async () => {
       (loadAllVideos as jest.Mock).mockRejectedValue(
-        new Error('Failed to load WWDC video list')
+        new Error('Failed to load WWDC video list'),
       );
 
       await expect(loadAllVideos()).rejects.toThrow(
-        'Failed to load WWDC video list'
+        'Failed to load WWDC video list',
       );
     });
   });

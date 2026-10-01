@@ -9,7 +9,7 @@ jest.mock('../../../src/utils/wwdc-data-source');
 import { handleToolCall } from '../../../src/tools/handlers';
 import { httpClient } from '../../../src/utils/http-client';
 
-const mockHttpClient = httpClient as jest.Mocked<typeof httpClient>;
+const mockHttpClient = httpClient;
 
 // Import mocked functions
 import {
@@ -20,11 +20,11 @@ import {
   loadAllVideos,
 } from '../../../src/utils/wwdc-data-source';
 
-const mockLoadGlobalMetadata = loadGlobalMetadata as jest.MockedFunction<typeof loadGlobalMetadata>;
-const mockLoadTopicIndex = loadTopicIndex as jest.MockedFunction<typeof loadTopicIndex>;
-const mockLoadYearIndex = loadYearIndex as jest.MockedFunction<typeof loadYearIndex>;
-const mockLoadVideoData = loadVideoData as jest.MockedFunction<typeof loadVideoData>;
-const mockLoadAllVideos = loadAllVideos as jest.MockedFunction<typeof loadAllVideos>;
+const mockLoadGlobalMetadata = loadGlobalMetadata;
+const mockLoadTopicIndex = loadTopicIndex;
+const mockLoadYearIndex = loadYearIndex;
+const mockLoadVideoData = loadVideoData;
+const mockLoadAllVideos = loadAllVideos;
 
 // Mock server instance
 const mockServer = {
@@ -141,7 +141,7 @@ describe('WWDC Tools Integration', () => {
       const result = await handleToolCall(
         'list_wwdc_videos',
         { year: '2025' },
-        mockServer
+        mockServer,
       );
 
       expect(result.content[0].text).toContain('2025');
@@ -152,7 +152,7 @@ describe('WWDC Tools Integration', () => {
       const result = await handleToolCall(
         'list_wwdc_videos',
         { topic: 'swiftui-ui-frameworks' },
-        mockServer
+        mockServer,
       );
 
       expect(mockLoadTopicIndex).toHaveBeenCalledWith('swiftui-ui-frameworks');
@@ -164,7 +164,7 @@ describe('WWDC Tools Integration', () => {
       const result = await handleToolCall(
         'search_wwdc_content',
         { query: 'SwiftUI' },
-        mockServer
+        mockServer,
       );
 
       expect(result).toHaveProperty('content');
@@ -180,7 +180,7 @@ describe('WWDC Tools Integration', () => {
           searchInTranscript: true,
           searchInCode: true,
         },
-        mockServer
+        mockServer,
       );
 
       expect(mockLoadYearIndex).toHaveBeenCalledWith('2025');
@@ -192,7 +192,7 @@ describe('WWDC Tools Integration', () => {
       const result = await handleToolCall(
         'get_wwdc_video',
         { videoId: '10001', year: '2025' },
-        mockServer
+        mockServer,
       );
 
       expect(result.content[0].text).toContain('Test Video');
@@ -207,7 +207,7 @@ describe('WWDC Tools Integration', () => {
           year: '2025',
           includeTranscript: true,
         },
-        mockServer
+        mockServer,
       );
 
       expect(result.content[0].text).toContain('transcript');
@@ -219,7 +219,7 @@ describe('WWDC Tools Integration', () => {
       const result = await handleToolCall(
         'get_wwdc_code_examples',
         {},
-        mockServer
+        mockServer,
       );
 
       expect(result).toHaveProperty('content');
@@ -230,7 +230,7 @@ describe('WWDC Tools Integration', () => {
       const result = await handleToolCall(
         'get_wwdc_code_examples',
         { framework: 'SwiftUI' },
-        mockServer
+        mockServer,
       );
 
       expect(result).toHaveProperty('content');
@@ -242,7 +242,7 @@ describe('WWDC Tools Integration', () => {
       const result = await handleToolCall(
         'browse_wwdc_topics',
         {},
-        mockServer
+        mockServer,
       );
 
       expect(result.content[0].text).toContain('WWDC Topics');
@@ -253,7 +253,7 @@ describe('WWDC Tools Integration', () => {
       const result = await handleToolCall(
         'browse_wwdc_topics',
         { topicId: 'swiftui' },
-        mockServer
+        mockServer,
       );
 
       expect(mockLoadTopicIndex).toHaveBeenCalledWith('swiftui');
@@ -265,7 +265,7 @@ describe('WWDC Tools Integration', () => {
       const result = await handleToolCall(
         'find_related_wwdc_videos',
         { videoId: '10001', year: '2025' },
-        mockServer
+        mockServer,
       );
 
       expect(result).toHaveProperty('content');
@@ -278,7 +278,7 @@ describe('WWDC Tools Integration', () => {
       const result = await handleToolCall(
         'list_wwdc_years',
         {},
-        mockServer
+        mockServer,
       );
 
       expect(result.content[0].text).toContain('2025');
@@ -294,7 +294,7 @@ describe('WWDC Tools Integration', () => {
       const result = await handleToolCall(
         'list_wwdc_videos',
         {},
-        mockServer
+        mockServer,
       );
 
       expect(result.content[0].text).toContain('Error');
@@ -306,7 +306,7 @@ describe('WWDC Tools Integration', () => {
       const result = await handleToolCall(
         'get_wwdc_video',
         { videoId: 'invalid', year: '2025' },
-        mockServer
+        mockServer,
       );
 
       expect(result.content[0].text).toContain('Error');

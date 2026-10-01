@@ -30,11 +30,11 @@ import {
   loadAllVideos,
 } from '../../../src/utils/wwdc-data-source';
 
-const mockLoadGlobalMetadata = loadGlobalMetadata as jest.MockedFunction<typeof loadGlobalMetadata>;
-const mockLoadTopicIndex = loadTopicIndex as jest.MockedFunction<typeof loadTopicIndex>;
-const mockLoadYearIndex = loadYearIndex as jest.MockedFunction<typeof loadYearIndex>;
-const mockLoadVideoData = loadVideoData as jest.MockedFunction<typeof loadVideoData>;
-const mockLoadAllVideos = loadAllVideos as jest.MockedFunction<typeof loadAllVideos>;
+const mockLoadGlobalMetadata = loadGlobalMetadata;
+const mockLoadTopicIndex = loadTopicIndex;
+const mockLoadYearIndex = loadYearIndex;
+const mockLoadVideoData = loadVideoData;
+const mockLoadAllVideos = loadAllVideos;
 
 // Helper to convert video ID to file path
 const videoIdToPath = (id: string, year: string = '2025') => `videos/${year}-${id}.json`;
@@ -108,15 +108,15 @@ describe('WWDC Handlers', () => {
         year: '2025',
         videoCount: 1,
         topics: ['Machine Learning & AI'],
-        videos: [{ 
-          id: '10188', 
+        videos: [{
+          id: '10188',
           year: '2025',
           title: 'Meet the Translation API',
           topics: ['Machine Learning & AI'],
           duration: '15 min',
           hasCode: true,
           hasTranscript: true,
-          dataFile: 'videos/2025-10188.json' 
+          dataFile: 'videos/2025-10188.json',
         }],
       };
 
@@ -162,8 +162,12 @@ describe('WWDC Handlers', () => {
 
       mockLoadYearIndex.mockResolvedValue(mockYearIndex);
       mockLoadVideoData.mockImplementation((year: string, videoId: string) => {
-        if (videoId === '10188') return Promise.resolve(mockVideoWithCode);
-        if (videoId === '10189') return Promise.resolve(mockVideoWithoutCode);
+        if (videoId === '10188') {
+          return Promise.resolve(mockVideoWithCode);
+        }
+        if (videoId === '10189') {
+          return Promise.resolve(mockVideoWithoutCode);
+        }
         return Promise.reject(new Error('Video not found'));
       });
 
@@ -237,21 +241,23 @@ describe('WWDC Handlers', () => {
         year: '2025',
         videoCount: 1,
         topics: ['Machine Learning & AI'],
-        videos: [{ 
-          id: '10188', 
+        videos: [{
+          id: '10188',
           year: '2025',
           title: 'Meet the Translation API',
           topics: ['Machine Learning & AI'],
           duration: '15 min',
           hasCode: true,
           hasTranscript: true,
-          dataFile: 'videos/2025-10188.json' 
+          dataFile: 'videos/2025-10188.json',
         }],
       });
 
       mockLoadVideoData.mockResolvedValue(mockSearchVideo);
       mockLoadVideoData.mockImplementation((year: string, videoId: string) => {
-        if (videoId === '10188') return Promise.resolve(mockSearchVideo);
+        if (videoId === '10188') {
+          return Promise.resolve(mockSearchVideo);
+        }
         return Promise.reject(new Error('Video not found'));
       });
     });
@@ -495,7 +501,7 @@ describe('WWDC Handlers', () => {
         ...v,
         codeExamples: [],
       }));
-      
+
       mockLoadVideoData.mockImplementation((year: string, videoId: string) => {
         const video = videosWithoutCode.find(v => v.id === videoId);
         if (video) {
@@ -517,16 +523,16 @@ describe('WWDC Handlers', () => {
         name: 'SwiftUI & UI Frameworks',
         videoCount: 50,
         videos: [
-          { 
-            id: '10188', 
-            year: '2025', 
+          {
+            id: '10188',
+            year: '2025',
             title: 'SwiftUI Animations',
             topics: ['SwiftUI & UI Frameworks'],
             duration: '20 min',
             hasCode: true,
             hasTranscript: true,
             url: 'https://developer.apple.com/videos/play/wwdc2025/10188/',
-            dataFile: 'videos/2025-10188.json' 
+            dataFile: 'videos/2025-10188.json',
           },
         ],
       },
@@ -579,7 +585,9 @@ describe('WWDC Handlers', () => {
       };
 
       mockLoadVideoData.mockImplementation((year: string, videoId: string) => {
-        if (videoId === '10188') return Promise.resolve(mockTranscriptVideo);
+        if (videoId === '10188') {
+          return Promise.resolve(mockTranscriptVideo);
+        }
         return Promise.reject(new Error('Video not found'));
       });
     });
@@ -663,9 +671,13 @@ describe('WWDC Handlers', () => {
 
     beforeEach(() => {
       mockLoadVideoData.mockImplementation((year: string, videoId: string) => {
-        if (videoId === '10188') return Promise.resolve(mockSourceVideo as any);
+        if (videoId === '10188') {
+          return Promise.resolve(mockSourceVideo as any);
+        }
         const video = mockRelatedVideos.find(v => v.id === videoId);
-        if (video) return Promise.resolve(video as any);
+        if (video) {
+          return Promise.resolve(video as any);
+        }
         return Promise.reject(new Error('Video not found'));
       });
     });

@@ -72,7 +72,7 @@ describe('find-similar-apis', () => {
 
       expect(mockConvertToJsonApiUrl).toHaveBeenCalledWith(mockApiUrl);
       expect(mockHttpClient.getJson).toHaveBeenCalledTimes(1);
-      
+
       expect(result).toContain('# Similar APIs to Text');
       expect(result).toContain('Structure · iOS 13.0+');
       expect(result).toContain('## See Also: Text Display');
@@ -173,7 +173,7 @@ describe('find-similar-apis', () => {
       mockConvertToJsonApiUrl.mockReturnValue(null);
 
       await expect(handleFindSimilarApis('invalid-url')).rejects.toThrow(
-        'Invalid Apple Developer Documentation URL'
+        'Invalid Apple Developer Documentation URL',
       );
     });
 
@@ -194,7 +194,7 @@ describe('find-similar-apis', () => {
               identifiers: ['swiftui/label', 'swiftui/textfield'],
             },
             {
-              title: 'Section 2', 
+              title: 'Section 2',
               identifiers: ['swiftui/label', 'swiftui/image'],
             },
           ],

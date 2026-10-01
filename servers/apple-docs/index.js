@@ -36297,7 +36297,7 @@ async function readBundledFile(filePath) {
   } catch (error62) {
     const errorMessage = error62 instanceof Error ? error62.message : String(error62);
     logger.error(`Failed to read bundled data: ${filePath}`, error62);
-    throw new Error(`Failed to load WWDC data from ${filePath}: ${errorMessage}`);
+    throw new Error(`Failed to load WWDC data from ${filePath}: ${errorMessage}`, { cause: error62 });
   }
 }
 async function fetchData(filePath) {
@@ -36317,7 +36317,7 @@ async function loadGlobalMetadata() {
     return JSON.parse(data2);
   } catch (error62) {
     logger.error("Failed to load global metadata", error62);
-    throw new Error("Failed to load WWDC metadata. Please ensure the package is properly installed.");
+    throw new Error("Failed to load WWDC metadata. Please ensure the package is properly installed.", { cause: error62 });
   }
 }
 async function loadTopicIndex(topicId) {
@@ -36326,7 +36326,7 @@ async function loadTopicIndex(topicId) {
     return JSON.parse(data2);
   } catch (error62) {
     logger.error(`Failed to load topic index: ${topicId}`, error62);
-    throw new Error(`Topic not found: ${topicId}`);
+    throw new Error(`Topic not found: ${topicId}`, { cause: error62 });
   }
 }
 async function loadYearIndex(year) {
@@ -36335,7 +36335,7 @@ async function loadYearIndex(year) {
     return JSON.parse(data2);
   } catch (error62) {
     logger.error(`Failed to load year index: ${year}`, error62);
-    throw new Error(`Year not found: ${year}`);
+    throw new Error(`Year not found: ${year}`, { cause: error62 });
   }
 }
 async function loadVideoData(year, videoId) {
@@ -36344,7 +36344,7 @@ async function loadVideoData(year, videoId) {
     return JSON.parse(data2);
   } catch (error62) {
     logger.error(`Failed to load video: ${year}-${videoId}`, error62);
-    throw new Error(`Video not found: ${year}-${videoId}`);
+    throw new Error(`Video not found: ${year}-${videoId}`, { cause: error62 });
   }
 }
 
@@ -53280,7 +53280,7 @@ async function collectHigSearchResults(query, platform) {
     for (const reference of references.values()) {
       const title = getString(reference, "title");
       const url2 = normalizeReferenceUrl(reference, APPLE_URLS.DESIGN);
-      if (!title || !url2 || !url2.includes("/design/human-interface-guidelines")) {
+      if (!title || !url2?.includes("/design/human-interface-guidelines")) {
         continue;
       }
       const description = renderInlineCollection(getArray(reference.abstract), references, APPLE_URLS.DESIGN);

@@ -19,12 +19,12 @@ describe('HTTP Client', () => {
         json: () => Promise.resolve({ success: true }),
         text: () => Promise.resolve('success'),
       };
-      
+
       mockFetch.mockResolvedValueOnce(mockResponse);
 
       const response = await fetch('https://example.com/api');
       const data = await response.json();
-      
+
       expect(mockFetch).toHaveBeenCalledWith('https://example.com/api');
       expect(data).toEqual({ success: true });
     });
@@ -35,11 +35,11 @@ describe('HTTP Client', () => {
         status: 404,
         statusText: 'Not Found',
       };
-      
+
       mockFetch.mockResolvedValueOnce(mockResponse);
 
       const response = await fetch('https://example.com/api');
-      
+
       expect(response.ok).toBe(false);
       expect(response.status).toBe(404);
     });
@@ -122,13 +122,13 @@ describe('HTTP Client', () => {
 
 ## Performance Insights
 
-${stats.successRate >= 95 ? '✅ **Excellent reliability**' : 
-  stats.successRate >= 90 ? '⚠️ **Good reliability**' : 
-  '❌ **Poor reliability**'} - Success rate ${stats.successRate >= 90 ? 'above' : 'below'} 90%
+${stats.successRate >= 95 ? '✅ **Excellent reliability**' :
+    stats.successRate >= 90 ? '⚠️ **Good reliability**' :
+      '❌ **Poor reliability**'} - Success rate ${stats.successRate >= 90 ? 'above' : 'below'} 90%
 
-${stats.averageResponseTime < 1000 ? '✅ **Fast response times**' : 
-  stats.averageResponseTime < 3000 ? '⚠️ **Moderate response times**' : 
-  '❌ **Slow response times**'} - Average ${stats.averageResponseTime < 1000 ? 'under 1 second' : 
+${stats.averageResponseTime < 1000 ? '✅ **Fast response times**' :
+    stats.averageResponseTime < 3000 ? '⚠️ **Moderate response times**' :
+      '❌ **Slow response times**'} - Average ${stats.averageResponseTime < 1000 ? 'under 1 second' :
   stats.averageResponseTime < 3000 ? 'under 3 seconds' : 'over 3 seconds'}`;
 
       expect(report).toContain('HTTP Client Performance Report');

@@ -725,7 +725,7 @@ async function collectHigSearchResults(query: string, platform: string): Promise
     for (const reference of references.values()) {
       const title = getString(reference, 'title');
       const url = normalizeReferenceUrl(reference, APPLE_URLS.DESIGN);
-      if (!title || !url || !url.includes('/design/human-interface-guidelines')) {
+      if (!title || !url?.includes('/design/human-interface-guidelines')) {
         continue;
       }
 

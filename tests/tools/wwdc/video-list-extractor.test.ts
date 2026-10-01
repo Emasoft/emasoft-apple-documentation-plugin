@@ -7,7 +7,7 @@ import { httpClient } from '../../../src/utils/http-client';
 
 // Mock http client
 jest.mock('../../../src/utils/http-client');
-const mockHttpClient = httpClient as jest.Mocked<typeof httpClient>;
+const mockHttpClient = httpClient;
 
 describe('WWDC Video List Extractor', () => {
   beforeEach(() => {
@@ -219,7 +219,7 @@ describe('WWDC Video List Extractor', () => {
     mockHttpClient.get.mockRejectedValue(new Error('Network error'));
 
     await expect(extractWWDCVideoList('2025')).rejects.toThrow(
-      'Failed to extract video list'
+      'Failed to extract video list',
     );
   });
 

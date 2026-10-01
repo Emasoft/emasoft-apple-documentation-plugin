@@ -34,7 +34,9 @@ export function scanSource(source: string): string[] {
   const aliases: string[] = [];
 
   for (const match of code.matchAll(/import\s+(type\s+)?([^;]*?)\s+from\s+['"]cheerio['"]/g)) {
-    if (match[1]) continue; // `import type` is erased at compile time
+    if (match[1]) {
+      continue;
+    } // `import type` is erased at compile time
     const clause = match[2].trim();
     const namespace = /^\*\s+as\s+([\w$]+)$/.exec(clause);
     if (namespace) {
@@ -44,7 +46,9 @@ export function scanSource(source: string): string[] {
     const named = /^\{([^}]*)\}$/.exec(clause);
     if (named) {
       for (const item of named[1].split(',').map((part) => part.trim()).filter(Boolean)) {
-        if (!item.startsWith('type ') && !isLoadOnly(item)) found.push(`named import '${item}' from 'cheerio'`);
+        if (!item.startsWith('type ') && !isLoadOnly(item)) {
+          found.push(`named import '${item}' from 'cheerio'`);
+        }
       }
       continue;
     }
@@ -57,12 +61,16 @@ export function scanSource(source: string): string[] {
   for (const alias of aliases) {
     const escaped = alias.replace(/\$/g, '\\$');
     for (const match of code.matchAll(new RegExp(`(?<![\\w$.])${escaped}\\.([a-z_$][\\w$]*)`, 'g'))) {
-      if (match[1] !== 'load') found.push(`${alias}.${match[1]}`);
+      if (match[1] !== 'load') {
+        found.push(`${alias}.${match[1]}`);
+      }
     }
     for (const match of code.matchAll(new RegExp(`\\b(?:const|let|var)\\s*\\{([^}]*)\\}\\s*=\\s*${escaped}\\b`, 'g'))) {
       for (const item of match[1].split(',').map((part) => part.trim()).filter(Boolean)) {
         const name = item.split(/[:=]/)[0].trim();
-        if (name !== 'load') found.push(`destructured '${name}' from ${alias}`);
+        if (name !== 'load') {
+          found.push(`destructured '${name}' from ${alias}`);
+        }
       }
     }
   }
@@ -72,7 +80,9 @@ export function scanSource(source: string): string[] {
 function listTsFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const full = path.join(dir, name);
-    if (statSync(full).isDirectory()) return listTsFiles(full);
+    if (statSync(full).isDirectory()) {
+      return listTsFiles(full);
+    }
     return full.endsWith('.ts') ? [full] : [];
   });
 }

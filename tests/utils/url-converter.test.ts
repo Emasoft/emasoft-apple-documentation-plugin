@@ -15,27 +15,27 @@ describe('URL Converter', () => {
     it('should convert documentation URL to JSON API URL', () => {
       const webUrl = 'https://developer.apple.com/documentation/swiftui/view';
       const expected = 'https://developer.apple.com/tutorials/data/documentation/swiftui/view.json';
-      
+
       expect(convertToJsonApiUrl(webUrl)).toBe(expected);
     });
 
     it('should handle URLs with trailing slash', () => {
       const webUrl = 'https://developer.apple.com/documentation/swiftui/view/';
       const expected = 'https://developer.apple.com/tutorials/data/documentation/swiftui/view.json';
-      
+
       expect(convertToJsonApiUrl(webUrl)).toBe(expected);
     });
 
     it('should convert tutorial URL to JSON API URL', () => {
       const webUrl = 'https://developer.apple.com/tutorials/swiftui/creating-and-combining-views';
       const expected = 'https://developer.apple.com/tutorials/data/swiftui/creating-and-combining-views.json';
-      
+
       expect(convertToJsonApiUrl(webUrl)).toBe(expected);
     });
 
     it('should return original URL if not recognized format', () => {
       const webUrl = 'https://developer.apple.com/news/some-article';
-      
+
       expect(convertToJsonApiUrl(webUrl)).toBe(webUrl);
     });
 
@@ -132,16 +132,16 @@ describe('URL Converter', () => {
       const testCases = [
         {
           url: 'https://developer.apple.com/documentation/swiftui/view',
-          expected: 'view'
+          expected: 'view',
         },
         {
           url: 'https://developer.apple.com/documentation/foundation/nsstring',
-          expected: 'nsstring'
+          expected: 'nsstring',
         },
         {
           url: 'https://developer.apple.com/documentation/swiftui/view/',
-          expected: ''
-        }
+          expected: '',
+        },
       ];
 
       testCases.forEach(({ url, expected }) => {
