@@ -85,7 +85,7 @@ const { metafile } = await build({
   metafile: true,
   platform: 'node',
   format: 'esm',
-  target: 'node20',
+  target: 'node22',
   legalComments: 'external',
   logLevel: 'warning',
   plugins: [cheerioCoreOnly],

@@ -7,8 +7,10 @@ name: Release
 
 on:
   push:
+    # Excludes the upstream v0.x/v1.x tags this repo still carries: only v2 and later can start a release.
     tags:
-      - 'v*.*.*'
+      - 'v[2-9].*.*'
+      - 'v[1-9][0-9]+.*.*'
 
 permissions: {}
 

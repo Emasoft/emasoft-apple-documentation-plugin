@@ -4,7 +4,7 @@ title: Evaluate TypeScript 7 adoption
 column: todo
 status: tasked
 created: 2026-09-30T20:14:50+0200
-updated: 2026-09-30T20:15:28+0200
+updated: 2026-10-01T02:31:30+0200
 current-owner: user
 created-by: user
 task-type: spike
@@ -31,3 +31,7 @@ Acceptance:
 ## Approval log
 
 - 2026-09-30T20:14:50+0200 — MANDATE issued by user (min-approval-requirement: none). Pre-approved: issuer authority >= required approver. No approval request was sent.
+
+## Blocker
+
+2026-10-01: typescript-eslint 8.71 peer range pins typescript below 6.1, so a TypeScript 7 bump is blocked until typescript-eslint supports it.
