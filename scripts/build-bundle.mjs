@@ -36,7 +36,7 @@
  * Usage: node scripts/build-bundle.mjs [--outfile <path>]
  * The license files are written next to the outfile.
  */
-import { chmodSync, existsSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
@@ -146,8 +146,8 @@ if (rewritten !== EXPECTED_CONTROL_REWRITES) {
 // Write beside outfile and rename, so a failed run never leaves a half-processed bundle.
 const processedPath = `${outfile}.tmp`;
 writeFileSync(processedPath, escapedBundle);
-// Keep the committed file mode (the bundle is tracked as executable); a fresh file would be 0644.
-chmodSync(processedPath, statSync(outfile).mode);
+// The bundle is meant to be executable (tracked 100755); esbuild's output mode is environment-dependent, so set it explicitly.
+chmodSync(processedPath, 0o755);
 renameSync(processedPath, outfile);
 
 // Package directory of every bundled third-party input: the path up to the

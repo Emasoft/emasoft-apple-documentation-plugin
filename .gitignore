@@ -37,3 +37,5 @@ package-lock.json
 npm-shrinkwrap.json
 bun.lock
 bun.lockb
+# build-bundle.mjs writes <outfile>.tmp then renames it; a crashed build can leave the .tmp behind
+servers/**/*.tmp

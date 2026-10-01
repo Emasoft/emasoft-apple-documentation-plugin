@@ -10,6 +10,9 @@
 #   test): scripts/build-bundle.mjs bundles cheerio's internal dist/esm/load-parse.js
 #   in place of its root entry, and tests/cheerio-usage-guard.test.ts pins src to
 #   cheerio.load only. The build fails loudly if that internal file moved.
+# * A bump of entities or esbuild that changes the control-character rewrite count
+#   fails the build: re-verify each occurrence's context, then update
+#   EXPECTED_CONTROL_REWRITES in scripts/build-bundle.mjs (never raise it blindly).
 # * Commit prefix chore(deps) is skipped by cliff.toml, so bumps stay out of the changelog.
 version: 2
 updates:
