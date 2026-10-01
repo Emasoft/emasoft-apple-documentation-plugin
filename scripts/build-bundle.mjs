@@ -103,24 +103,40 @@ const { metafile } = await build({
 // source spells them as hex escapes; raw control bytes make scanners and editors
 // treat index.js as binary-ish text (CPV flags it). Outside comments such a
 // character can only sit inside a string, template or regex literal, where the
-// hex escape is the identical character, so behaviour does not change. A raw
+// hex escape is the identical character, so behaviour does not change.
+// WHY an allowlist: that equivalence was verified only for the four code points
+// below. A different control character (or a new dependency) could sit in a
+// context where \xNN is NOT the same character, so anything outside the
+// allowlist fails the build and the allowlist must be extended deliberately
+// after re-verifying the context. Likewise String.raw / tagged templates keep
+// \x literally, so any rewrite alongside String.raw fails the build. A raw
 // control character right after a lone backslash would turn into a different
-// escape sequence, so that case fails the build instead of being rewritten.
+// escape sequence, so that case fails too instead of being rewritten.
 // \p{Cc} (Unicode control category) rather than a \x00-\x1f class keeps eslint's
 // no-control-regex quiet.
 const rawControlChar = /(\\*)(\p{Cc})/gu;
-writeFileSync(
-  outfile,
-  readFileSync(outfile, 'utf8').replace(rawControlChar, (match, backslashes, control) => {
-    if (control === '\t' || control === '\n' || control === '\r') {
-      return match;
-    }
-    if (backslashes.length % 2 === 1) {
-      throw new Error(`raw control character 0x${control.charCodeAt(0).toString(16)} follows a lone backslash in ${outfile}`);
-    }
-    return `${backslashes}\\x${control.charCodeAt(0).toString(16).padStart(2, '0')}`;
-  }),
-);
+const allowedControlCodes = new Set([0x0f, 0x12, 0x15, 0x18]);
+const bundleText = readFileSync(outfile, 'utf8');
+let rewritten = 0;
+const escapedBundle = bundleText.replace(rawControlChar, (match, backslashes, control) => {
+  if (control === '\t' || control === '\n' || control === '\r') {
+    return match;
+  }
+  const code = control.charCodeAt(0);
+  const hex = code.toString(16).padStart(2, '0');
+  if (!allowedControlCodes.has(code)) {
+    throw new Error(`unexpected raw control character 0x${hex} in bundle — re-verify the escape is safe in its context (String.raw/tagged templates keep \\x literally) and extend the allowlist deliberately`);
+  }
+  if (backslashes.length % 2 === 1) {
+    throw new Error(`raw control character 0x${hex} follows a lone backslash in ${outfile}`);
+  }
+  rewritten += 1;
+  return `${backslashes}\\x${hex}`;
+});
+if (rewritten > 0 && bundleText.includes('String.raw')) {
+  throw new Error('bundle contains String.raw next to re-escaped control characters — \\x would stay literal there; re-verify the escape is safe before building');
+}
+writeFileSync(outfile, escapedBundle);
 
 // Package directory of every bundled third-party input: the path up to the
 // LAST node_modules/<name> (or <@scope>/<name>) segment, so pnpm's

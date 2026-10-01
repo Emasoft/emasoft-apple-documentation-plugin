@@ -286,7 +286,7 @@ emasoft-apple-documentation-plugin/
 
 ## 설정
 
-서버는 시작할 때 다음의 선택적 환경 변수를 읽습니다. Claude Code를 실행하는 셸에서 export하세요.
+서버는 시작할 때 다음의 선택적 환경 변수를 읽습니다. Claude Code를 실행하는 셸에서 export하세요. 변수는 Claude Code를 시작하는 프로세스의 환경에 설정되어 있어야 합니다. GUI로 실행한 Claude Code는 셸 프로필에서 export한 변수를 인식하지 못합니다(Claude Code 2.1.285에서 확인, 공식 문서에는 없음).
 
 | 변수 | 설명 | 기본값 |
 |------|------|--------|
