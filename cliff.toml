@@ -36,6 +36,13 @@ conventional_commits = true
 filter_unconventional = true
 split_commits = false
 commit_preprocessors = [
+  # Four commits inherited from kimsungwhee/apple-docs-mcp carry UPSTREAM PR numbers. The generic rule below
+  # would link them to THIS repo issues, which is wrong, so each one is rewritten to an upstream link first.
+  # They are anchored on the subject text, because a bare number rule would also capture this repo own PRs.
+  { pattern = 'tool understanding \(#34\)', replace = "tool understanding ([upstream #34](https://github.com/kimsungwhee/apple-docs-mcp/issues/34))" },
+  { pattern = 'sync Korean README with English version \(#35\)', replace = "sync Korean README with English version ([upstream #35](https://github.com/kimsungwhee/apple-docs-mcp/issues/35))" },
+  { pattern = 'add alarmkit support \(#31\)', replace = "add alarmkit support ([upstream #31](https://github.com/kimsungwhee/apple-docs-mcp/issues/31))" },
+  { pattern = 'avoid GitHub rate limits \(#3\)', replace = "avoid GitHub rate limits ([upstream #3](https://github.com/kimsungwhee/apple-docs-mcp/issues/3))" },
   { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](https://github.com/Emasoft/emasoft-apple-documentation-plugin/issues/${2}))" },
   { pattern = '\s+$', replace = "" },
 ]

@@ -1,276 +1,83 @@
-# Apple Docs MCP - Apple Developer Documentation Model Context Protocol Server
+# Emasoft Apple Documentation plugin
 
-[![npm version](https://badge.fury.io/js/@kimsungwhee%2Fapple-docs-mcp.svg)](https://badge.fury.io/js/@kimsungwhee%2Fapple-docs-mcp)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<!--BADGES-START-->
+[![Version](https://img.shields.io/badge/version-2.0.0-blue)](https://github.com/Emasoft/emasoft-apple-documentation-plugin/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<!--BADGES-END-->
 
-Apple Developer Documentation MCP Server - Access Apple's official developer docs, frameworks, APIs, SwiftUI, UIKit, and WWDC videos through Model Context Protocol. Search iOS, macOS, watchOS, tvOS, and visionOS documentation with AI-powered natural language queries. Get instant access to Swift/Objective-C code examples, API references, and technical guides directly in Claude, Cursor, or any MCP-compatible AI assistant.
+Apple Developer Documentation for Claude Code: search iOS, macOS, watchOS, tvOS and visionOS documentation, frameworks, APIs, SwiftUI, UIKit and WWDC videos, and get Swift/Objective-C code examples, API references and technical guides directly in your Claude Code session. The plugin bundles an MCP (Model Context Protocol) server, so installing the plugin is all it takes.
+
+This plugin (`emasoft-apple-documentation-plugin`) is based on [kimsungwhee/apple-docs-mcp](https://github.com/kimsungwhee/apple-docs-mcp) by kimsungwhee (MIT license). It is an independent fork, repackaged as a Claude Code plugin; it is not published to npm.
 
 **English** | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-CN.md)
 
-## ✨ Features
+## Features
 
-- 🔍 **Smart Search**: Intelligent search across Apple Developer Documentation for SwiftUI, UIKit, Foundation, CoreData, ARKit, and more
-- 📚 **Complete Documentation Access**: Full access to Apple's JSON API for Swift, Objective-C, and framework documentation
-- 🎨 **Apple Design and HIG Access**: Read Human Interface Guidelines JSON, Apple Design pages, and Design Resources catalog entries
-- 🖼️ **Design Resource Previews**: Return Apple-provided HIG images and resource thumbnails as MCP image content blocks
-- 📦 **Downloadable Design Resources**: Download direct Apple-hosted templates, fonts, tools, and archives into a local MCP resource cache
-- 🔧 **Framework Index**: Browse hierarchical API structures for iOS, macOS, watchOS, tvOS, visionOS frameworks
-- 📋 **Technology Catalog**: Explore Apple technologies including SwiftUI, UIKit, Metal, Core ML, Vision, and ARKit
-- 📰 **Documentation Updates**: Track WWDC 2025/2026 announcements, iOS 27, macOS 27, and latest SDK releases
-- 🎯 **Technology Overviews**: Comprehensive guides for Swift, SwiftUI, UIKit, and all Apple development platforms
-- 💻 **Sample Code Library**: Swift and Objective-C code examples for iOS, macOS, and cross-platform development
-- 🎥 **WWDC Video Library**: Search WWDC 2014-2026 sessions with transcripts, Swift/SwiftUI code examples, and resources
-- 🔗 **Related APIs Discovery**: Find SwiftUI views, UIKit controllers, and framework-specific API relationships
-- 📊 **Platform Compatibility**: iOS 13+, macOS 10.15+, watchOS 6+, tvOS 13+, visionOS compatibility analysis
-- ⚡ **High Performance**: Optimized for Xcode, Swift Playgrounds, and AI-powered development environments
-- 🔄 **Smart UserAgent Pool**: Intelligent UserAgent rotation system with automatic failure recovery and performance monitoring
-- 🌐 **Multi-Platform**: Complete iOS, iPadOS, macOS, watchOS, tvOS, and visionOS documentation support
-- 🏷️ **Beta & Status Tracking**: beta and newly released APIs, deprecated UIKit methods, new SwiftUI features tracking
+- **Smart Search**: Intelligent search across Apple Developer Documentation for SwiftUI, UIKit, Foundation, CoreData, ARKit, and more
+- **Complete Documentation Access**: Full access to the Apple JSON API for Swift, Objective-C, and framework documentation
+- **Apple Design and HIG Access**: Read Human Interface Guidelines JSON, Apple Design pages, and Design Resources catalog entries
+- **Design Resource Previews**: Return Apple-provided HIG images and resource thumbnails as MCP image content blocks
+- **Downloadable Design Resources**: Download direct Apple-hosted templates, fonts, tools, and archives into a local MCP resource cache
+- **Framework Index**: Browse hierarchical API structures for iOS, macOS, watchOS, tvOS, visionOS frameworks
+- **Technology Catalog**: Explore Apple technologies including SwiftUI, UIKit, Metal, Core ML, Vision, and ARKit
+- **Documentation Updates**: Track WWDC 2025/2026 announcements, iOS 27, macOS 27, and latest SDK releases
+- **Technology Overviews**: Comprehensive guides for Swift, SwiftUI, UIKit, and all Apple development platforms
+- **Sample Code Library**: Swift and Objective-C code examples for iOS, macOS, and cross-platform development
+- **WWDC Video Library**: Search WWDC 2014-2026 sessions with transcripts, Swift/SwiftUI code examples, and resources, fully offline
+- **Related APIs Discovery**: Find SwiftUI views, UIKit controllers, and framework-specific API relationships
+- **Platform Compatibility**: iOS 13+, macOS 10.15+, watchOS 6+, tvOS 13+, visionOS compatibility analysis
+- **High Performance**: Optimized for Xcode, Swift Playgrounds, and AI-powered development environments
+- **Smart UserAgent Pool**: Intelligent UserAgent rotation system with automatic failure recovery and performance monitoring
+- **Multi-Platform**: Complete iOS, iPadOS, macOS, watchOS, tvOS, and visionOS documentation support
+- **Beta and Status Tracking**: Beta and newly released APIs, deprecated UIKit methods, new SwiftUI features tracking
 
-## 🚀 Quick Start
+## Installation
 
-### Claude Desktop (Recommended)
+### Requirements
 
-Add this to your Claude Desktop configuration:
+- [Claude Code](https://code.claude.com/docs/en/overview)
+- `node` (Node.js 22 or later) on your `PATH`. Claude Code runs the bundled server with `node`, and its native installer does not ship Node.js. Check with `node --version`.
+- About 39 MB of disk space per installed plugin version (the WWDC data is bundled for offline use).
 
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`  
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+### From a Claude Code session
 
-```json
-{
-  "mcpServers": {
-    "apple-docs": {
-      "command": "npx",
-      "args": ["-y", "@kimsungwhee/apple-docs-mcp"]
-    }
-  }
-}
+```text
+/plugin marketplace add Emasoft/emasoft-plugins
+/plugin install emasoft-apple-documentation-plugin@emasoft-plugins
 ```
 
-> **Note**: If you encounter issues with an old version being used, add `@latest` to force the latest version:
-> ```json
-> "args": ["-y", "@kimsungwhee/apple-docs-mcp@latest"]
-> ```
-
-Restart Claude Desktop and start asking about Apple APIs!
-
-## 📦 Installation
-
-<details>
-<summary><strong>📱 Claude Code</strong></summary>
+### From a terminal
 
 ```bash
-claude mcp add apple-docs -- npx -y @kimsungwhee/apple-docs-mcp@latest
+claude plugin marketplace add Emasoft/emasoft-plugins
+claude plugin install emasoft-apple-documentation-plugin@emasoft-plugins --scope user
 ```
 
-[📖 Claude Code MCP docs](https://docs.anthropic.com/en/docs/claude-code/mcp)
+Restart Claude Code (or run `/reload-plugins`) to activate the plugin, then run `/mcp` to check that the `apple-docs` server of this plugin is connected.
 
-</details>
-
-<details>
-<summary><strong>🛠️ Autohand Code</strong></summary>
+### Update and uninstall
 
 ```bash
-autohand mcp add apple-docs npx -y @kimsungwhee/apple-docs-mcp@latest
+claude plugin update emasoft-apple-documentation-plugin@emasoft-plugins
+claude plugin uninstall emasoft-apple-documentation-plugin
 ```
 
-Add `--scope project` after `mcp add` to keep the registration in the current workspace. See [Autohand Code](https://github.com/autohandai/code-cli/) for current CLI details.
+### Tool names in Claude Code
 
-</details>
+Claude Code namespaces the tools of a plugin MCP server, so the tool `search_apple_docs` appears as `mcp__plugin_emasoft-apple-documentation-plugin_apple-docs__search_apple_docs`. You never have to type these names: describe what you need and Claude picks the tool.
 
-<details>
-<summary><strong>🖱️ Cursor</strong></summary>
+### Troubleshooting
 
-**Via Settings**: Settings → Cursor Settings → MCP → Add new global MCP server
+- **The server fails to start, or `/mcp` shows it as failed?** Claude Code launches the server with the command `node`. GUI apps do not always inherit the `PATH` of your shell: run `which node` in a terminal, and make sure that directory is on the `PATH` of the process that starts Claude Code. The plugin needs Node.js 22 or later.
+- **`search_apple_docs` returning nothing, or erroring?** It depends on an undocumented Apple search backend (`devintserv.msc.sbz.apple.com`) that the search page of developer.apple.com uses internally. If Apple changes its response shape, `search_apple_docs` can break until this plugin catches up. `get_apple_doc_content`, `search_framework_symbols` and the WWDC tools do not depend on that endpoint and keep working.
 
-**Via Config File**: Add to `~/.cursor/mcp.json`:
+## Usage
 
-```json
-{
-  "mcpServers": {
-    "apple-docs": {
-      "command": "npx",
-      "args": ["-y", "@kimsungwhee/apple-docs-mcp"]
-    }
-  }
-}
-```
+Ask Claude in plain language; it chooses the right tool. Examples:
 
-[📖 Cursor MCP docs](https://docs.cursor.com/context/mcp)
+### Smart Search
 
-</details>
-
-<details>
-<summary><strong>🔷 VS Code</strong></summary>
-
-Add to your VS Code MCP config:
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "apple-docs": {
-        "type": "stdio",
-        "command": "npx",
-        "args": ["-y", "@kimsungwhee/apple-docs-mcp"]
-      }
-    }
-  }
-}
-```
-
-[📖 VS Code MCP docs](https://code.visualstudio.com/docs/editor/mcp)
-
-</details>
-
-<details>
-<summary><strong>🌊 Windsurf</strong></summary>
-
-Add to your Windsurf MCP config:
-
-```json
-{
-  "mcpServers": {
-    "apple-docs": {
-      "command": "npx",
-      "args": ["-y", "@kimsungwhee/apple-docs-mcp"]
-    }
-  }
-}
-```
-
-[📖 Windsurf MCP docs](https://docs.codeium.com/windsurf/mcp)
-
-</details>
-
-<details>
-<summary><strong>⚡ Zed</strong></summary>
-
-Add to your Zed `settings.json`:
-
-```json
-{
-  "context_servers": {
-    "Apple Docs": {
-      "command": {
-        "path": "npx",
-        "args": ["-y", "@kimsungwhee/apple-docs-mcp"]
-      },
-      "settings": {}
-    }
-  }
-}
-```
-
-[📖 Zed Context Server docs](https://zed.dev/docs/context-servers)
-
-</details>
-
-<details>
-<summary><strong>🔧 Cline</strong></summary>
-
-**Via Marketplace**:
-1. Open Cline → Menu (☰) → MCP Servers → Marketplace
-2. Search "Apple Docs MCP" → Install
-
-**Via Config**: Add to `cline_mcp_settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "apple-docs": {
-      "command": "npx",
-      "args": ["-y", "@kimsungwhee/apple-docs-mcp"],
-      "disabled": false,
-      "autoApprove": []
-    }
-  }
-}
-```
-
-</details>
-
-<details>
-<summary><strong> Amazon A Developer CLI</strong></summary>
-
-**Via Config File**: Add to `~/.aws/amazonq/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "apple-docs": {
-      "command": "npx",
-      "args": ["-y", "@kimsungwhee/apple-docs-mcp"]
-    }
-  }
-}
-```
-
-[📖 Amazon A Developer CLI MCP docs](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html)
-
-</details>
-
-<details>
-<summary><strong>🪟 Windows</strong></summary>
-
-For Windows systems, use:
-
-```json
-{
-  "mcpServers": {
-    "apple-docs": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "@kimsungwhee/apple-docs-mcp"],
-      "disabled": false,
-      "autoApprove": []
-    }
-  }
-}
-```
-
-</details>
-
-<details>
-<summary><strong>⚙️ Advanced Installation</strong></summary>
-
-**Global Installation**:
-```bash
-# Using pnpm (recommended)
-pnpm add -g @kimsungwhee/apple-docs-mcp
-
-# Using npm
-npm install -g @kimsungwhee/apple-docs-mcp
-```
-
-**Direct Usage**:
-```bash
-npx @kimsungwhee/apple-docs-mcp --help
-```
-
-**Development Setup**:
-```bash
-git clone https://github.com/kimsungwhee/apple-docs-mcp.git
-cd apple-docs-mcp
-
-# Using pnpm (recommended)
-pnpm install && pnpm run build
-
-# Using npm
-npm install && npm run build
-```
-
-</details>
-
-### 🩹 Troubleshooting
-
-- **Getting outdated behavior after an update?** `npx` caches package versions. If the plain command fails or behaves like an older version, pin `@latest`: use `npx -y @kimsungwhee/apple-docs-mcp@latest` in your MCP client config (as shown above) to force the latest version.
-- **Client reports `"Client closed"` or `"No server info found"`?** One known cause is that the client's MCP host process can't find `npx` on its `PATH` (common with GUI apps that don't inherit your shell's `PATH`). Run `which npx` in your terminal and use the absolute path it prints (e.g. `/opt/homebrew/bin/npx` on Apple Silicon Homebrew installs) as the `"command"` value in your MCP config instead of the bare `"npx"`.
-- **`search_apple_docs` returning nothing, or erroring?** It depends on an undocumented Apple search backend (`devintserv.msc.sbz.apple.com`) that developer.apple.com's own search page uses internally; if Apple changes its response shape, `search_apple_docs` can break without a new release of this project catching up yet. `search_framework_symbols` and `get_apple_doc_content` don't depend on that endpoint and keep working.
-
-## 💬 Usage Examples
-
-### 🔍 Smart Search
-```
+```text
 "Search for SwiftUI animations"
 "Find withAnimation API documentation"
 "Look up async/await patterns in Swift"
@@ -279,8 +86,9 @@ npm install && npm run build
 "Find AVFoundation video playback APIs"
 ```
 
-### 📚 Documentation Access
-```
+### Documentation Access
+
+```text
 "Get detailed information about the SwiftUI framework"
 "Show me withAnimation API with related APIs"
 "Get platform compatibility for SwiftData"
@@ -289,8 +97,9 @@ npm install && npm run build
 "Get URLSession async/await methods"
 ```
 
-### 🎨 Apple Design and HIG
-```
+### Apple Design and HIG
+
+```text
 "Search Apple Design docs for layout"
 "Read the HIG page about color"
 "List Apple Design Resources for iOS templates"
@@ -298,8 +107,9 @@ npm install && npm run build
 "Show Apple Design examples for the layout HIG page"
 ```
 
-### 🔧 Framework Exploration
-```
+### Framework Exploration
+
+```text
 "Show me SwiftUI framework API index"
 "List all UIKit classes and methods"
 "Browse ARKit framework structure"
@@ -308,33 +118,37 @@ npm install && npm run build
 "Show Vision framework image analysis APIs"
 ```
 
-### 🔗 API Discovery
-```
+### API Discovery
+
+```text
 "Find APIs related to UIViewController"
 "Show me similar APIs to withAnimation"
 "Get all references from SwiftData documentation"
 "Discover alternatives to Core Data NSManagedObject"
 ```
 
-### 📋 Technology & Platform Analysis
-```
+### Technology and Platform Analysis
+
+```text
 "List all Beta frameworks in the latest iOS"
 "Show me Graphics & Games technologies"
 "What machine learning frameworks are available?"
 "Analyze platform compatibility for Vision framework"
 ```
 
-### 📰 Documentation Updates
-```
+### Documentation Updates
+
+```text
 "Show me the latest WWDC updates"
-"What's new in SwiftUI?"
+"What is new in SwiftUI?"
 "Get technology updates for iOS"
 "Show me release notes for Xcode"
 "Find beta features in the latest updates"
 ```
 
-### 🎯 Technology Overviews
-```
+### Technology Overviews
+
+```text
 "Show me technology overviews for app design and UI"
 "Get comprehensive guides for games development"
 "Explore AI and machine learning overviews"
@@ -342,8 +156,9 @@ npm install && npm run build
 "Get data management technology overviews"
 ```
 
-### 💻 Sample Code Library
-```
+### Sample Code Library
+
+```text
 "Show SwiftUI sample code projects"
 "Find sample code for machine learning"
 "Get UIKit example projects"
@@ -352,8 +167,9 @@ npm install && npm run build
 "Show only beta sample code projects"
 ```
 
-### 🎥 WWDC Video Search
-```
+### WWDC Video Search
+
+```text
 "Search WWDC videos about SwiftUI"
 "Find WWDC sessions on machine learning"
 "Show me WWDC 2026 videos"
@@ -362,17 +178,19 @@ npm install && npm run build
 "Show accessibility-focused WWDC sessions"
 ```
 
-### 📺 WWDC Video Details
-```
+### WWDC Video Details
+
+```text
 "Get details for WWDC session 10176"
 "Show me the transcript for WWDC23 session on SwiftData"
 "Get code examples from WWDC video 10019"
 "Show resources from Vision Pro WWDC session"
-"Get transcript for 'Meet async/await in Swift' session"
+"Get transcript for the Meet async/await in Swift session"
 ```
 
-### 📋 WWDC Topics & Years
-```
+### WWDC Topics and Years
+
+```text
 "List all WWDC topics"
 "Show me Swift topic WWDC videos"
 "Get WWDC videos about developer tools"
@@ -381,15 +199,16 @@ npm install && npm run build
 "Get machine learning WWDC content"
 ```
 
-### 🛠️ Advanced Usage
-```
+### Advanced Usage
+
+```text
 "Find related APIs for @State with platform analysis"
 "Resolve all references from SwiftUI documentation"
 "Get platform compatibility analysis for Vision framework"
 "Find similar APIs to UIViewController with deep search"
 ```
 
-## 🛠️ Available Tools
+## Available Tools
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -405,53 +224,38 @@ npm install && npm run build
 | `get_related_apis` | Find related APIs | Inheritance, conformance, "See Also" relationships |
 | `resolve_references_batch` | Batch resolve API references | Extract and resolve all references from documentation |
 | `get_platform_compatibility` | Platform compatibility analysis | Version support, beta status, deprecation info |
-| `find_similar_apis` | Discover similar APIs | Apple's official recommendations, topic groupings |
+| `find_similar_apis` | Discover similar APIs | Official Apple recommendations, topic groupings |
 | `get_documentation_updates` | Track Apple documentation updates | WWDC announcements, technology updates, release notes |
 | `get_technology_overviews` | Get technology overviews and guides | Comprehensive guides, hierarchical navigation, platform filtering |
 | `get_sample_code` | Browse Apple sample code projects | Framework filtering (with limitations), keyword search, beta status |
-| `search_wwdc_videos` | Search WWDC video sessions | Keyword search, topic/year filtering, session metadata |
-| `get_wwdc_video_details` | Get WWDC video details with transcript | Full transcripts, code examples, resources, platform info |
-| `list_wwdc_topics` | List all available WWDC topics | 19 topic categories from Swift to Spatial Computing |
-| `list_wwdc_years` | List all available WWDC years | Conference years with video counts |
+| `list_wwdc_videos` | Browse WWDC video sessions | Offline transcripts and code, topic/year filtering |
+| `search_wwdc_content` | Full-text search of WWDC transcripts and code | Specific discussions, API mentions, implementation examples |
+| `get_wwdc_video` | Get a complete WWDC session | Full transcript, code examples, resources |
+| `get_wwdc_code_examples` | Browse code examples from WWDC sessions | Implementation patterns with session context |
+| `browse_wwdc_topics` | List WWDC topic categories with their IDs | Topic IDs usable as filters in `list_wwdc_videos` |
+| `find_related_wwdc_videos` | Discover sessions related to a video | Prerequisites, follow-up sessions, similar talks |
+| `list_wwdc_years` | List all available WWDC years | Conference years with video counts and statistics |
 
-## 🏗️ Technical Architecture for Apple Developer Documentation Access
+## Technical Architecture
 
-```
-apple-docs-mcp/
-├── 🔧 src/
+```text
+emasoft-apple-documentation-plugin/
+├── .claude-plugin/plugin.json        # Claude Code plugin manifest
+├── .mcp.json                         # Registers the bundled MCP server (apple-docs)
+├── servers/apple-docs/
+│   ├── index.js                      # Committed esbuild bundle, the server users run
+│   └── THIRD_PARTY_LICENSES.txt      # Licenses of the bundled dependencies
+├── data/wwdc/                        # Offline WWDC data (read by the bundle)
+├── src/                              # TypeScript sources of the server
 │   ├── index.ts                      # MCP server entry point with all tools
-│   ├── tools/                        # MCP tool implementations
-│   │   ├── search-parser.ts          # HTML search result parsing
-│   │   ├── doc-fetcher.ts            # JSON API documentation fetching
-│   │   ├── design-docs.ts            # Apple Design, HIG, resources, and previews
-│   │   ├── list-technologies.ts      # Technology catalog handling
-│   │   ├── get-documentation-updates.ts # Documentation updates tracking
-│   │   ├── get-technology-overviews.ts # Technology overviews and guides
-│   │   ├── get-sample-code.ts        # Sample code library browser
-│   │   ├── get-framework-index.ts    # Framework structure indexing
-│   │   ├── get-related-apis.ts       # Related API discovery
-│   │   ├── resolve-references-batch.ts # Batch reference resolution
-│   │   ├── get-platform-compatibility.ts # Platform analysis
-│   │   ├── find-similar-apis.ts      # Similar API recommendations
-│   │   └── wwdc/                     # WWDC video tools
-│   │       ├── wwdc-handlers.ts      # WWDC tool handlers
-│   │       ├── content-extractor.ts  # Video content extraction
-│   │       ├── topics-extractor.ts   # Topic listing
-│   │       └── video-list-extractor.ts # Video list parsing
-│   └── utils/                        # Utility functions and helpers
-│       ├── cache.ts                  # Memory cache with TTL support
-│       ├── constants.ts              # Application constants and URLs
-│       ├── error-handler.ts          # Error handling and validation
-│       ├── http-client.ts            # HTTP client with performance tracking
-│       ├── user-agent-pool.ts        # Smart UserAgent rotation system
-│       ├── http-headers-generator.ts # Dynamic browser headers generation
-│       └── url-converter.ts          # URL conversion utilities
-├── 📦 dist/                          # Compiled JavaScript
-├── 📄 package.json                   # Package configuration
-└── 📖 README.md                      # This file
+│   ├── tools/                        # MCP tool implementations (docs, design, WWDC, ...)
+│   └── utils/                        # Cache, HTTP client, UserAgent pool, error handling
+├── scripts/                          # build-bundle.mjs and publish.py
+├── tests/                            # Jest test suites
+└── package.json                      # Development dependencies and scripts (private)
 ```
 
-### 🚀 Performance Features
+### Performance Features
 
 - **Memory-Based Caching**: Custom cache implementation with automatic cleanup and TTL support
 - **Smart UserAgent Pool**: Intelligent rotation system with automatic failure recovery and performance monitoring
@@ -459,10 +263,10 @@ apple-docs-mcp/
 - **Smart Search**: Official Apple search API with enhanced result formatting
 - **Enhanced Analysis**: Optional related APIs, platform compatibility, and similarity analysis
 - **Error Resilience**: Graceful degradation with comprehensive error handling
-- **Type Safety**: Full TypeScript with Zod v4.0.5 runtime validation
-- **Latest Dependencies**: MCP SDK v1.15.1, optimized package footprint
+- **Type Safety**: Full TypeScript with Zod runtime validation
+- **Zero Runtime Dependencies**: The server ships as one bundled file, with no node_modules to install
 
-### 💾 Caching Strategy
+### Caching Strategy
 
 | Content Type | Cache Duration | Cache Size | Reason |
 |--------------|----------------|------------|--------|
@@ -474,124 +278,79 @@ apple-docs-mcp/
 | Apple Design Content | 2 hours | 100 entries | HIG and Design pages are stable during a session |
 | Apple Design Resources | 2 hours | 20 entries | Catalog metadata changes less often than page reads |
 
-Downloaded Apple Design files are cached outside the repository by default. Set `APPLE_DOCS_MCP_CACHE_DIR` to choose a cache directory for downloaded resource files exposed through MCP `resources/list` and `resources/read`.
+Downloaded Apple Design files are cached outside the plugin directory: in a temporary directory created per server process, or in the directory named by `APPLE_DOCS_MCP_CACHE_DIR` (see Configuration). They are exposed through MCP `resources/list` and `resources/read`.
 
-## 📦 WWDC Data
+## WWDC Data
 
-All WWDC video data (2014-2026) is **bundled directly in the npm package**, providing:
+All WWDC video data (2014-2026) is **bundled directly in the plugin**, providing:
 
-- ✅ **Zero network latency** - No API calls needed for WWDC content
-- ✅ **100% offline access** - Works without internet connection
-- ✅ **No rate limits** - Unlimited WWDC searches and browsing
-- ✅ **Instant responses** - All data is locally available
+- **Zero network latency**: No API calls needed for WWDC content
+- **100% offline access**: Works without internet connection
+- **No rate limits**: Unlimited WWDC searches and browsing
+- **Instant responses**: All data is locally available
 
-The package includes:
-- 📹 **1,400+ WWDC session videos** with full transcripts
-- 🏷️ **19 topic categories** for organized browsing
-- 📅 **13 years of content** (2014-2026)
-- 💾 **35MB of optimized JSON data**
+The plugin includes:
 
-> **Note**: Keep your package updated to get the latest WWDC content additions.
+- **1,400+ WWDC session videos** with full transcripts
+- **19 topic categories** for organized browsing
+- **13 years of content** (2014-2026)
+- **About 39 MB of optimized JSON data** per installed plugin version
 
-## ⚙️ Configuration
+> **Note**: Update the plugin to get the latest WWDC content additions.
 
-### 🔄 UserAgent Pool Configuration
+## Configuration
 
-The MCP server includes an intelligent UserAgent rotation system to improve API reliability:
+The server reads these optional environment variables when it starts. Export them in the shell that launches Claude Code.
 
-#### Environment Variables
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `APPLE_DOCS_MCP_CACHE_DIR` | Directory for downloaded Apple Design files | A temporary directory per server process |
+| `APPLE_DOCS_MCP_CACHE_MAX_BYTES` | Size limit of the download cache, in bytes | 1073741824 (1 GiB) |
+| `MCP_DEBUG` | Set to `true` to enable debug logging | Off |
+| `DEFAULT_ACCEPT_LANGUAGE` | Accept-Language header sent to Apple servers | `en-US,en;q=0.9` |
+| `DISABLE_LANGUAGE_ROTATION` | Set to `true` to stop rotating the Accept-Language header | Off |
+| `DISABLE_SEC_FETCH` | Set to `true` to drop the Sec-Fetch-* headers | Off |
+| `DISABLE_DNT` | Set to `true` to drop the DNT header | Off |
+| `SIMPLE_HEADERS_MODE` | Set to `true` to send minimal request headers | Off |
 
-| Variable | Description | Default | Example |
-|----------|-------------|---------|---------|
-| `USER_AGENT_ROTATION_ENABLED` | Enable/disable rotation | `true` | `true` |
-| `USER_AGENT_POOL_STRATEGY` | Rotation strategy | `random` | `smart` |
-| `USER_AGENT_MAX_RETRIES` | Max retry attempts | `3` | `5` |
-| `USER_AGENT_POOL_CONFIG` | Custom pool config (JSON) | Built-in agents | See below |
+The server includes a pool of 12+ pre-configured UserAgent strings (Chrome, Firefox, Safari and Edge on macOS, Windows and Linux) that it rotates with automatic failure recovery.
 
-#### Custom Pool Configuration
+## Development
 
-```bash
-# Configure custom UserAgent pool
-export USER_AGENT_POOL_CONFIG='[
-  {"userAgent": "MyApp/1.0 (compatible)", "weight": 3, "maxUsageCount": 1000},
-  {"userAgent": "MyApp/2.0 (advanced)", "weight": 2, "maxUsageCount": 800}
-]'
-
-# Set rotation strategy (random/sequential/smart)
-export USER_AGENT_POOL_STRATEGY=smart
-
-# Enable debugging
-export NODE_ENV=development
-```
-
-#### Available Strategies
-
-- **`random`**: Fast random selection (best performance)
-- **`sequential`**: Round-robin rotation (predictable order)
-- **`smart`**: Success rate optimization (best reliability)
-
-#### Built-in UserAgents
-
-The server includes 12+ pre-configured UserAgent strings covering:
-- Chrome (Mac Intel/Apple Silicon, Windows, Linux)
-- Firefox (Mac Intel/Apple Silicon, Windows, Linux)
-- Safari (Mac Intel/Apple Silicon, latest versions)
-- Edge (Windows, Mac Intel/Apple Silicon)
-
-## 🧪 Development
-
-### Quick Commands
+This section is for maintainers; plugin users never need it. Requirements: Node.js 22 or later and pnpm (the version is pinned by `packageManager` in `package.json`).
 
 ```bash
-# Development with auto-reload
-pnpm run dev    # or: npm run dev
-
-# Build for production  
-pnpm run build  # or: npm run build
-
-# Type checking
-pnpm exec tsc --noEmit  # or: npx tsc --noEmit
-
-# Clean build artifacts
-pnpm run clean  # or: npm run clean
+pnpm install --frozen-lockfile   # install the development dependencies
+pnpm build                       # regenerate servers/apple-docs/index.js and THIRD_PARTY_LICENSES.txt
+pnpm typecheck                   # tsc --noEmit
+pnpm lint                        # eslint src
+pnpm test                        # Jest test suites
+pnpm start                       # run the built stdio server (node servers/apple-docs/index.js)
 ```
 
-### Testing Locally
+- **The bundle is committed.** `servers/apple-docs/index.js` is what Claude Code runs, with no dependency installation step on the user machine. After changing anything under `src/` or a bundled dependency, run `pnpm build` and commit the result: a freshness test (`tests/bundle-freshness.test.ts`) fails when the committed bundle differs from a fresh build.
+- **No npm or bun lockfile.** Claude Code runs `npm ci` in the plugin root when `package.json` sits next to a `package-lock.json`, `npm-shrinkwrap.json`, `bun.lock` or `bun.lockb`, which would install every development dependency on every user machine. This repository uses pnpm, whose lockfile Claude Code ignores. A guard test (`tests/plugin-lockfile-guard.test.ts`) fails if one of those files appears.
+- **Dependency updates.** A cheerio upgrade must re-verify the redirect to its `load-parse` entry in `scripts/build-bundle.mjs` (run `pnpm build` and the standalone bundle test).
+- **Release.** Releases are cut with the CPV canonical pipeline: `uv run python scripts/publish.py` (lint, validation, tests, version bump in `plugin.json`, `package.json` and `pyproject.toml`, changelog, tag, push and GitHub release). Nothing is published to npm.
 
-```bash
-# Test the MCP server directly
-node dist/index.js
+## Contributing
 
-# Test with sample queries
-npx @kimsungwhee/apple-docs-mcp --test
-```
-
-## 🤝 Contributing
-
-Contributions are welcome! Here's how to get started:
+Contributions are welcome! Here is how to get started:
 
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Commit** your changes: `git commit -m 'Add amazing feature'`
+3. **Commit** your changes using Conventional Commits (checked by commitlint in CI): `git commit -m "feat: add amazing feature"`
 4. **Push** to the branch: `git push origin feature/amazing-feature`
 5. **Open** a Pull Request
 
-## 📄 License
+## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License, see [LICENSE](LICENSE) for details. The original work is copyright kimsungwhee; additions are copyright Emasoft. The licenses of the dependencies bundled into the server are listed in [servers/apple-docs/THIRD_PARTY_LICENSES.txt](servers/apple-docs/THIRD_PARTY_LICENSES.txt).
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 This project is not affiliated with or endorsed by Apple Inc. It uses publicly available Apple Developer Documentation APIs for educational and development purposes.
 
 ---
 
-<div align="center">
-
-**Made with ❤️ for the Apple Developer Community**
-
-Search Apple Developer Documentation | iOS Development | macOS Development | Swift Programming | SwiftUI | UIKit | Xcode | WWDC Videos | Model Context Protocol | MCP Server
-
-[Report Issues](https://github.com/kimsungwhee/apple-docs-mcp/issues) • [Request Features](https://github.com/kimsungwhee/apple-docs-mcp/issues/new) • [Documentation](https://github.com/kimsungwhee/apple-docs-mcp)
-
-</div>
+[Report Issues](https://github.com/Emasoft/emasoft-apple-documentation-plugin/issues) • [Request Features](https://github.com/Emasoft/emasoft-apple-documentation-plugin/issues/new) • [Source](https://github.com/Emasoft/emasoft-apple-documentation-plugin)

@@ -16,7 +16,7 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
-- Sync Korean README with English version ([#35](https://github.com/Emasoft/emasoft-apple-documentation-plugin/issues/35)) (3339f30)
+- Sync Korean README with English version ([upstream #35](https://github.com/kimsungwhee/apple-docs-mcp/issues/35)) (3339f30)
 - Add Autohand Code MCP setup (6eb0675)
 - Bring years and OS versions up to WWDC 2026 / iOS 27; add troubleshooting (c6dbfc7)
 - Plan fork independence, dependency updates and Jev result selection as TRDDs (4a67ccf)
@@ -32,8 +32,8 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- Add alarmkit support ([#31](https://github.com/Emasoft/emasoft-apple-documentation-plugin/issues/31)) (60c2719)
-- Add tool annotations for improved LLM tool understanding ([#34](https://github.com/Emasoft/emasoft-apple-documentation-plugin/issues/34)) (28c06cb)
+- Add alarmkit support ([upstream #31](https://github.com/kimsungwhee/apple-docs-mcp/issues/31)) (60c2719)
+- Add tool annotations for improved LLM tool understanding ([upstream #34](https://github.com/kimsungwhee/apple-docs-mcp/issues/34)) (28c06cb)
 - Add WWDC 2026 videos (5a72336)
 - Ship the MCP server as a committed esbuild bundle (TRDD-4P6OWTBS step a) (4ea418c)
 - Rename to the Claude Code plugin emasoft-apple-documentation-plugin 2.0.0 (TRDD-4P6OWTBS step b) (66209c9)
@@ -46,6 +46,7 @@ All notable changes to this project will be documented in this file.
 - Decline esbuild/unrs-resolver build scripts in pnpm-workspace.yaml (8837c29)
 - Update MCP SDK 1.31.0, zod 4.6.5, cheerio 1.2.0 (TRDD-2DDKQU67) (52351c7)
 - Update jest 30.5.2, ts-jest 29.4.14, tsx 4.23.15 (TRDD-YP2TDR2R) (f5c1fb6)
+- Adopt the CPV canonical publish pipeline, no npm (TRDD-4P6OWTBS step c) (c42c071)
 
 ### Refactor
 
@@ -81,7 +82,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- Add local clone support to avoid GitHub rate limits ([#3](https://github.com/Emasoft/emasoft-apple-documentation-plugin/issues/3)) (ac0b74d)
+- Add local clone support to avoid GitHub rate limits ([upstream #3](https://github.com/kimsungwhee/apple-docs-mcp/issues/3)) (ac0b74d)
 
 ### Miscellaneous Tasks
 
