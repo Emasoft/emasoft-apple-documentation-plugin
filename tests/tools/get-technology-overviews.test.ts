@@ -2,6 +2,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { handleGetTechnologyOverviews } from '../../src/tools/get-technology-overviews.js';
 import { httpClient } from '../../src/utils/http-client.js';
 import { technologyOverviewsCache } from '../../src/utils/cache.js';
+import { mockedObject } from '../helpers/test-helpers.js';
 
 // Mock dependencies
 jest.mock('../../src/utils/http-client.js');
@@ -10,7 +11,7 @@ jest.mock('../../src/utils/cache.js', () => ({
     get: jest.fn(),
     set: jest.fn(),
   },
-  generateUrlCacheKey: jest.fn((key, params) => `${key}-${JSON.stringify(params)}`),
+  generateUrlCacheKey: jest.fn((key, params) => `${String(key)}-${JSON.stringify(params)}`),
 }));
 
 describe('get-technology-overviews', () => {
@@ -148,7 +149,7 @@ describe('get-technology-overviews', () => {
   it('should fetch and format technology overviews', async () => {
     const result = await handleGetTechnologyOverviews();
 
-    expect(httpClient.getJson).toHaveBeenCalledTimes(2);
+    expect(mockedObject(httpClient).getJson).toHaveBeenCalledTimes(2);
     expect(result).toContain('Apple Developer Technology Overviews');
     expect(result).toContain('App design and UI');
     expect(result).toContain('Games');
@@ -222,14 +223,14 @@ describe('get-technology-overviews', () => {
 
     const result = await handleGetTechnologyOverviews();
 
-    expect(httpClient.getJson).not.toHaveBeenCalled();
+    expect(mockedObject(httpClient).getJson).not.toHaveBeenCalled();
     expect(result).toBe(cachedResult);
   });
 
   it('should store results in cache', async () => {
     await handleGetTechnologyOverviews();
 
-    expect(technologyOverviewsCache.set).toHaveBeenCalled();
+    expect(mockedObject(technologyOverviewsCache).set).toHaveBeenCalled();
     const [cacheKey, cachedValue] = (technologyOverviewsCache.set as jest.Mock).mock.calls[0];
     expect(cacheKey).toContain('technology-overviews');
     expect(cachedValue).toContain('Apple Developer Technology Overviews');

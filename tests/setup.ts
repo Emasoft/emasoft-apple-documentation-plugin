@@ -2,6 +2,9 @@
  * Jest test setup file
  */
 
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
 // Set test environment
 process.env.NODE_ENV = 'test';
 
@@ -18,7 +21,7 @@ const originalConsoleError = console.error;
 // literal that could go stale; tests/index.test.ts asserts the same value and
 // tests/standalone-bundle.test.ts exercises the real read against the real bundle.
 jest.mock('../src/utils/plugin-version.js', () => ({
-  getPluginVersion: () => (require('../package.json') as { version: string }).version,
+  getPluginVersion: () => (JSON.parse(readFileSync(path.resolve(__dirname, '../package.json'), 'utf8')) as { version: string }).version,
 }));
 
 beforeEach(() => {

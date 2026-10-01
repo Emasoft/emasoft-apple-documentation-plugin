@@ -7510,9 +7510,23 @@ var init_constants = __esm({
 });
 
 // src/types/error.ts
+var AppError;
 var init_error = __esm({
   "src/types/error.ts"() {
     "use strict";
+    AppError = class extends Error {
+      type;
+      originalError;
+      // mutable: createToolErrorResponse appends tool-specific suggestions
+      suggestions;
+      constructor(init) {
+        super(init.message, init.originalError ? { cause: init.originalError } : void 0);
+        this.name = "AppError";
+        this.type = init.type;
+        this.originalError = init.originalError;
+        this.suggestions = init.suggestions;
+      }
+    };
   }
 });
 
@@ -7534,7 +7548,7 @@ function createErrorResponse(error62) {
 }
 function handleFetchError(error62, url2) {
   if (error62 instanceof TypeError) {
-    return {
+    return new AppError({
       type: "NETWORK_ERROR" /* NETWORK_ERROR */,
       message: ERROR_MESSAGES.NETWORK_ERROR,
       originalError: error62,
@@ -7543,11 +7557,11 @@ function handleFetchError(error62, url2) {
         "Verify the URL is accessible",
         "Try again in a few moments"
       ]
-    };
+    });
   }
   if (error62 instanceof Error) {
     if (error62.message.includes("timeout")) {
-      return {
+      return new AppError({
         type: "TIMEOUT" /* TIMEOUT */,
         message: ERROR_MESSAGES.TIMEOUT,
         originalError: error62,
@@ -7555,10 +7569,10 @@ function handleFetchError(error62, url2) {
           "Try again with a simpler query",
           "Check your network connection"
         ]
-      };
+      });
     }
     if (error62.message.includes("404")) {
-      return {
+      return new AppError({
         type: "NOT_FOUND" /* NOT_FOUND */,
         message: ERROR_MESSAGES.NOT_FOUND,
         originalError: error62,
@@ -7567,21 +7581,21 @@ function handleFetchError(error62, url2) {
           "Check if this is an outdated link",
           `Visit the original URL directly: ${url2}`
         ]
-      };
+      });
     }
-    return {
+    return new AppError({
       type: "UNKNOWN" /* UNKNOWN */,
       message: error62.message,
       originalError: error62
-    };
+    });
   }
-  return {
+  return new AppError({
     type: "UNKNOWN" /* UNKNOWN */,
     message: String(error62)
-  };
+  });
 }
 function handleParseError(error62) {
-  return {
+  return new AppError({
     type: "PARSE_ERROR" /* PARSE_ERROR */,
     message: ERROR_MESSAGES.PARSE_FAILED,
     originalError: error62 instanceof Error ? error62 : void 0,
@@ -7590,18 +7604,18 @@ function handleParseError(error62) {
       "Try again later",
       "Report this issue if it persists"
     ]
-  };
+  });
 }
 function validateInput(value, fieldName, minLength = 1) {
   if (!value || value.trim().length < minLength) {
-    return {
+    return new AppError({
       type: "INVALID_INPUT" /* INVALID_INPUT */,
       message: `${fieldName} is required and must be at least ${minLength} character(s)`,
       suggestions: [
         `Provide a valid ${fieldName.toLowerCase()}`,
         "Check the parameter format"
       ]
-    };
+    });
   }
   return null;
 }
@@ -7609,7 +7623,7 @@ function handleGenericError(error62, context, fallbackMessage) {
   logger.error(`Error in ${context}:`, error62);
   if (error62 instanceof Error) {
     if (error62.message.includes("timeout") || error62.message.includes("ETIMEDOUT")) {
-      return {
+      return new AppError({
         type: "TIMEOUT" /* TIMEOUT */,
         message: ERROR_MESSAGES.TIMEOUT,
         originalError: error62,
@@ -7618,10 +7632,10 @@ function handleGenericError(error62, context, fallbackMessage) {
           "Check your network connection",
           "Verify the service is available"
         ]
-      };
+      });
     }
     if (error62.message.includes("429") || error62.message.includes("rate limit")) {
-      return {
+      return new AppError({
         type: "RATE_LIMITED" /* RATE_LIMITED */,
         message: "Request rate limit exceeded",
         originalError: error62,
@@ -7629,10 +7643,10 @@ function handleGenericError(error62, context, fallbackMessage) {
           "Wait a moment before trying again",
           "Consider reducing the frequency of requests"
         ]
-      };
+      });
     }
     if (error62.message.includes("500") || error62.message.includes("502") || error62.message.includes("503")) {
-      return {
+      return new AppError({
         type: "SERVICE_UNAVAILABLE" /* SERVICE_UNAVAILABLE */,
         message: "Apple Developer Documentation service is temporarily unavailable",
         originalError: error62,
@@ -7641,12 +7655,12 @@ function handleGenericError(error62, context, fallbackMessage) {
           "Check Apple Developer status page",
           "Verify your internet connection"
         ]
-      };
+      });
     }
     if (error62.message.includes("JSON") || error62.message.includes("parse")) {
       return handleParseError(error62);
     }
-    return {
+    return new AppError({
       type: "API_ERROR" /* API_ERROR */,
       message: error62.message,
       originalError: error62,
@@ -7655,9 +7669,9 @@ function handleGenericError(error62, context, fallbackMessage) {
         "Try again later",
         "Verify the API endpoint is correct"
       ]
-    };
+    });
   }
-  return {
+  return new AppError({
     type: "UNKNOWN" /* UNKNOWN */,
     message: fallbackMessage || `An error occurred in ${context}`,
     suggestions: [
@@ -7665,7 +7679,7 @@ function handleGenericError(error62, context, fallbackMessage) {
       "Check your input parameters",
       "Contact support if the issue persists"
     ]
-  };
+  });
 }
 function createStandardErrorResponse(error62, operation) {
   const appError = handleGenericError(error62, operation);
@@ -9102,7 +9116,7 @@ var init_http_client = __esm({
               const result = await requestFn();
               resolve(result);
             } catch (error62) {
-              reject(error62);
+              reject(error62 instanceof Error ? error62 : new Error(String(error62)));
             } finally {
               this.activeRequests--;
               const nextRequest = this.requestQueue.shift();
@@ -9230,7 +9244,7 @@ var init_http_client = __esm({
             }
             if (error62 instanceof Error) {
               if (error62.name === "AbortError") {
-                throw new Error(ERROR_MESSAGES.TIMEOUT);
+                throw new Error(ERROR_MESSAGES.TIMEOUT, { cause: error62 });
               }
               if (error62.message.includes("404")) {
                 throw error62;
@@ -9265,7 +9279,7 @@ var init_http_client = __esm({
        * Generate request headers with User-Agent rotation and browser compatibility
        */
       async generateRequestHeaders(customHeaders = {}, acceptOverride) {
-        let requestHeaders = {};
+        let requestHeaders;
         try {
           const pool = initializeUserAgentPool();
           const generator = initializeHeadersGenerator();
@@ -36376,7 +36390,7 @@ async function handleListWWDCVideos(year, topic, hasCode, limit = 50) {
         const videoFiles = videosToLoad.map((v) => v.dataFile);
         const videos = await loadVideosData(videoFiles);
         allVideos = videos.map((v) => ({ ...v, year: v.year }));
-      } catch (error62) {
+      } catch {
         logger.warn(`Failed to load topic index for ${topic}, will search by keyword instead`);
       }
     }
@@ -36504,7 +36518,7 @@ async function handleGetWWDCCodeExamples(framework, topic, year, language, limit
               const topicIndex = await loadTopicIndex(topic);
               const topicVideoIds = new Set(topicIndex.videos.map((v) => v.id));
               filteredVideos = videosWithCode.filter((v) => topicVideoIds.has(v.id));
-            } catch (error62) {
+            } catch {
               const topicLower = topic.toLowerCase();
               filteredVideos = videosWithCode.filter(
                 (v) => v.topics.some((t) => t.toLowerCase().includes(topicLower)) || v.title.toLowerCase().includes(topicLower)
@@ -37957,7 +37971,7 @@ async function handleFindSimilarApis(apiUrl, searchDepth = "medium", filterByCat
     if (errorMessage.includes("Invalid Apple Developer Documentation URL")) {
       throw error62;
     }
-    throw new Error(errorMessage);
+    throw new Error(errorMessage, { cause: error62 });
   }
 }
 function extractSeeAlsoApis(seeAlsoSections, references, filterByCategory) {
@@ -54478,7 +54492,7 @@ async function writeExclusiveDesignCacheFile(cacheDirectory, hash2, filename, da
       try {
         await fileHandle.writeFile(data2);
       } catch (error62) {
-        writeError = error62;
+        writeError = error62 instanceof Error ? error62 : new Error(String(error62));
       } finally {
         await fileHandle.close();
       }
@@ -54699,6 +54713,7 @@ function getStringArray(value) {
 
 // src/index.ts
 init_constants();
+init_error();
 init_error_handler();
 init_preloader();
 init_cache_warmer();
@@ -54777,7 +54792,7 @@ var AppleDeveloperDocsMCPServer = class {
         ]
       };
     } catch (error62) {
-      if (error62 && typeof error62 === "object" && "type" in error62) {
+      if (isAppError(error62)) {
         return createToolErrorResponse(error62, operationName);
       }
       return createStandardErrorResponse(error62, operationName);
@@ -54867,10 +54882,10 @@ var AppleDeveloperDocsMCPServer = class {
         return createToolErrorResponse(urlValidation, "get_apple_doc_content");
       }
       if (!isValidAppleDeveloperUrl(url2)) {
-        return createToolErrorResponse({
+        return createToolErrorResponse(new AppError({
           type: "INVALID_INPUT" /* INVALID_INPUT */,
           message: "URL must be from developer.apple.com"
-        }, "get_apple_doc_content");
+        }), "get_apple_doc_content");
       }
       if (isAppleDesignUrl(url2)) {
         return await this.getAppleDesignContent(url2);

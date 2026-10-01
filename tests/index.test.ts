@@ -7,6 +7,8 @@ import {
   ListToolsRequestSchema,
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 // Mock all dependencies
 jest.mock('@modelcontextprotocol/sdk/server/index.js');
@@ -107,7 +109,7 @@ describe('AppleDeveloperDocsMCPServer', () => {
           name: 'apple-docs-mcp',
           // The server must report package.json's version: the single source that
           // tests/plugin-manifest-consistency.test.ts also pins plugin.json to.
-          version: (require('../package.json') as { version: string }).version,
+          version: (JSON.parse(readFileSync(path.resolve(__dirname, '../package.json'), 'utf8')) as { version: string }).version,
         },
         {
           capabilities: {
@@ -198,7 +200,7 @@ describe('AppleDeveloperDocsMCPServer', () => {
     });
 
     it('should handle tool call errors', async () => {
-      const server = new AppleDeveloperDocsMCPServer();
+      new AppleDeveloperDocsMCPServer();
       (handleToolCall as jest.Mock).mockRejectedValueOnce(new Error('Tool error'));
 
       // Get the handler function
@@ -222,7 +224,7 @@ describe('AppleDeveloperDocsMCPServer', () => {
     });
 
     it('should handle non-Error exceptions', async () => {
-      const server = new AppleDeveloperDocsMCPServer();
+      new AppleDeveloperDocsMCPServer();
       (handleToolCall as jest.Mock).mockRejectedValueOnce('String error');
 
       // Get the handler function

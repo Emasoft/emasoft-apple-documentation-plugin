@@ -154,7 +154,7 @@ describe('HTTP Client Headers Integration', () => {
 
       try {
         await httpClient.getJson('https://example.com/nonexistent');
-      } catch (error) {
+      } catch {
         // Request should fail, but we should still have sent headers
         expect(mockFetch).toHaveBeenCalledTimes(1);
         const [, options] = mockFetch.mock.calls[0];

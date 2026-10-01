@@ -63,7 +63,7 @@ export async function handleListWWDCVideos(
         const videos = await loadVideosData(videoFiles);
 
         allVideos = videos.map((v: WWDCVideo) => ({ ...v, year: v.year }));
-      } catch (error) {
+      } catch {
         logger.warn(`Failed to load topic index for ${topic}, will search by keyword instead`);
         // Fall through to load by year and filter by keyword
       }
@@ -289,7 +289,7 @@ export async function handleGetWWDCCodeExamples(
               const topicIndex = await loadTopicIndex(topic);
               const topicVideoIds = new Set(topicIndex.videos.map((v: any) => v.id));
               filteredVideos = videosWithCode.filter(v => topicVideoIds.has(v.id));
-            } catch (error) {
+            } catch {
               // If topic index doesn't exist, fallback to string matching
               const topicLower = topic.toLowerCase();
               filteredVideos = videosWithCode.filter(v =>

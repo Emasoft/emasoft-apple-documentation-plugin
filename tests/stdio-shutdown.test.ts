@@ -48,13 +48,10 @@ describe('stdio server shutdown', () => {
     );
 
     let stdout = '';
-    let stderr = '';
     child.stdout.on('data', (chunk) => {
       stdout += chunk.toString();
     });
-    child.stderr.on('data', (chunk) => {
-      stderr += chunk.toString();
-    });
+    child.stderr.resume(); // drain so the pipe never fills; stderr content is not asserted
 
     try {
       const TOOL_CALL_IDS = Array.from({ length: 20 }, (_, i) => i + 2); // 2..21

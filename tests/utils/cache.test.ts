@@ -89,7 +89,6 @@ describe('Cache System', () => {
     });
 
     it('should handle cleanup of expired entries', async () => {
-      const cleanupSpy = jest.spyOn(cache as any, 'cleanup');
 
       // Create a new cache with shorter cleanup interval
       const testCache = new MemoryCache(10, 1000);

@@ -84,8 +84,7 @@ describe('fetchAppleDocsSearch', () => {
     mockJsonlResponse(loadFixture('apple-search-permalink-renamed.jsonl'));
 
     // fetchAppleDocsSearch rethrows through handleFetchError, which wraps the thrown Error
-    // in a plain AppError object (not itself an Error instance) — so assert on its .message
-    // rather than jest's toThrow(), which expects a real Error.
+    // in an AppError (an Error subclass) — assert on its .message.
     await expect(fetchAppleDocsSearch('NavigationStack', 'all', searchUrl)).rejects.toMatchObject(
       { message: expect.stringMatching(/format changed/) },
     );

@@ -2221,11 +2221,11 @@ async function writeExclusiveDesignCacheFile(
 
     try {
       const fileHandle = await open(filePath, 'wx', 0o600);
-      let writeError: unknown;
+      let writeError: Error | undefined;
       try {
         await fileHandle.writeFile(data);
       } catch (error) {
-        writeError = error;
+        writeError = error instanceof Error ? error : new Error(String(error));
       } finally {
         await fileHandle.close();
       }

@@ -27,17 +27,13 @@ import {
   loadTopicIndex,
   loadYearIndex,
   loadVideoData,
-  loadAllVideos,
 } from '../../../src/utils/wwdc-data-source';
 
 const mockLoadGlobalMetadata = loadGlobalMetadata;
 const mockLoadTopicIndex = loadTopicIndex;
 const mockLoadYearIndex = loadYearIndex;
 const mockLoadVideoData = loadVideoData;
-const mockLoadAllVideos = loadAllVideos;
 
-// Helper to convert video ID to file path
-const videoIdToPath = (id: string, year: string = '2025') => `videos/${year}-${id}.json`;
 
 describe('WWDC Handlers', () => {
   beforeEach(() => {

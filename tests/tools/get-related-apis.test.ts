@@ -2,6 +2,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { handleGetRelatedApis } from '../../src/tools/get-related-apis.js';
 import { httpClient } from '../../src/utils/http-client.js';
 import { convertToJsonApiUrl } from '../../src/utils/url-converter.js';
+import { mockedObject } from '../helpers/test-helpers.js';
 
 jest.mock('../../src/utils/http-client.js');
 jest.mock('../../src/utils/url-converter.js', () => ({
@@ -83,7 +84,7 @@ describe('get-related-apis', () => {
       const result = await handleGetRelatedApis(mockApiUrl);
 
       expect(mockConvertToJsonApiUrl).toHaveBeenCalledWith(mockApiUrl);
-      expect(mockHttpClient.getJson).toHaveBeenCalledWith(
+      expect(mockedObject(mockHttpClient).getJson).toHaveBeenCalledWith(
         'https://developer.apple.com/documentation/swiftui/view.json',
       );
 

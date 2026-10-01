@@ -99,7 +99,7 @@ export async function extractAllTopics(): Promise<Topic[]> {
 
   } catch (error) {
     logger.error('Failed to extract topic categories:', error);
-    throw new Error(`Failed to extract topics: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`Failed to extract topics: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
   }
 }
 

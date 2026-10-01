@@ -1,4 +1,3 @@
-import { handleGetSampleCode } from '../../src/tools/get-sample-code';
 import { APPLE_URLS } from '../../src/utils/constants';
 
 // Mock the modules

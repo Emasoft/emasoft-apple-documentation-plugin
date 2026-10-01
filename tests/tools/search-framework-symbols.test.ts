@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { searchFrameworkSymbols } from '../../src/tools/search-framework-symbols.js';
-import { mockData, createTestFrameworkIndex } from '../helpers/test-helpers.js';
+import { mockData, createTestFrameworkIndex, mockedObject } from '../helpers/test-helpers.js';
 
 // Mock dependencies
 jest.mock('../../src/utils/cache.js');
@@ -24,13 +24,13 @@ describe('searchFrameworkSymbols', () => {
 
       const result = await searchFrameworkSymbols('uikit', 'class', undefined, 'swift', 10);
 
-      expect(httpClient.getJson).toHaveBeenCalledWith(
+      expect(mockedObject(httpClient).getJson).toHaveBeenCalledWith(
         'https://developer.apple.com/tutorials/data/index/uikit', undefined,
       );
       expect(result).toContain('UIView');
       expect(result).toContain('UIViewController');
       expect(result).toContain('Found:** 4 classes');
-      expect(indexCache.set).toHaveBeenCalled();
+      expect(mockedObject(indexCache).set).toHaveBeenCalled();
     });
 
     it('should search with wildcard pattern', async () => {
@@ -65,7 +65,7 @@ describe('searchFrameworkSymbols', () => {
       const result = await searchFrameworkSymbols('uikit', 'class', undefined, 'swift', 10);
 
       expect(result).toBe(cachedResult);
-      expect(httpClient.getJson).not.toHaveBeenCalled();
+      expect(mockedObject(httpClient).getJson).not.toHaveBeenCalled();
     });
 
     it('should respect limit parameter', async () => {
@@ -215,15 +215,15 @@ describe('searchFrameworkSymbols', () => {
       (httpClient.getJson as jest.Mock).mockResolvedValue(mockData.frameworkIndex);
 
       // Test different case variations
-      const result1 = await searchFrameworkSymbols('UIKit', 'class', undefined, 'swift', 1);
-      const result2 = await searchFrameworkSymbols('UIKIT', 'class', undefined, 'swift', 1);
-      const result3 = await searchFrameworkSymbols('uikit', 'class', undefined, 'swift', 1);
+      await searchFrameworkSymbols('UIKit', 'class', undefined, 'swift', 1);
+      await searchFrameworkSymbols('UIKIT', 'class', undefined, 'swift', 1);
+      await searchFrameworkSymbols('uikit', 'class', undefined, 'swift', 1);
 
       // All should call the same lowercase URL
-      expect(httpClient.getJson).toHaveBeenCalledWith(
+      expect(mockedObject(httpClient).getJson).toHaveBeenCalledWith(
         'https://developer.apple.com/tutorials/data/index/uikit', undefined,
       );
-      expect(httpClient.getJson).toHaveBeenCalledTimes(3);
+      expect(mockedObject(httpClient).getJson).toHaveBeenCalledTimes(3);
     });
 
     it('should handle items with beta and deprecated flags', async () => {

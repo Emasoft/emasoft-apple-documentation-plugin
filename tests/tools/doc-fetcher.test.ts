@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { fetchAppleDocJson } from '../../src/tools/doc-fetcher.js';
-import { mockData } from '../helpers/test-helpers.js';
+import { mockData, mockedObject } from '../helpers/test-helpers.js';
 
 // Mock dependencies
 jest.mock('../../src/utils/cache.js', () => ({
@@ -12,7 +12,7 @@ jest.mock('../../src/utils/cache.js', () => ({
     get: jest.fn(),
     set: jest.fn(),
   },
-  generateEnhancedCacheKey: jest.fn((url) => `cache-key-${url}`),
+  generateEnhancedCacheKey: jest.fn((url) => `cache-key-${String(url)}`),
 }));
 
 jest.mock('../../src/utils/http-client.js', () => ({
@@ -25,7 +25,7 @@ jest.mock('../../src/utils/url-converter.js', () => ({
   convertToJsonApiUrl: jest.fn(),
 }));
 
-import { apiCache, docCache } from '../../src/utils/cache.js';
+import { apiCache } from '../../src/utils/cache.js';
 import { httpClient } from '../../src/utils/http-client.js';
 import { convertToJsonApiUrl } from '../../src/utils/url-converter.js';
 
@@ -46,11 +46,11 @@ describe('fetchAppleDocJson', () => {
       const result = await fetchAppleDocJson(mockDocUrl);
 
       expect(convertToJsonApiUrl).toHaveBeenCalledWith(mockDocUrl);
-      expect(httpClient.getJson).toHaveBeenCalledWith(mockJsonUrl);
+      expect(mockedObject(httpClient).getJson).toHaveBeenCalledWith(mockJsonUrl);
       expect(result.content[0].text).toContain('# UIView');
       expect(result.content[0].text).toContain('**Class**');
       expect(result.content[0].text).toContain('class UIView');
-      expect(apiCache.set).toHaveBeenCalled();
+      expect(mockedObject(apiCache).set).toHaveBeenCalled();
     });
 
     it('should use cache when available', async () => {
@@ -62,7 +62,7 @@ describe('fetchAppleDocJson', () => {
       const result = await fetchAppleDocJson(mockDocUrl);
 
       expect(result.content[0].text).toBe('# Cached Documentation');
-      expect(httpClient.getJson).not.toHaveBeenCalled();
+      expect(mockedObject(httpClient).getJson).not.toHaveBeenCalled();
     });
 
     it('should include related APIs when requested', async () => {

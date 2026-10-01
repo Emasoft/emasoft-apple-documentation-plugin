@@ -20,13 +20,22 @@ export enum ErrorType {
 }
 
 /**
- * Application error structure
+ * Application error. A real Error subclass so it can be thrown and used as a
+ * Promise rejection reason (only-throw-error / prefer-promise-reject-errors).
  */
-export interface AppError {
-  type: ErrorType;
-  message: string;
-  originalError?: Error;
+export class AppError extends Error {
+  readonly type: ErrorType;
+  readonly originalError?: Error;
+  // mutable: createToolErrorResponse appends tool-specific suggestions
   suggestions?: string[];
+
+  constructor(init: { type: ErrorType; message: string; originalError?: Error; suggestions?: string[] }) {
+    super(init.message, init.originalError ? { cause: init.originalError } : undefined);
+    this.name = 'AppError';
+    this.type = init.type;
+    this.originalError = init.originalError;
+    this.suggestions = init.suggestions;
+  }
 }
 
 /**

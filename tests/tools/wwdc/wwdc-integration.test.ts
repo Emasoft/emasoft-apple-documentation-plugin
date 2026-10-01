@@ -7,9 +7,7 @@ jest.mock('../../../src/utils/http-client');
 jest.mock('../../../src/utils/wwdc-data-source');
 
 import { handleToolCall } from '../../../src/tools/handlers';
-import { httpClient } from '../../../src/utils/http-client';
 
-const mockHttpClient = httpClient;
 
 // Import mocked functions
 import {
@@ -149,7 +147,7 @@ describe('WWDC Tools Integration', () => {
     });
 
     it('should filter videos by topic', async () => {
-      const result = await handleToolCall(
+      await handleToolCall(
         'list_wwdc_videos',
         { topic: 'swiftui-ui-frameworks' },
         mockServer,
@@ -172,7 +170,7 @@ describe('WWDC Tools Integration', () => {
     });
 
     it('should search with filters', async () => {
-      const result = await handleToolCall(
+      await handleToolCall(
         'search_wwdc_content',
         {
           query: 'animation',
@@ -250,7 +248,7 @@ describe('WWDC Tools Integration', () => {
     });
 
     it('should show specific topic', async () => {
-      const result = await handleToolCall(
+      await handleToolCall(
         'browse_wwdc_topics',
         { topicId: 'swiftui' },
         mockServer,

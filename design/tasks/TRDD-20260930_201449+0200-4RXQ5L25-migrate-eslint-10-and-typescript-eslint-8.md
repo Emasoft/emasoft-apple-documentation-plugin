@@ -1,10 +1,10 @@
 ---
 trdd-id: 4RXQ5L25
 title: Migrate ESLint 10 and typescript-eslint 8
-column: dev
+column: testing
 status: tasked
 created: 2026-09-30T20:14:49+0200
-updated: 2026-10-01T02:17:50+0200
+updated: 2026-10-01T02:28:57+0200
 current-owner: user
 created-by: user
 task-type: refactor
@@ -38,3 +38,4 @@ Dependency note (2026-09-30, orchestrator decision, user delegated): removed npt
 ## Worker result 2026-10-01
 
 eslint10 partial: toolchain+flat config done, 82 lint errors remain (AppError design, tests unbound-method); see reports/workers/20261001_021733+0200-eslint10.md
+eslint10-finish: pnpm run lint exit 0 (0 errors, 290 warnings); tsc --noEmit 0; pnpm build 0 (servers/apple-docs/index.js regenerated); pnpm test 44 suites / 553 tests pass. AppError is now an Error subclass (isAppError kept structural).

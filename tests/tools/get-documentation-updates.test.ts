@@ -2,6 +2,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { handleGetDocumentationUpdates } from '../../src/tools/get-documentation-updates.js';
 import { httpClient } from '../../src/utils/http-client.js';
 import { updatesCache } from '../../src/utils/cache.js';
+import { mockedObject } from '../helpers/test-helpers.js';
 
 // Mock dependencies
 jest.mock('../../src/utils/http-client.js');
@@ -10,7 +11,7 @@ jest.mock('../../src/utils/cache.js', () => ({
     get: jest.fn(),
     set: jest.fn(),
   },
-  generateUrlCacheKey: jest.fn((key, params) => `${key}-${JSON.stringify(params)}`),
+  generateUrlCacheKey: jest.fn((key, params) => `${String(key)}-${JSON.stringify(params)}`),
 }));
 
 describe('get-documentation-updates', () => {
@@ -149,7 +150,7 @@ describe('get-documentation-updates', () => {
   it('should fetch and format documentation updates', async () => {
     const result = await handleGetDocumentationUpdates();
 
-    expect(httpClient.getJson).toHaveBeenCalledTimes(2);
+    expect(mockedObject(httpClient).getJson).toHaveBeenCalledTimes(2);
     expect(result).toContain('Apple Developer Documentation Updates');
     expect(result).toContain('WWDC24');
     expect(result).toContain('SwiftUI updates');
@@ -232,14 +233,14 @@ describe('get-documentation-updates', () => {
 
     const result = await handleGetDocumentationUpdates();
 
-    expect(httpClient.getJson).not.toHaveBeenCalled();
+    expect(mockedObject(httpClient).getJson).not.toHaveBeenCalled();
     expect(result).toBe(cachedResult);
   });
 
   it('should store results in cache', async () => {
     await handleGetDocumentationUpdates('all', undefined, undefined, undefined, true, 10);
 
-    expect(updatesCache.set).toHaveBeenCalled();
+    expect(mockedObject(updatesCache).set).toHaveBeenCalled();
     const [cacheKey, cachedValue] = (updatesCache.set as jest.Mock).mock.calls[0];
     expect(cacheKey).toContain('documentation-updates');
     expect(cachedValue).toContain('Apple Developer Documentation Updates');

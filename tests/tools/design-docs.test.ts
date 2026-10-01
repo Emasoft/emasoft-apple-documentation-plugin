@@ -16,6 +16,7 @@ import {
   readCachedDesignResource,
 } from '../../src/tools/design-docs.js';
 import { httpClient } from '../../src/utils/http-client.js';
+import { mockedObject } from '../helpers/test-helpers.js';
 
 jest.mock('../../src/utils/http-client.js', () => ({
   httpClient: {
@@ -320,8 +321,8 @@ describe('Apple Design document formatting', () => {
       url: 'https://example.com/design/',
     })).rejects.toThrow('Apple Design content URLs');
 
-    expect(httpClient.getText).not.toHaveBeenCalled();
-    expect(httpClient.getJson).not.toHaveBeenCalled();
+    expect(mockedObject(httpClient).getText).not.toHaveBeenCalled();
+    expect(mockedObject(httpClient).getJson).not.toHaveBeenCalled();
   });
 
   it('should follow allowed Apple Design content redirects manually', async () => {
@@ -347,7 +348,7 @@ describe('Apple Design document formatting', () => {
       type: 'text',
       text: expect.stringContaining('# Design Resources'),
     });
-    expect(httpClient.get).toHaveBeenNthCalledWith(
+    expect(mockedObject(httpClient).get).toHaveBeenNthCalledWith(
       1,
       'https://developer.apple.com/design/',
       expect.objectContaining({
@@ -355,7 +356,7 @@ describe('Apple Design document formatting', () => {
         redirect: 'manual',
       }),
     );
-    expect(httpClient.get).toHaveBeenNthCalledWith(
+    expect(mockedObject(httpClient).get).toHaveBeenNthCalledWith(
       2,
       'https://developer.apple.com/design/resources/',
       expect.objectContaining({
@@ -374,7 +375,7 @@ describe('Apple Design document formatting', () => {
     await expect(handleGetAppleDesignContent({
       url: 'https://developer.apple.com/design/',
     })).rejects.toThrow('outside the Apple Design content allowlist');
-    expect(httpClient.get).toHaveBeenCalledTimes(1);
+    expect(mockedObject(httpClient).get).toHaveBeenCalledTimes(1);
   });
 
   it('should reject oversized Apple Design HTML before reading the body', async () => {
@@ -506,7 +507,7 @@ describe('Apple Design search', () => {
       type: 'text',
       text: expect.stringContaining('No Apple Design results found.'),
     });
-    expect(httpClient.get).toHaveBeenCalledWith(
+    expect(mockedObject(httpClient).get).toHaveBeenCalledWith(
       'https://developer.apple.com/tutorials/data/design/human-interface-guidelines.json',
       expect.objectContaining({
         allowManualRedirect: true,
@@ -788,7 +789,7 @@ describe('Apple Design downloads and resources', () => {
         name: 'templates.zip',
       }),
     ]);
-    expect(httpClient.get).toHaveBeenNthCalledWith(
+    expect(mockedObject(httpClient).get).toHaveBeenNthCalledWith(
       1,
       'https://developer.apple.com/design/downloads/templates.zip',
       expect.objectContaining({
@@ -796,7 +797,7 @@ describe('Apple Design downloads and resources', () => {
         redirect: 'manual',
       }),
     );
-    expect(httpClient.get).toHaveBeenNthCalledWith(
+    expect(mockedObject(httpClient).get).toHaveBeenNthCalledWith(
       2,
       'https://devimages-cdn.apple.com/design/templates.zip',
       expect.objectContaining({
@@ -815,7 +816,7 @@ describe('Apple Design downloads and resources', () => {
     await expect(handleDownloadAppleDesignResource({
       url: 'https://developer.apple.com/design/downloads/templates.zip',
     })).rejects.toThrow('outside the Apple Design allowlist');
-    expect(httpClient.get).toHaveBeenCalledTimes(1);
+    expect(mockedObject(httpClient).get).toHaveBeenCalledTimes(1);
   });
 
   it('should reject download responses whose final URL is outside the Apple allowlist', async () => {
@@ -827,7 +828,7 @@ describe('Apple Design downloads and resources', () => {
     await expect(handleDownloadAppleDesignResource({
       url: 'https://developer.apple.com/design/downloads/templates.zip',
     })).rejects.toThrow('outside the Apple Design allowlist');
-    expect(httpClient.get).toHaveBeenCalledWith(
+    expect(mockedObject(httpClient).get).toHaveBeenCalledWith(
       'https://developer.apple.com/design/downloads/templates.zip',
       expect.objectContaining({
         allowManualRedirect: true,
@@ -864,7 +865,7 @@ describe('Apple Design downloads and resources', () => {
     const firstLink = firstResult.content.find(content => content.type === 'resource_link');
     const secondLink = secondResult.content.find(content => content.type === 'resource_link');
 
-    expect(httpClient.get).toHaveBeenCalledTimes(1);
+    expect(mockedObject(httpClient).get).toHaveBeenCalledTimes(1);
     expect(firstLink?.uri).toBe(secondLink?.uri);
   });
 
@@ -888,7 +889,7 @@ describe('Apple Design downloads and resources', () => {
     const firstLink = firstResult.content.find(content => content.type === 'resource_link');
     const secondLink = secondResult.content.find(content => content.type === 'resource_link');
 
-    expect(httpClient.get).toHaveBeenCalledTimes(1);
+    expect(mockedObject(httpClient).get).toHaveBeenCalledTimes(1);
     expect(firstLink?.uri).toBe(secondLink?.uri);
   });
 
@@ -906,7 +907,7 @@ describe('Apple Design downloads and resources', () => {
       url: 'https://developer.apple.com/design/downloads/templates.zip',
       maxBytes: 4,
     })).rejects.toThrow('exceeds');
-    expect(httpClient.get).toHaveBeenCalledTimes(1);
+    expect(mockedObject(httpClient).get).toHaveBeenCalledTimes(1);
   });
 
   it('should reject downloads that exceed the aggregate cache limit', async () => {
@@ -964,8 +965,8 @@ describe('Apple Design examples', () => {
       url: 'https://example.com/design/example-page',
     })).rejects.toThrow('Apple Design content URLs');
 
-    expect(httpClient.getText).not.toHaveBeenCalled();
-    expect(httpClient.get).not.toHaveBeenCalled();
+    expect(mockedObject(httpClient).getText).not.toHaveBeenCalled();
+    expect(mockedObject(httpClient).get).not.toHaveBeenCalled();
   });
 
   it('should reject direct image URLs from non-Apple hosts before fetching', async () => {
@@ -973,8 +974,8 @@ describe('Apple Design examples', () => {
       url: 'https://example.com/design/example.png',
     })).rejects.toThrow('allowed Apple host');
 
-    expect(httpClient.getText).not.toHaveBeenCalled();
-    expect(httpClient.get).not.toHaveBeenCalled();
+    expect(mockedObject(httpClient).getText).not.toHaveBeenCalled();
+    expect(mockedObject(httpClient).get).not.toHaveBeenCalled();
   });
 
   it('should reject unknown resource IDs for examples', async () => {
@@ -986,7 +987,7 @@ describe('Apple Design examples', () => {
       resourceId: 'missing-resource-id',
     })).rejects.toThrow('Unknown Apple Design resourceId');
 
-    expect(httpClient.get).toHaveBeenCalledTimes(1);
+    expect(mockedObject(httpClient).get).toHaveBeenCalledTimes(1);
   });
 
   it('should return HIG image references as MCP image content blocks', async () => {
@@ -1045,7 +1046,7 @@ describe('Apple Design examples', () => {
     await expect(handleGetAppleDesignExamples({
       url: 'https://developer.apple.com/design/get-started/',
     })).rejects.toThrow('outside the Apple Design content allowlist');
-    expect(httpClient.get).toHaveBeenCalledTimes(1);
+    expect(mockedObject(httpClient).get).toHaveBeenCalledTimes(1);
   });
 
   it('should keep trying example candidates until limit fetchable images are found', async () => {
@@ -1077,7 +1078,7 @@ describe('Apple Design examples', () => {
         mimeType: 'image/png',
       }),
     ]);
-    expect(httpClient.get).toHaveBeenCalledTimes(3);
+    expect(mockedObject(httpClient).get).toHaveBeenCalledTimes(3);
   });
 
   it('should cap query-derived preview fetches by the requested limit', async () => {
@@ -1120,7 +1121,7 @@ describe('Apple Design examples', () => {
         mimeType: 'image/png',
       }),
     ]);
-    expect(httpClient.get).toHaveBeenCalledTimes(2);
+    expect(mockedObject(httpClient).get).toHaveBeenCalledTimes(2);
   });
 
   it('should skip failed discovered image candidates and keep trying later candidates', async () => {
@@ -1152,7 +1153,7 @@ describe('Apple Design examples', () => {
         mimeType: 'image/png',
       }),
     ]);
-    expect(httpClient.get).toHaveBeenCalledTimes(3);
+    expect(mockedObject(httpClient).get).toHaveBeenCalledTimes(3);
   });
 
   it('should extract HIG image examples from tabs', async () => {
@@ -1227,7 +1228,7 @@ describe('Apple Design examples', () => {
         mimeType: 'image/png',
       }),
     ]);
-    expect(httpClient.get).toHaveBeenCalledWith(
+    expect(mockedObject(httpClient).get).toHaveBeenCalledWith(
       'https://developer.apple.com/design/images/example.png',
       expect.any(Object),
     );
@@ -1255,7 +1256,7 @@ describe('Apple Design examples', () => {
         mimeType: 'image/png',
       }),
     ]);
-    expect(httpClient.get).toHaveBeenNthCalledWith(
+    expect(mockedObject(httpClient).get).toHaveBeenNthCalledWith(
       1,
       'https://developer.apple.com/design/images/example.png',
       expect.objectContaining({
@@ -1263,7 +1264,7 @@ describe('Apple Design examples', () => {
         redirect: 'manual',
       }),
     );
-    expect(httpClient.get).toHaveBeenNthCalledWith(
+    expect(mockedObject(httpClient).get).toHaveBeenNthCalledWith(
       2,
       'https://docs-assets.developer.apple.com/design/example.png',
       expect.objectContaining({
@@ -1282,7 +1283,7 @@ describe('Apple Design examples', () => {
       url: 'https://developer.apple.com/design/images/example.png',
       limit: 1,
     })).rejects.toThrow('outside the Apple Design allowlist');
-    expect(httpClient.get).toHaveBeenCalledTimes(1);
+    expect(mockedObject(httpClient).get).toHaveBeenCalledTimes(1);
   });
 
   it('should reject direct image example responses whose final URL is outside the Apple allowlist', async () => {
@@ -1295,7 +1296,7 @@ describe('Apple Design examples', () => {
       url: 'https://developer.apple.com/design/images/example.png',
       limit: 1,
     })).rejects.toThrow('outside the Apple Design allowlist');
-    expect(httpClient.get).toHaveBeenCalledWith(
+    expect(mockedObject(httpClient).get).toHaveBeenCalledWith(
       'https://developer.apple.com/design/images/example.png',
       expect.objectContaining({
         allowManualRedirect: true,

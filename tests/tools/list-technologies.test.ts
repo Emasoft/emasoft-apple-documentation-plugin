@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { handleListTechnologies } from '../../src/tools/list-technologies.js';
 import { httpClient } from '../../src/utils/http-client.js';
-import { technologiesCache } from '../../src/utils/cache.js';
+import { mockedObject } from '../helpers/test-helpers.js';
 
 jest.mock('../../src/utils/http-client.js');
 jest.mock('../../src/utils/cache.js', () => ({
@@ -9,7 +9,7 @@ jest.mock('../../src/utils/cache.js', () => ({
     get: jest.fn(),
     set: jest.fn(),
   },
-  generateUrlCacheKey: jest.fn().mockImplementation((url, params) => `${url}-${JSON.stringify(params)}`),
+  generateUrlCacheKey: jest.fn().mockImplementation((url, params) => `${String(url)}-${JSON.stringify(params)}`),
 }));
 
 const mockHttpClient = httpClient as jest.Mocked<typeof httpClient>;
@@ -72,7 +72,7 @@ describe('list-technologies', () => {
 
       const result = await handleListTechnologies();
 
-      expect(mockHttpClient.getJson).toHaveBeenCalledWith(
+      expect(mockedObject(mockHttpClient).getJson).toHaveBeenCalledWith(
         'https://developer.apple.com/tutorials/data/documentation/technologies.json', undefined,
       );
       expect(result).toContain('# Apple Developer Technologies');

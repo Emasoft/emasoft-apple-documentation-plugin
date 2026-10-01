@@ -33,7 +33,7 @@ import {
   readCachedDesignResource,
 } from './tools/design-docs.js';
 import { APPLE_URLS } from './utils/constants.js';
-import type { AppError } from './types/error.js';
+import { AppError } from './types/error.js';
 import { isAppleDesignUrl, isValidAppleDeveloperUrl } from './utils/url-converter.js';
 import { validateInput, ErrorType, createStandardErrorResponse, createToolErrorResponse } from './utils/error-handler.js';
 import { preloadPopularFrameworks, abortPreload } from './utils/preloader.js';
@@ -155,8 +155,8 @@ export default class AppleDeveloperDocsMCPServer {
       };
     } catch (error) {
       // If error is already an AppError, use tool-specific suggestions
-      if (error && typeof error === 'object' && 'type' in error) {
-        return createToolErrorResponse(error as any, operationName) as CallToolResult;
+      if (isAppError(error)) {
+        return createToolErrorResponse(error, operationName) as CallToolResult;
       }
       return createStandardErrorResponse(error, operationName) as CallToolResult;
     }
@@ -284,10 +284,10 @@ export default class AppleDeveloperDocsMCPServer {
 
       // 验证是否为有效的Apple Developer URL
       if (!isValidAppleDeveloperUrl(url)) {
-        return createToolErrorResponse({
+        return createToolErrorResponse(new AppError({
           type: ErrorType.INVALID_INPUT,
           message: 'URL must be from developer.apple.com',
-        }, 'get_apple_doc_content');
+        }), 'get_apple_doc_content');
       }
 
       if (isAppleDesignUrl(url)) {

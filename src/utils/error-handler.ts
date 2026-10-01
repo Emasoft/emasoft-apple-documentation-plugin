@@ -3,13 +3,12 @@
  */
 
 import { ERROR_MESSAGES } from './constants.js';
-import type { AppError, ErrorResponse } from '../types/error.js';
-import { ErrorType } from '../types/error.js';
+import { AppError, ErrorType } from '../types/error.js';
+import type { ErrorResponse } from '../types/error.js';
 import { logger } from './logger.js';
 
 // Re-export for backward compatibility
-export type { AppError };
-export { ErrorType };
+export { AppError, ErrorType };
 
 /**
  * Create a standardized error response
@@ -37,7 +36,7 @@ export function createErrorResponse(error: AppError): ErrorResponse {
  */
 export function handleFetchError(error: unknown, url: string): AppError {
   if (error instanceof TypeError) {
-    return {
+    return new AppError({
       type: ErrorType.NETWORK_ERROR,
       message: ERROR_MESSAGES.NETWORK_ERROR,
       originalError: error,
@@ -46,12 +45,12 @@ export function handleFetchError(error: unknown, url: string): AppError {
         'Verify the URL is accessible',
         'Try again in a few moments',
       ],
-    };
+    });
   }
 
   if (error instanceof Error) {
     if (error.message.includes('timeout')) {
-      return {
+      return new AppError({
         type: ErrorType.TIMEOUT,
         message: ERROR_MESSAGES.TIMEOUT,
         originalError: error,
@@ -59,11 +58,11 @@ export function handleFetchError(error: unknown, url: string): AppError {
           'Try again with a simpler query',
           'Check your network connection',
         ],
-      };
+      });
     }
 
     if (error.message.includes('404')) {
-      return {
+      return new AppError({
         type: ErrorType.NOT_FOUND,
         message: ERROR_MESSAGES.NOT_FOUND,
         originalError: error,
@@ -72,27 +71,27 @@ export function handleFetchError(error: unknown, url: string): AppError {
           'Check if this is an outdated link',
           `Visit the original URL directly: ${url}`,
         ],
-      };
+      });
     }
 
-    return {
+    return new AppError({
       type: ErrorType.UNKNOWN,
       message: error.message,
       originalError: error,
-    };
+    });
   }
 
-  return {
+  return new AppError({
     type: ErrorType.UNKNOWN,
     message: String(error),
-  };
+  });
 }
 
 /**
  * Handle JSON parsing errors
  */
 export function handleParseError(error: unknown): AppError {
-  return {
+  return new AppError({
     type: ErrorType.PARSE_ERROR,
     message: ERROR_MESSAGES.PARSE_FAILED,
     originalError: error instanceof Error ? error : undefined,
@@ -101,7 +100,7 @@ export function handleParseError(error: unknown): AppError {
       'Try again later',
       'Report this issue if it persists',
     ],
-  };
+  });
 }
 
 /**
@@ -109,14 +108,14 @@ export function handleParseError(error: unknown): AppError {
  */
 export function validateInput(value: string, fieldName: string, minLength: number = 1): AppError | null {
   if (!value || value.trim().length < minLength) {
-    return {
+    return new AppError({
       type: ErrorType.INVALID_INPUT,
       message: `${fieldName} is required and must be at least ${minLength} character(s)`,
       suggestions: [
         `Provide a valid ${fieldName.toLowerCase()}`,
         'Check the parameter format',
       ],
-    };
+    });
   }
   return null;
 }
@@ -139,7 +138,7 @@ export function handleGenericError(error: unknown, context: string, fallbackMess
   if (error instanceof Error) {
     // Check for specific error types
     if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
-      return {
+      return new AppError({
         type: ErrorType.TIMEOUT,
         message: ERROR_MESSAGES.TIMEOUT,
         originalError: error,
@@ -148,11 +147,11 @@ export function handleGenericError(error: unknown, context: string, fallbackMess
           'Check your network connection',
           'Verify the service is available',
         ],
-      };
+      });
     }
 
     if (error.message.includes('429') || error.message.includes('rate limit')) {
-      return {
+      return new AppError({
         type: ErrorType.RATE_LIMITED,
         message: 'Request rate limit exceeded',
         originalError: error,
@@ -160,11 +159,11 @@ export function handleGenericError(error: unknown, context: string, fallbackMess
           'Wait a moment before trying again',
           'Consider reducing the frequency of requests',
         ],
-      };
+      });
     }
 
     if (error.message.includes('500') || error.message.includes('502') || error.message.includes('503')) {
-      return {
+      return new AppError({
         type: ErrorType.SERVICE_UNAVAILABLE,
         message: 'Apple Developer Documentation service is temporarily unavailable',
         originalError: error,
@@ -173,14 +172,14 @@ export function handleGenericError(error: unknown, context: string, fallbackMess
           'Check Apple Developer status page',
           'Verify your internet connection',
         ],
-      };
+      });
     }
 
     if (error.message.includes('JSON') || error.message.includes('parse')) {
       return handleParseError(error);
     }
 
-    return {
+    return new AppError({
       type: ErrorType.API_ERROR,
       message: error.message,
       originalError: error,
@@ -189,10 +188,10 @@ export function handleGenericError(error: unknown, context: string, fallbackMess
         'Try again later',
         'Verify the API endpoint is correct',
       ],
-    };
+    });
   }
 
-  return {
+  return new AppError({
     type: ErrorType.UNKNOWN,
     message: fallbackMessage || `An error occurred in ${context}`,
     suggestions: [
@@ -200,7 +199,7 @@ export function handleGenericError(error: unknown, context: string, fallbackMess
       'Check your input parameters',
       'Contact support if the issue persists',
     ],
-  };
+  });
 }
 
 /**
@@ -247,7 +246,7 @@ export function validateInputs(
  * Handle cache-related errors
  */
 export function handleCacheError(error: unknown, operation: string): AppError {
-  return {
+  return new AppError({
     type: ErrorType.CACHE_ERROR,
     message: `Cache operation failed: ${operation}`,
     originalError: error instanceof Error ? error : undefined,
@@ -255,7 +254,7 @@ export function handleCacheError(error: unknown, operation: string): AppError {
       'The operation will continue without cache',
       'Try clearing the cache if issues persist',
     ],
-  };
+  });
 }
 
 /**

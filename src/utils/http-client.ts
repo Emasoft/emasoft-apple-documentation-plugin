@@ -194,7 +194,7 @@ class HttpClient {
           const result = await requestFn();
           resolve(result);
         } catch (error) {
-          reject(error);
+          reject(error instanceof Error ? error : new Error(String(error)));
         } finally {
           this.activeRequests--;
           // Process next request in queue
@@ -381,7 +381,7 @@ class HttpClient {
         // Don't retry on certain errors
         if (error instanceof Error) {
           if (error.name === 'AbortError') {
-            throw new Error(ERROR_MESSAGES.TIMEOUT);
+            throw new Error(ERROR_MESSAGES.TIMEOUT, { cause: error });
           }
           if (error.message.includes('404')) {
             throw error; // Don't retry 404s
@@ -432,7 +432,7 @@ class HttpClient {
     customHeaders: Record<string, string> = {},
     acceptOverride?: string,
   ): Promise<Record<string, string>> {
-    let requestHeaders: Record<string, string> = {};
+    let requestHeaders: Record<string, string>;
 
     try {
       // Initialize User-Agent pool and headers generator

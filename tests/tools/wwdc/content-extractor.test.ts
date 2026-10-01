@@ -4,7 +4,6 @@
 
 import { extractVideoContent as extractWWDCVideoContent } from '../../../src/tools/wwdc/content-extractor';
 import { httpClient } from '../../../src/utils/http-client';
-import { JSDOM } from 'jsdom';
 
 // Mock http client
 jest.mock('../../../src/utils/http-client');

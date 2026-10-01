@@ -2,6 +2,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { handleFindSimilarApis } from '../../src/tools/find-similar-apis.js';
 import { httpClient } from '../../src/utils/http-client.js';
 import { convertToJsonApiUrl } from '../../src/utils/url-converter.js';
+import { mockedObject } from '../helpers/test-helpers.js';
 
 jest.mock('../../src/utils/http-client.js');
 jest.mock('../../src/utils/url-converter.js', () => ({
@@ -71,7 +72,7 @@ describe('find-similar-apis', () => {
       const result = await handleFindSimilarApis(mockApiUrl, 'shallow');
 
       expect(mockConvertToJsonApiUrl).toHaveBeenCalledWith(mockApiUrl);
-      expect(mockHttpClient.getJson).toHaveBeenCalledTimes(1);
+      expect(mockedObject(mockHttpClient).getJson).toHaveBeenCalledTimes(1);
 
       expect(result).toContain('# Similar APIs to Text');
       expect(result).toContain('Structure · iOS 13.0+');

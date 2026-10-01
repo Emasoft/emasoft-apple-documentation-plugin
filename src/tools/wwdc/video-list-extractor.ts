@@ -70,7 +70,7 @@ export async function extractVideoList(year: string): Promise<VideoListItem[]> {
 
   } catch (error) {
     logger.error(`Failed to extract video list for WWDC${year}:`, error);
-    throw new Error(`Failed to extract video list for WWDC${year}: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`Failed to extract video list for WWDC${year}: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
   }
 }
 
@@ -79,7 +79,7 @@ export async function extractVideoList(year: string): Promise<VideoListItem[]> {
  */
 function extractVideoFromElement(element: Element, year: string): VideoListItem | null {
   // Extract video ID
-  let id: string | null = null;
+  let id: string | null;
 
   // Get from data attribute
   id = element.getAttribute('data-video-id');

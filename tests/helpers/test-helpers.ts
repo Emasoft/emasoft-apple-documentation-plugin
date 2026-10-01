@@ -133,6 +133,17 @@ export const mockData = {
 };
 
 /**
+ * View a jest.mock()-ed object's methods as jest.Mock properties, so assertions like
+ * `expect(mockedObject(httpClient).get)` are not unbound-method references.
+ * Test-only cast: the caller must have replaced the object with jest.fn() members.
+ */
+export function mockedObject<T extends object>(
+  target: T,
+): { [K in keyof T]: T[K] extends (...args: infer A) => infer R ? jest.Mock<(...args: A) => R> : T[K] } {
+  return target as never;
+}
+
+/**
  * Create a mock HTTP client
  */
 export const createMockHttpClient = () => ({
