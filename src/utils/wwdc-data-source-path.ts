@@ -1,28 +1,24 @@
 /**
- * Separate module for handling data directory path resolution
- * This is isolated to avoid import.meta.url issues in tests
+ * Resolves where the WWDC data lives. The data is NOT shipped with the plugin:
+ * it is downloaded once, on first use of a WWDC tool (see wwdc-data-source.ts).
  */
 
+import os from 'os';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { WWDC_DATA } from './constants.js';
 
 /**
- * Get the WWDC data directory path
+ * Get the WWDC data directory path.
+ * Order: APPLE_DOCS_MCP_WWDC_DATA_DIR (a local extracted copy, never downloaded into),
+ * else <base>/wwdc-data/<version> with base = CLAUDE_PLUGIN_DATA, else
+ * APPLE_DOCS_MCP_CACHE_DIR, else ~/.cache/apple-docs-mcp.
  */
 export function getWWDCDataDirectory(): string {
-  // In test environment, use current working directory
-  if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
-    return path.resolve(process.cwd(), 'data/wwdc');
+  const override = process.env[WWDC_DATA.DIR_ENV];
+  if (override) {
+    return path.resolve(override);
   }
-
-  // In production, use import.meta.url
-  const currentFilePath = fileURLToPath(import.meta.url);
-  const currentDirPath = path.dirname(currentFilePath);
-
-  // The plugin ships ONE copy of the data, at the plugin root (data/wwdc).
-  // The running file is the esbuild bundle servers/apple-docs/index.js, so the
-  // plugin root is two levels up from its directory. The same expression also
-  // resolves correctly when the server runs from source (src/utils/ -> repo
-  // root), so there is no build-time copy of data/ to keep in sync.
-  return path.resolve(currentDirPath, '../../data/wwdc');
+  const base =
+    process.env.CLAUDE_PLUGIN_DATA || process.env.APPLE_DOCS_MCP_CACHE_DIR || path.join(os.homedir(), '.cache', 'apple-docs-mcp');
+  return path.resolve(base, 'wwdc-data', WWDC_DATA.VERSION);
 }

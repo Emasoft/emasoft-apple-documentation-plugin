@@ -1,0 +1,28 @@
+{
+  "id": "90003",
+  "year": "2024",
+  "url": "https://developer.apple.com/videos/play/wwdc2024/90003/",
+  "title": "Fixture video three",
+  "speakers": ["Test Speaker"],
+  "duration": "10:00",
+  "topics": ["Swift"],
+  "hasTranscript": true,
+  "hasCode": false,
+  "transcript": {
+    "fullText": "Synthetic transcript for the Fixture video three fixture video.",
+    "segments": []
+  },
+  "codeExamples": [
+    {
+      "timestamp": "1:00",
+      "title": "Fixture example",
+      "language": "swift",
+      "code": "let fixture = \"90003\""
+    }
+  ],
+  "resources": {
+    "resourceLinks": [
+      { "title": "Fixture link", "url": "https://example.com/fixture-90003" }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "version": "2.0",
+  "lastUpdated": "2026-01-01T00:00:00.000Z",
+  "totalVideos": 3,
+  "topics": [{ "id": "swift", "name": "Swift", "url": "https://developer.apple.com/videos/swift/" }],
+  "years": ["2024"],
+  "statistics": {
+    "byTopic": { "swift": 3 },
+    "byYear": { "2024": 3 },
+    "videosWithCode": 2,
+    "videosWithTranscript": 3,
+    "videosWithResources": 3
+  }
+}

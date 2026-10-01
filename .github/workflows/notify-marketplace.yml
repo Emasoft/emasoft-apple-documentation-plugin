@@ -11,12 +11,12 @@ on:
     # Same default branch as ci.yml; a dispatch is only meaningful for main.
     branches: [main]
     # Everything that ships to a user: manifest, MCP registration, the committed
-    # bundle under servers/, the WWDC data, and the canon component folders.
+    # bundle under servers/, and the canon component folders. (The WWDC data is not
+    # in this repo: it is a release asset of the separate data repo.)
     paths:
       - '.claude-plugin/plugin.json'
       - '.mcp.json'
       - 'servers/**'
-      - 'data/**'
       - 'hooks/**'
       - 'commands/**'
       - 'agents/**'

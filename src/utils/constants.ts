@@ -324,7 +324,20 @@ export const WWDC_CONFIG = {
   MAX_TOPIC_VIDEOS_FOR_SCORING: 10, // Maximum videos to load for similarity scoring
 
   // Cache TTL for WWDC data (in milliseconds)
-  CACHE_TTL: 60 * 60 * 1000, // 1 hour - increased since data is now bundled
+  CACHE_TTL: 60 * 60 * 1000, // 1 hour - the data is read from disk; this only saves re-reading and re-parsing it
+} as const;
+
+// WWDC data is optional: downloaded once, on first use of a WWDC tool, from a release asset of
+// the data repo (a tar.gz whose top level holds index.json, by-year/, by-topic/, videos/ ...).
+// SHA256 pins the exact asset.
+export const WWDC_DATA = {
+  VERSION: 'v2',
+  URL: 'https://github.com/Emasoft/apple-docs-wwdc-data/releases/download/v2/wwdc-data.tar.gz',
+  SHA256: '9e436884c29acb8ccef0b1077bc0713e1d380be513ba174cbf865fa7f17bc3bb',
+  DIR_ENV: 'APPLE_DOCS_MCP_WWDC_DATA_DIR',
+  MARKER_FILE: '.complete',
+  // WHY 5 min: a one-off ~11 MB download on a possibly slow link, not an API call.
+  DOWNLOAD_TIMEOUT_MS: 5 * 60 * 1000,
 } as const;
 
 // Error Messages

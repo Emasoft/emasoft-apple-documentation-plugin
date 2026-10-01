@@ -7278,7 +7278,7 @@ var init_logger = __esm({
 });
 
 // src/utils/constants.ts
-var API_LIMITS, SEARCH_DEPTH_LIMITS, CACHE_TTL, CACHE_SIZE, JEV_CONFIG, SAFARI_USER_AGENTS, SAFARI_USER_AGENT_CATEGORIES, REQUEST_CONFIG, STDIN_EOF_BACKSTOP_MS, RATE_LIMIT, PROCESSING_LIMITS, APPLE_URLS, WWDC_CONFIG, ERROR_MESSAGES;
+var API_LIMITS, SEARCH_DEPTH_LIMITS, CACHE_TTL, CACHE_SIZE, JEV_CONFIG, SAFARI_USER_AGENTS, SAFARI_USER_AGENT_CATEGORIES, REQUEST_CONFIG, STDIN_EOF_BACKSTOP_MS, RATE_LIMIT, PROCESSING_LIMITS, APPLE_URLS, WWDC_CONFIG, WWDC_DATA, ERROR_MESSAGES;
 var init_constants = __esm({
   "src/utils/constants.ts"() {
     "use strict";
@@ -7530,7 +7530,16 @@ var init_constants = __esm({
       // Maximum videos to load for similarity scoring
       // Cache TTL for WWDC data (in milliseconds)
       CACHE_TTL: 60 * 60 * 1e3
-      // 1 hour - increased since data is now bundled
+      // 1 hour - the data is read from disk; this only saves re-reading and re-parsing it
+    };
+    WWDC_DATA = {
+      VERSION: "v2",
+      URL: "https://github.com/Emasoft/apple-docs-wwdc-data/releases/download/v2/wwdc-data.tar.gz",
+      SHA256: "9e436884c29acb8ccef0b1077bc0713e1d380be513ba174cbf865fa7f17bc3bb",
+      DIR_ENV: "APPLE_DOCS_MCP_WWDC_DATA_DIR",
+      MARKER_FILE: ".complete",
+      // WHY 5 min: a one-off ~11 MB download on a possibly slow link, not an API call.
+      DOWNLOAD_TIMEOUT_MS: 5 * 60 * 1e3
     };
     ERROR_MESSAGES = {
       INVALID_URL: "URL must be from developer.apple.com",
@@ -8274,7 +8283,7 @@ var init_browser_headers = __esm({
 function parseUserAgent(userAgentString) {
   let browserType = "chrome";
   let version2 = "unknown";
-  let os = "unknown";
+  let os2 = "unknown";
   let osVersion = "unknown";
   let architecture;
   if (userAgentString.includes("Safari/") && userAgentString.includes("Version/")) {
@@ -8290,7 +8299,7 @@ function parseUserAgent(userAgentString) {
     }
     const macOSMatch = userAgentString.match(/Mac OS X (\d+)_(\d+)(?:_(\d+))?/);
     if (macOSMatch) {
-      os = "macOS";
+      os2 = "macOS";
       osVersion = macOSMatch[3] ? `${macOSMatch[1]}.${macOSMatch[2]}.${macOSMatch[3]}` : `${macOSMatch[1]}.${macOSMatch[2]}`;
     }
   } else if (userAgentString.includes("Chrome/") && !userAgentString.includes("Edg/")) {
@@ -8314,32 +8323,32 @@ function parseUserAgent(userAgentString) {
   }
   if (browserType !== "safari") {
     if (userAgentString.includes("Windows NT")) {
-      os = "Windows";
+      os2 = "Windows";
       const winMatch = userAgentString.match(/Windows NT ([\d.]+)/);
       if (winMatch) {
         osVersion = winMatch[1];
       }
     } else if (userAgentString.includes("Mac OS X")) {
-      os = "macOS";
+      os2 = "macOS";
       const macMatch = userAgentString.match(/Mac OS X ([\d_.]+)/);
       if (macMatch) {
         osVersion = macMatch[1].replace(/_/g, ".");
       }
     } else if (userAgentString.includes("Intel Mac OS X")) {
-      os = "macOS";
+      os2 = "macOS";
       const macMatch = userAgentString.match(/Intel Mac OS X ([\d.]+)/);
       if (macMatch) {
         osVersion = macMatch[1];
       }
     } else if (userAgentString.includes("Linux")) {
-      os = "Linux";
+      os2 = "Linux";
     }
   }
   return {
     userAgent: userAgentString,
     browserType,
     version: version2,
-    os,
+    os: os2,
     osVersion,
     architecture
   };
@@ -36611,32 +36620,125 @@ init_logger();
 init_logger();
 init_cache();
 init_constants();
+import { execFile } from "child_process";
+import { createHash as createHash2 } from "crypto";
 import { promises as fs } from "fs";
 import path2 from "path";
+import { promisify } from "util";
 
 // src/utils/wwdc-data-source-path.ts
+init_constants();
+import os from "os";
 import path from "path";
-import { fileURLToPath } from "url";
 function getWWDCDataDirectory() {
-  if (process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID) {
-    return path.resolve(process.cwd(), "data/wwdc");
+  const override = process.env[WWDC_DATA.DIR_ENV];
+  if (override) {
+    return path.resolve(override);
   }
-  const currentFilePath = fileURLToPath(import.meta.url);
-  const currentDirPath = path.dirname(currentFilePath);
-  return path.resolve(currentDirPath, "../../data/wwdc");
+  const base = process.env.CLAUDE_PLUGIN_DATA || process.env.APPLE_DOCS_MCP_CACHE_DIR || path.join(os.homedir(), ".cache", "apple-docs-mcp");
+  return path.resolve(base, "wwdc-data", WWDC_DATA.VERSION);
 }
 
 // src/utils/wwdc-data-source.ts
-var WWDC_DATA_DIR = getWWDCDataDirectory();
+init_error();
+var execFileAsync = promisify(execFile);
+var installs = /* @__PURE__ */ new Map();
+async function pathExists(target) {
+  try {
+    await fs.access(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
+function installError(dir, url2, reason, cause) {
+  return new AppError({
+    type: "NETWORK_ERROR" /* NETWORK_ERROR */,
+    message: `WWDC data is not installed and could not be installed: ${reason}. URL: ${url2}; target directory: ${dir}. Offline: mkdir -p <dir> && curl -L ${url2} | tar xz -C <dir>, then set ${WWDC_DATA.DIR_ENV}=<dir>.`,
+    originalError: cause instanceof Error ? cause : void 0
+  });
+}
+async function installWWDCData(dir, { url: url2 = WWDC_DATA.URL, sha256 = WWDC_DATA.SHA256 } = {}) {
+  const marker = path2.join(dir, WWDC_DATA.MARKER_FILE);
+  if (await pathExists(marker)) {
+    return dir;
+  }
+  const fail = (reason, cause) => installError(dir, url2, reason, cause);
+  logger.info(`Downloading WWDC data from ${url2}`);
+  let archive;
+  try {
+    const response = await fetch(url2, { signal: AbortSignal.timeout(WWDC_DATA.DOWNLOAD_TIMEOUT_MS) });
+    if (!response.ok) {
+      throw fail(`HTTP ${response.status}`);
+    }
+    archive = Buffer.from(await response.arrayBuffer());
+  } catch (error62) {
+    throw error62 instanceof AppError ? error62 : fail(error62 instanceof Error ? error62.message : String(error62), error62);
+  }
+  const actual = createHash2("sha256").update(archive).digest("hex");
+  if (actual !== sha256) {
+    throw fail(`sha256 mismatch (expected ${sha256}, got ${actual})`);
+  }
+  const tempDir = `${dir}.tmp-${process.pid}-${Date.now()}`;
+  const archivePath = `${tempDir}.tar.gz`;
+  try {
+    await fs.mkdir(tempDir, { recursive: true });
+    await fs.writeFile(archivePath, archive);
+    try {
+      await execFileAsync("tar", ["-xzf", archivePath, "-C", tempDir]);
+    } catch (error62) {
+      throw fail(`could not extract the archive with the system tar (${error62 instanceof Error ? error62.message : String(error62)})`, error62);
+    }
+    if (!await pathExists(path2.join(tempDir, "index.json"))) {
+      throw fail("the archive has no index.json at its top level");
+    }
+    await fs.writeFile(path2.join(tempDir, WWDC_DATA.MARKER_FILE), sha256, "utf-8");
+    if (!await pathExists(marker)) {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+    try {
+      await fs.rename(tempDir, dir);
+    } catch (error62) {
+      if (!await pathExists(marker)) {
+        throw error62;
+      }
+    }
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true });
+    await fs.rm(archivePath, { force: true });
+  }
+  logger.info(`WWDC data installed in ${dir}`);
+  return dir;
+}
+async function ensureWWDCData(source) {
+  const dir = getWWDCDataDirectory();
+  if (process.env[WWDC_DATA.DIR_ENV]) {
+    if (!await pathExists(path2.join(dir, "index.json"))) {
+      throw new AppError({
+        type: "NOT_FOUND" /* NOT_FOUND */,
+        message: `${WWDC_DATA.DIR_ENV}=${dir} has no index.json. Extract the WWDC data archive there: mkdir -p <dir> && curl -L ${WWDC_DATA.URL} | tar xz -C <dir>`
+      });
+    }
+    return dir;
+  }
+  let install = installs.get(dir);
+  if (!install) {
+    install = installWWDCData(dir, source);
+    installs.set(dir, install);
+    install.catch(() => installs.delete(dir));
+  }
+  return install;
+}
 async function readBundledFile(filePath) {
-  const fullPath = path2.join(WWDC_DATA_DIR, filePath);
+  const dir = await ensureWWDCData();
+  const fullPath = path2.join(dir, filePath);
   try {
     const content = await fs.readFile(fullPath, "utf-8");
-    logger.debug(`Loaded bundled data: ${filePath}`);
+    logger.debug(`Loaded WWDC data: ${filePath}`);
     return content;
   } catch (error62) {
     const errorMessage = error62 instanceof Error ? error62.message : String(error62);
-    logger.error(`Failed to read bundled data: ${filePath}`, error62);
+    logger.error(`Failed to read WWDC data: ${filePath}`, error62);
     throw new Error(`Failed to load WWDC data from ${filePath}: ${errorMessage}`, { cause: error62 });
   }
 }
@@ -36651,13 +36753,19 @@ async function fetchData(filePath) {
   wwdcDataCache.set(cacheKey2, data2, WWDC_CONFIG.CACHE_TTL);
   return data2;
 }
+function rethrowInstallError(error62) {
+  if (error62 instanceof AppError) {
+    throw error62;
+  }
+}
 async function loadGlobalMetadata() {
   try {
     const data2 = await fetchData("index.json");
     return JSON.parse(data2);
   } catch (error62) {
+    rethrowInstallError(error62);
     logger.error("Failed to load global metadata", error62);
-    throw new Error("Failed to load WWDC metadata. Please ensure the package is properly installed.", { cause: error62 });
+    throw new Error("Failed to load WWDC metadata", { cause: error62 });
   }
 }
 async function loadTopicIndex(topicId) {
@@ -36665,6 +36773,7 @@ async function loadTopicIndex(topicId) {
     const data2 = await fetchData(`by-topic/${topicId}/index.json`);
     return JSON.parse(data2);
   } catch (error62) {
+    rethrowInstallError(error62);
     logger.error(`Failed to load topic index: ${topicId}`, error62);
     throw new Error(`Topic not found: ${topicId}`, { cause: error62 });
   }
@@ -36674,6 +36783,7 @@ async function loadYearIndex(year) {
     const data2 = await fetchData(`by-year/${year}/index.json`);
     return JSON.parse(data2);
   } catch (error62) {
+    rethrowInstallError(error62);
     logger.error(`Failed to load year index: ${year}`, error62);
     throw new Error(`Year not found: ${year}`, { cause: error62 });
   }
@@ -36683,6 +36793,7 @@ async function loadVideoData(year, videoId) {
     const data2 = await fetchData(`videos/${year}-${videoId}.json`);
     return JSON.parse(data2);
   } catch (error62) {
+    rethrowInstallError(error62);
     logger.error(`Failed to load video: ${year}-${videoId}`, error62);
     throw new Error(`Video not found: ${year}-${videoId}`, { cause: error62 });
   }
@@ -53169,7 +53280,7 @@ var load = getLoad(parse9, (dom, options) => options._useHtmlParser2 ? esm_defau
 init_cache();
 init_constants();
 init_http_client();
-import { createHash as createHash2, randomUUID } from "node:crypto";
+import { createHash as createHash3, randomUUID } from "node:crypto";
 import { mkdtempSync } from "node:fs";
 import { mkdir, open as open2, readFile, readdir, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -55001,10 +55112,10 @@ function normalizeWhitespace(value) {
   return value.replace(/\s+/g, " ").trim();
 }
 function hashString(value) {
-  return createHash2("sha256").update(value).digest("hex");
+  return createHash3("sha256").update(value).digest("hex");
 }
 function hashBuffer(value) {
-  return createHash2("sha256").update(value).digest("hex");
+  return createHash3("sha256").update(value).digest("hex");
 }
 function getIdentifierTitle(identifier) {
   return identifier.split("/").pop() ?? identifier;
@@ -55391,7 +55502,7 @@ var AppleDeveloperDocsMCPServer = class {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
     logger.info("Apple Developer Docs MCP server running on stdio");
-    logger.info("WWDC Data: Using bundled data from npm package");
+    logger.info("WWDC Data: downloaded on first use of a WWDC tool (see APPLE_DOCS_MCP_WWDC_DATA_DIR)");
     logger.info("Cache system initialized with TTL: API(30m), Index(1h), Technologies(2h)");
     logger.info("Note: Search results are not cached to ensure real-time accuracy");
     Promise.all([

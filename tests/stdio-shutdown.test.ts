@@ -42,7 +42,12 @@ describe('stdio server shutdown', () => {
       {
         // NODE_ENV must NOT be 'test' — the entrypoint only runs the server
         // when it isn't.
-        env: { ...process.env, NODE_ENV: 'development' },
+        env: {
+          ...process.env,
+          NODE_ENV: 'development',
+          // The WWDC data is downloaded on first use in production; the fixture keeps this test offline.
+          APPLE_DOCS_MCP_WWDC_DATA_DIR: path.join(__dirname, 'fixtures', 'wwdc-data'),
+        },
         stdio: ['pipe', 'pipe', 'pipe'],
       },
     );
@@ -68,7 +73,7 @@ describe('stdio server shutdown', () => {
           },
         }),
         JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }),
-        // list_wwdc_videos reads bundled JSON from disk (src/utils/wwdc-data-source.ts)
+        // list_wwdc_videos reads WWDC JSON from the fixture directory on disk (src/utils/wwdc-data-source.ts)
         // and needs no network, so 20 concurrent calls stay fast and
         // deterministic while still being async work genuinely in flight at
         // stdin EOF — the scenario that dropped responses before the fix.

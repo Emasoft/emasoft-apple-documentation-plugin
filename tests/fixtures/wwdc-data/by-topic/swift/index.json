@@ -1,0 +1,11 @@
+{
+  "id": "swift",
+  "name": "Swift",
+  "videoCount": 3,
+  "years": ["2024"],
+  "videos": [
+    {"id": "90001", "year": "2024", "title": "Fixture video one", "topics": ["Swift"], "duration": "10:00", "hasCode": true, "hasTranscript": true, "url": "https://developer.apple.com/videos/play/wwdc2024/90001/", "dataFile": "videos/2024-90001.json"},
+    {"id": "90002", "year": "2024", "title": "Fixture video two", "topics": ["Swift"], "duration": "10:00", "hasCode": true, "hasTranscript": true, "url": "https://developer.apple.com/videos/play/wwdc2024/90002/", "dataFile": "videos/2024-90002.json"},
+    {"id": "90003", "year": "2024", "title": "Fixture video three", "topics": ["Swift"], "duration": "10:00", "hasCode": false, "hasTranscript": true, "url": "https://developer.apple.com/videos/play/wwdc2024/90003/", "dataFile": "videos/2024-90003.json"}
+  ]
+}

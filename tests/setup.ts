@@ -8,15 +8,10 @@ import path from 'node:path';
 // Set test environment
 process.env.NODE_ENV = 'test';
 
-// Mock the path module to avoid import.meta.url issues
-jest.mock('../src/utils/wwdc-data-source-path.js', () => ({
-  getWWDCDataDirectory: jest.fn(() => '/mock/data/wwdc'),
-}));
-
 // Mock console.error to avoid noise in tests
 const originalConsoleError = console.error;
 
-// Same reason: plugin-version.ts reads the plugin version through import.meta.
+// plugin-version.ts reads the plugin version through import.meta, which ts-jest (CommonJS) cannot parse.
 // The mock returns the REAL package.json version (the one source of truth), never a
 // literal that could go stale; tests/index.test.ts asserts the same value and
 // tests/standalone-bundle.test.ts exercises the real read against the real bundle.
@@ -34,7 +29,9 @@ afterEach(() => {
 
 // Global test timeout: single source is jest.config.cjs testTimeout.
 
-// Mock fetch for tests
+// Mock fetch for tests. The real one stays reachable as global.realFetch for the few tests
+// that talk to a local in-process HTTP server (tests/utils/wwdc-data-install.test.ts).
+(global as any).realFetch = global.fetch;
 global.fetch = jest.fn();
 
 // Helper to create mock fetch responses

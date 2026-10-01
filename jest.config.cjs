@@ -27,7 +27,6 @@ module.exports = {
     'src/**/*.ts',
     '!src/**/*.d.ts',
     '!src/index.ts',
-    '!src/utils/wwdc-data-source.ts',  // Exclude due to import.meta.url
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],

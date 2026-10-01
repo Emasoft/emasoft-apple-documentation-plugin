@@ -23,7 +23,7 @@ This plugin (`emasoft-apple-documentation-plugin`) is based on [kimsungwhee/appl
 - **Documentation Updates**: Track WWDC 2025/2026 announcements, iOS 27, macOS 27, and latest SDK releases
 - **Technology Overviews**: Comprehensive guides for Swift, SwiftUI, UIKit, and all Apple development platforms
 - **Sample Code Library**: Swift and Objective-C code examples for iOS, macOS, and cross-platform development
-- **WWDC Video Library**: Search WWDC 2014-2026 sessions with transcripts, Swift/SwiftUI code examples, and resources, fully offline
+- **WWDC Video Library**: Search WWDC 2014-2026 sessions with transcripts, Swift/SwiftUI code examples, and resources (the data is downloaded once, on first use)
 - **Related APIs Discovery**: Find SwiftUI views, UIKit controllers, and framework-specific API relationships
 - **Platform Compatibility**: iOS 13+, macOS 10.15+, watchOS 6+, tvOS 13+, visionOS compatibility analysis
 - **High Performance**: Optimized for Xcode, Swift Playgrounds, and AI-powered development environments
@@ -37,7 +37,7 @@ This plugin (`emasoft-apple-documentation-plugin`) is based on [kimsungwhee/appl
 
 - [Claude Code](https://code.claude.com/docs/en/overview)
 - `node` (Node.js 22 or later) on your `PATH`. Claude Code runs the bundled server with `node`, and its native installer does not ship Node.js. Check with `node --version`.
-- About 39 MB of disk space per installed plugin version (the WWDC data is bundled for offline use).
+- About 11 MB of disk space for the WWDC data, downloaded once the first time a WWDC tool is used (see [WWDC Data](#wwdc-data)).
 
 ### From a Claude Code session
 
@@ -246,7 +246,6 @@ emasoft-apple-documentation-plugin/
 ├── servers/apple-docs/
 │   ├── index.js                      # Committed esbuild bundle, the server users run
 │   └── THIRD_PARTY_LICENSES.txt      # Licenses of the bundled dependencies
-├── data/wwdc/                        # Offline WWDC data (read by the bundle)
 ├── src/                              # TypeScript sources of the server
 │   ├── index.ts                      # MCP server entry point with all tools
 │   ├── tools/                        # MCP tool implementations (docs, design, WWDC, ...)
@@ -283,21 +282,18 @@ Downloaded Apple Design files are cached outside the plugin directory: in a temp
 
 ## WWDC Data
 
-All WWDC video data (2014-2026) is **bundled directly in the plugin**, providing:
+The WWDC video data (2014-2026) is **not shipped with the plugin**. The first call of a WWDC tool downloads one archive (about 11 MB: 1,400+ sessions with full transcripts, 19 topic categories) from the plugin's data release, checks its SHA-256 and extracts it into `${CLAUDE_PLUGIN_DATA}/wwdc-data/v2` (or into `wwdc-data/v2` under `APPLE_DOCS_MCP_CACHE_DIR`, or under `~/.cache/apple-docs-mcp`, when `CLAUDE_PLUGIN_DATA` is not set). Later calls, in any session, read it from disk. Starting the server and every other tool never download it. Videos, slides and sample projects are never downloaded: the WWDC tools only return their links.
 
-- **Zero network latency**: No API calls needed for WWDC content
-- **100% offline access**: Works without internet connection
-- **No rate limits**: Unlimited WWDC searches and browsing
-- **Instant responses**: All data is locally available
+To install the data offline or on a machine without access to GitHub, extract the archive yourself and point the plugin at it:
 
-The plugin includes:
+```bash
+mkdir -p /path/to/wwdc-data && curl -L https://github.com/Emasoft/apple-docs-wwdc-data/releases/download/v2/wwdc-data.tar.gz | tar xz -C /path/to/wwdc-data
+export APPLE_DOCS_MCP_WWDC_DATA_DIR=/path/to/wwdc-data
+```
 
-- **1,400+ WWDC session videos** with full transcripts
-- **19 topic categories** for organized browsing
-- **13 years of content** (2014-2026)
-- **About 39 MB of optimized JSON data** per installed plugin version
+The SHA-256 of the archive is `9e436884c29acb8ccef0b1077bc0713e1d380be513ba174cbf865fa7f17bc3bb`. If the download fails, the WWDC tools report an error naming the URL, the target directory and `APPLE_DOCS_MCP_WWDC_DATA_DIR`.
 
-> **Note**: Update the plugin to get the latest WWDC content additions.
+> **Note**: Update the plugin to get a newer WWDC data release.
 
 ## Configuration
 
@@ -305,7 +301,8 @@ The server reads these optional environment variables when it starts. Set them i
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `APPLE_DOCS_MCP_CACHE_DIR` | Directory for downloaded Apple Design files | A temporary directory per server process |
+| `APPLE_DOCS_MCP_CACHE_DIR` | Directory for downloaded Apple Design files (and, when `CLAUDE_PLUGIN_DATA` is not set, for the WWDC data) | A temporary directory per server process (WWDC data: `~/.cache/apple-docs-mcp`) |
+| `APPLE_DOCS_MCP_WWDC_DATA_DIR` | Directory with an already extracted WWDC data archive; nothing is downloaded when it is set (see [WWDC Data](#wwdc-data)) | Unset: the data is downloaded on first use |
 | `APPLE_DOCS_MCP_CACHE_MAX_BYTES` | Size limit of the download cache, in bytes | 1073741824 (1 GiB) |
 | `MCP_DEBUG` | Set to `true` to enable debug logging | Off |
 | `DEFAULT_ACCEPT_LANGUAGE` | Accept-Language header sent to Apple servers | `en-US,en;q=0.9` |

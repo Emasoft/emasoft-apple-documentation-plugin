@@ -506,7 +506,7 @@ export default class AppleDeveloperDocsMCPServer {
     await this.server.connect(transport);
 
     logger.info('Apple Developer Docs MCP server running on stdio');
-    logger.info('WWDC Data: Using bundled data from npm package');
+    logger.info('WWDC Data: downloaded on first use of a WWDC tool (see APPLE_DOCS_MCP_WWDC_DATA_DIR)');
     logger.info('Cache system initialized with TTL: API(30m), Index(1h), Technologies(2h)');
     logger.info('Note: Search results are not cached to ensure real-time accuracy');
 

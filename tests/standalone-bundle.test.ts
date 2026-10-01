@@ -1,33 +1,23 @@
 /**
  * Proves the committed plugin bundle (servers/apple-docs/index.js) is
  * self-contained: it is copied into a temp dir laid out like an installed
- * plugin (servers/apple-docs/index.js + data/), with NO node_modules anywhere
- * up the tree, and driven over stdio with real MCP requests, including a
- * data-backed tool call that needs no network.
+ * plugin (servers/apple-docs/index.js + package.json), with NO node_modules
+ * anywhere up the tree, and driven over stdio with real MCP requests,
+ * including a data-backed tool call that needs no network.
  *
- * The child is spawned with an explicit minimal env and a cwd that has no
- * data/ dir. Both are load-bearing: getWWDCDataDirectory() takes its test
- * branch (cwd/data/wwdc) when NODE_ENV=test or JEST_WORKER_ID is set, and a
- * child that inherits those from jest would pass even with a broken
- * production path. Here the only way the tool call can succeed is the
- * bundle-relative ../../data/wwdc resolution.
+ * The WWDC data is not shipped with the plugin (it is downloaded on first
+ * use), so the child reads the small fixture corpus through
+ * APPLE_DOCS_MCP_WWDC_DATA_DIR and the call stays offline. The child is
+ * spawned with an explicit minimal env, never one inherited from jest.
  */
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import {
-  existsSync,
-  copyFileSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  unlinkSync,
-} from 'node:fs';
+import { existsSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 const repoRoot = path.resolve(__dirname, '..');
 const committedBundle = path.join(repoRoot, 'servers', 'apple-docs', 'index.js');
+const fixtureDataDir = path.join(repoRoot, 'tests', 'fixtures', 'wwdc-data');
 
 interface JsonRpcResponse {
   id?: number;
@@ -73,9 +63,6 @@ describe('standalone plugin bundle', () => {
 
     mkdirSync(path.join(pluginDir, 'servers', 'apple-docs'), { recursive: true });
     copyFileSync(committedBundle, path.join(pluginDir, 'servers', 'apple-docs', 'index.js'));
-    // Symlink instead of copying 39 MB: path arithmetic from the bundle to
-    // ../../data is the same either way.
-    symlinkSync(path.join(repoRoot, 'data'), path.join(pluginDir, 'data'), 'dir');
     // serverInfo.version is read from the plugin-root package.json at runtime.
     copyFileSync(path.join(repoRoot, 'package.json'), path.join(pluginDir, 'package.json'));
     const cwd = path.join(pluginDir, 'cwd');
@@ -83,7 +70,7 @@ describe('standalone plugin bundle', () => {
 
     child = spawn(process.execPath, [path.join(pluginDir, 'servers', 'apple-docs', 'index.js')], {
       cwd,
-      env: { PATH: process.env.PATH, HOME: process.env.HOME },
+      env: { PATH: process.env.PATH, HOME: process.env.HOME, APPLE_DOCS_MCP_WWDC_DATA_DIR: fixtureDataDir },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     child.stderr.on('data', (chunk: Buffer) => {
@@ -109,8 +96,6 @@ describe('standalone plugin bundle', () => {
   afterAll(() => {
     child?.kill('SIGKILL');
     if (pluginDir) {
-      // Remove the symlink first so rmSync can never reach the repo's data/.
-      unlinkSync(path.join(pluginDir, 'data'));
       rmSync(pluginDir, { recursive: true, force: true });
     }
   });
@@ -147,5 +132,9 @@ describe('standalone plugin bundle', () => {
 
   it('does not bundle jsdom (removed from the project; guards against it creeping back into the shipped server)', () => {
     expect(readFileSync(committedBundle, 'utf8')).not.toContain('jsdom');
+  });
+
+  it('does not resolve WWDC data relative to the plugin tree (the data is downloaded, never shipped)', () => {
+    expect(readFileSync(committedBundle, 'utf8')).not.toContain('data/wwdc');
   });
 });

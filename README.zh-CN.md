@@ -25,7 +25,7 @@
 - **文档更新**: 跟踪 WWDC 2025/2026 公告、iOS 27、macOS 27 和最新 SDK 发布
 - **技术概览**: Swift、SwiftUI、UIKit 和所有 Apple 开发平台的综合指南
 - **示例代码库**: iOS、macOS 和跨平台开发的 Swift 和 Objective-C 代码示例
-- **WWDC 视频库**: 搜索 WWDC 2014-2026 会议，包含文字记录、Swift/SwiftUI 代码示例和资源，完全离线可用
+- **WWDC 视频库**: 搜索 WWDC 2014-2026 会议，包含文字记录、Swift/SwiftUI 代码示例和资源 (数据在首次使用时下载一次)
 - **相关 API 发现**: 查找 SwiftUI 视图、UIKit 控制器和框架特定的 API 关系
 - **平台兼容性**: iOS 13+、macOS 10.15+、watchOS 6+、tvOS 13+、visionOS 兼容性分析
 - **高性能**: 针对 Xcode、Swift Playgrounds 和 AI 驱动的开发环境进行优化
@@ -39,7 +39,7 @@
 
 - [Claude Code](https://code.claude.com/docs/en/overview)
 - `PATH` 中的 `node`（Node.js 22 或更高版本）。Claude Code 使用 `node` 运行内置服务器，而其原生安装程序不附带 Node.js。可用 `node --version` 检查。
-- 每个已安装的插件版本约占 39 MB 磁盘空间（WWDC 数据已内置，供离线使用）。
+- WWDC 数据约占 11 MB 磁盘空间，在首次使用 WWDC 工具时下载一次 (见“WWDC 数据”)。
 
 ### 在 Claude Code 会话中
 
@@ -241,7 +241,6 @@ emasoft-apple-documentation-plugin/
 ├── servers/apple-docs/
 │   ├── index.js                      # 已提交的 esbuild 打包文件，用户运行的服务器
 │   └── THIRD_PARTY_LICENSES.txt      # 已打包依赖的许可证
-├── data/wwdc/                        # 离线 WWDC 数据 (由打包文件读取)
 ├── src/                              # 服务器的 TypeScript 源码
 │   ├── index.ts                      # MCP 服务器入口点，包含所有工具
 │   ├── tools/                        # MCP 工具实现 (docs、design、WWDC 等)
@@ -278,21 +277,18 @@ emasoft-apple-documentation-plugin/
 
 ## WWDC 数据
 
-所有 WWDC 视频数据 (2014-2026) **直接内置于插件中**，带来以下优势：
+WWDC 视频数据 (2014-2026) **不随插件发布**。首次调用 WWDC 工具时，会从插件的数据发布页下载一个压缩包 (约 11 MB：1,400 多个会议及完整文字记录，19 个主题类别)，校验其 SHA-256，并解压到 `${CLAUDE_PLUGIN_DATA}/wwdc-data/v2` (未设置 `CLAUDE_PLUGIN_DATA` 时，位于 `APPLE_DOCS_MCP_CACHE_DIR` 或 `~/.cache/apple-docs-mcp` 下的 `wwdc-data/v2`)。之后的调用在任何会话中都直接从磁盘读取。启动服务器和所有其他工具都不会下载它。视频、幻灯片和示例项目从不下载：WWDC 工具只返回它们的链接。
 
-- **零网络延迟**: WWDC 内容无需 API 调用
-- **100% 离线访问**: 无需互联网连接即可使用
-- **无速率限制**: 无限制的 WWDC 搜索和浏览
-- **即时响应**: 所有数据均在本地可用
+要离线安装，或在无法访问 GitHub 的机器上安装，请自行解压压缩包并让插件指向它：
 
-包含的数据：
+```bash
+mkdir -p /path/to/wwdc-data && curl -L https://github.com/Emasoft/apple-docs-wwdc-data/releases/download/v2/wwdc-data.tar.gz | tar xz -C /path/to/wwdc-data
+export APPLE_DOCS_MCP_WWDC_DATA_DIR=/path/to/wwdc-data
+```
 
-- **1,400 多个 WWDC 会议视频**，附完整文字记录
-- **19 个主题类别**，便于有序浏览
-- **13 年的内容** (2014-2026)
-- 每个已安装的插件版本含**约 39 MB 的优化 JSON 数据**
+压缩包的 SHA-256 为 `9e436884c29acb8ccef0b1077bc0713e1d380be513ba174cbf865fa7f17bc3bb`。如果下载失败，WWDC 工具会返回包含 URL、目标目录和 `APPLE_DOCS_MCP_WWDC_DATA_DIR` 的错误。
 
-> **注意**: 请更新插件以获取最新的 WWDC 内容。
+> **注意**: 请更新插件以获取更新的 WWDC 数据发布。
 
 ## 配置
 
@@ -300,7 +296,8 @@ emasoft-apple-documentation-plugin/
 
 | 变量 | 描述 | 默认值 |
 |------|------|--------|
-| `APPLE_DOCS_MCP_CACHE_DIR` | 已下载 Apple Design 文件的目录 | 每个服务器进程的临时目录 |
+| `APPLE_DOCS_MCP_CACHE_DIR` | 已下载 Apple Design 文件的目录 (未设置 `CLAUDE_PLUGIN_DATA` 时也用于 WWDC 数据) | 每个服务器进程的临时目录 (WWDC 数据：`~/.cache/apple-docs-mcp`) |
+| `APPLE_DOCS_MCP_WWDC_DATA_DIR` | 已解压的 WWDC 数据压缩包所在目录；设置后不会下载 | 未设置：首次使用时下载 |
 | `APPLE_DOCS_MCP_CACHE_MAX_BYTES` | 下载缓存的大小上限（字节） | 1073741824 (1 GiB) |
 | `MCP_DEBUG` | 设为 `true` 以启用调试日志 | 关闭 |
 | `DEFAULT_ACCEPT_LANGUAGE` | 发送给 Apple 服务器的 Accept-Language 请求头 | `en-US,en;q=0.9` |

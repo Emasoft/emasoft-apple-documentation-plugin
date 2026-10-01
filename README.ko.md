@@ -25,7 +25,7 @@ Claude Code용 Apple 개발자 문서: iOS, macOS, watchOS, tvOS, visionOS 문�
 - **문서 업데이트**: WWDC 2025/2026 발표, iOS 27, macOS 27 및 최신 SDK 릴리스 추적
 - **기술 개요**: Swift, SwiftUI, UIKit 및 모든 Apple 개발 플랫폼의 포괄적인 가이드
 - **샘플 코드 라이브러리**: iOS, macOS 및 크로스 플랫폼 개발을 위한 Swift 및 Objective-C 코드 예제
-- **WWDC 비디오 라이브러리**: WWDC 2014-2026 세션 검색, 트랜스크립트, Swift/SwiftUI 코드 예제 및 리소스 포함, 완전한 오프라인 지원
+- **WWDC 비디오 라이브러리**: WWDC 2014-2026 세션 검색, 트랜스크립트, Swift/SwiftUI 코드 예제 및 리소스 포함 (데이터는 처음 사용할 때 한 번만 다운로드됩니다)
 - **관련 API 발견**: SwiftUI 뷰, UIKit 컨트롤러 및 프레임워크별 API 관계 찾기
 - **플랫폼 호환성**: iOS 13+, macOS 10.15+, watchOS 6+, tvOS 13+, visionOS 호환성 분석
 - **고성능**: Xcode, Swift Playgrounds 및 AI 기반 개발 환경에 최적화
@@ -39,7 +39,7 @@ Claude Code용 Apple 개발자 문서: iOS, macOS, watchOS, tvOS, visionOS 문�
 
 - [Claude Code](https://code.claude.com/docs/en/overview)
 - `PATH`에 있는 `node`(Node.js 22 이상). Claude Code는 포함된 서버를 `node`로 실행하며, 네이티브 설치 프로그램은 Node.js를 포함하지 않습니다. `node --version`으로 확인하세요.
-- 설치된 플러그인 버전당 약 39 MB의 디스크 공간(WWDC 데이터가 오프라인 사용을 위해 포함되어 있습니다).
+- WWDC 데이터를 위한 약 11 MB의 디스크 공간. WWDC 도구를 처음 사용할 때 한 번만 다운로드됩니다("WWDC 데이터" 참조).
 
 ### Claude Code 세션에서
 
@@ -232,7 +232,6 @@ emasoft-apple-documentation-plugin/
 ├── servers/apple-docs/
 │   ├── index.js                      # 커밋된 esbuild 번들, 사용자가 실행하는 서버
 │   └── THIRD_PARTY_LICENSES.txt      # 번들된 의존성의 라이선스
-├── data/wwdc/                        # 오프라인 WWDC 데이터 (번들이 읽음)
 ├── src/                              # 서버의 TypeScript 소스
 │   ├── index.ts                      # MCP 서버 진입점, 모든 도구 포함
 │   ├── tools/                        # MCP 도구 구현 (docs, design, WWDC 등)
@@ -269,21 +268,18 @@ emasoft-apple-documentation-plugin/
 
 ## WWDC 데이터
 
-모든 WWDC 비디오 데이터(2014-2026)는 **플러그인에 직접 번들링**되어 다음을 제공합니다:
+WWDC 비디오 데이터(2014-2026)는 **플러그인에 포함되어 있지 않습니다**. WWDC 도구를 처음 호출하면 플러그인의 데이터 릴리스에서 아카이브 하나(약 11 MB: 1,400개 이상의 세션과 전체 대본, 19개 주제 카테고리)를 다운로드하고 SHA-256을 검증한 뒤 `${CLAUDE_PLUGIN_DATA}/wwdc-data/v2`에 풉니다(`CLAUDE_PLUGIN_DATA`가 설정되지 않은 경우 `APPLE_DOCS_MCP_CACHE_DIR` 또는 `~/.cache/apple-docs-mcp` 아래의 `wwdc-data/v2`). 이후 호출은 어느 세션에서든 디스크에서 읽습니다. 서버 시작과 다른 모든 도구는 다운로드하지 않습니다. 비디오, 슬라이드, 샘플 프로젝트는 다운로드되지 않으며 WWDC 도구는 링크만 반환합니다.
 
-- **네트워크 지연 없음**: WWDC 콘텐츠에 API 호출 불필요
-- **100% 오프라인 액세스**: 인터넷 연결 없이 작동
-- **속도 제한 없음**: 무제한 WWDC 검색 및 탐색
-- **즉각적인 응답**: 모든 데이터가 로컬에서 사용 가능
+오프라인이거나 GitHub에 접속할 수 없는 컴퓨터에서는 아카이브를 직접 풀고 플러그인에 그 경로를 알려 주세요:
 
-포함된 데이터:
+```bash
+mkdir -p /path/to/wwdc-data && curl -L https://github.com/Emasoft/apple-docs-wwdc-data/releases/download/v2/wwdc-data.tar.gz | tar xz -C /path/to/wwdc-data
+export APPLE_DOCS_MCP_WWDC_DATA_DIR=/path/to/wwdc-data
+```
 
-- **1,400개 이상의 WWDC 세션 비디오** 및 전체 대본
-- 체계적인 탐색을 위한 **19개 주제 카테고리**
-- **13년간의 콘텐츠** (2014-2026)
-- 설치된 플러그인 버전당 **약 39 MB의 최적화된 JSON 데이터**
+아카이브의 SHA-256은 `9e436884c29acb8ccef0b1077bc0713e1d380be513ba174cbf865fa7f17bc3bb`입니다. 다운로드에 실패하면 WWDC 도구가 URL, 대상 디렉터리, `APPLE_DOCS_MCP_WWDC_DATA_DIR`를 알려 주는 오류를 반환합니다.
 
-> **참고**: 최신 WWDC 콘텐츠를 받으려면 플러그인을 업데이트하세요.
+> **참고**: 더 새로운 WWDC 데이터 릴리스를 받으려면 플러그인을 업데이트하세요.
 
 ## 설정
 
@@ -291,7 +287,8 @@ emasoft-apple-documentation-plugin/
 
 | 변수 | 설명 | 기본값 |
 |------|------|--------|
-| `APPLE_DOCS_MCP_CACHE_DIR` | 다운로드한 Apple Design 파일의 디렉터리 | 서버 프로세스마다 생성되는 임시 디렉터리 |
+| `APPLE_DOCS_MCP_CACHE_DIR` | 다운로드한 Apple Design 파일의 디렉터리(`CLAUDE_PLUGIN_DATA`가 설정되지 않은 경우 WWDC 데이터도) | 서버 프로세스마다 생성되는 임시 디렉터리 (WWDC 데이터: `~/.cache/apple-docs-mcp`) |
+| `APPLE_DOCS_MCP_WWDC_DATA_DIR` | 이미 풀어 둔 WWDC 데이터 아카이브의 디렉터리. 설정하면 다운로드하지 않습니다("WWDC 데이터" 참조) | 설정 안 함: 처음 사용할 때 다운로드 |
 | `APPLE_DOCS_MCP_CACHE_MAX_BYTES` | 다운로드 캐시의 크기 제한(바이트) | 1073741824 (1 GiB) |
 | `MCP_DEBUG` | `true`로 설정하면 디버그 로그 활성화 | 꺼짐 |
 | `DEFAULT_ACCEPT_LANGUAGE` | Apple 서버로 보내는 Accept-Language 헤더 | `en-US,en;q=0.9` |
