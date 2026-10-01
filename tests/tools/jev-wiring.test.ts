@@ -52,10 +52,10 @@ const jevResponse = (score: (row: Record<string, unknown>) => number, init: { st
 const VIDEO_COUNT = 12;
 const videoNo = (title: unknown): number => Number(String(title).replace('Video ', ''));
 
-function mockWwdcCorpus(): void {
+function mockWwdcCorpus(count: number = VIDEO_COUNT): void {
   (loadGlobalMetadata as jest.Mock).mockResolvedValue({ years: ['2025'] });
   (loadYearIndex as jest.Mock).mockResolvedValue({
-    videos: Array.from({ length: VIDEO_COUNT }, (_, i) => ({
+    videos: Array.from({ length: count }, (_, i) => ({
       id: String(i), title: 'Video ' + i, topics: ['Swift'], hasCode: false, hasTranscript: true,
       dataFile: 'videos/2025-' + i + '.json',
     })),
@@ -171,6 +171,48 @@ describe('search_wwdc_content with Jev selection', () => {
     expect(text).toMatch(/^Error:/);
     expect(text).toContain('401');
     expect(headingCount(text)).toBe(0);
+  });
+
+  describe('recall width', () => {
+    const scoredRows = (): number => sentBodies.reduce((n, b) => n + b.state.rows.length, 0);
+
+    it('select on without limit scores every candidate, more than the old default of 20', async () => {
+      mockWwdcCorpus(30);
+      enableJev();
+      mockFetch.mockImplementation(jevResponse(() => 0.5));
+
+      const text = await handleSearchWWDCContent('concurrency', 'transcript');
+
+      expect(scoredRows()).toBe(30);
+      expect(text).toContain('Selected 5 of 30 candidates by relevance (Jev)');
+    });
+
+    it('select on with an explicit limit caps the recall width', async () => {
+      mockWwdcCorpus(30);
+      enableJev();
+      mockFetch.mockImplementation(jevResponse(() => 0.5));
+
+      const text = await handleSearchWWDCContent('concurrency', 'transcript', undefined, undefined, 10);
+
+      expect(scoredRows()).toBe(10);
+      expect(text).toContain('Selected 5 of 10 candidates by relevance (Jev)');
+    });
+
+    it('select off without limit returns exactly 20 results and never calls Jev', async () => {
+      mockWwdcCorpus(30);
+
+      const text = await handleSearchWWDCContent('concurrency', 'transcript');
+
+      expect(headingCount(text)).toBe(20);
+      expect(text).not.toContain('Jev');
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('select off rejects a limit above 100', async () => {
+      const text = await handleSearchWWDCContent('concurrency', 'transcript', undefined, undefined, 101);
+
+      expect(text).toMatch(/^Error:.*maximum is 100/);
+    });
   });
 });
 

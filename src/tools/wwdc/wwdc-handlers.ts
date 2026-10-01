@@ -11,6 +11,7 @@ import {
   loadVideoData,
 } from '../../utils/wwdc-data-source.js';
 import { selectWithJev, resolveSelect, type JevRow } from '../../utils/jev-select.js';
+import { JEV_CONFIG } from '../../utils/constants.js';
 
 /**
  * Helper function to load multiple video data files
@@ -140,13 +141,20 @@ export async function handleSearchWWDCContent(
   searchIn: 'transcript' | 'code' | 'both' = 'both',
   year?: string,
   language?: string,
-  limit: number = 20,
+  limit?: number,
   select?: boolean,
   maxResults?: number,
 ): Promise<string> {
   try {
     // Fail before the scan when select: true cannot be honoured.
     const useJev = resolveSelect(select);
+    // Select off keeps the 100 cap the schema used to enforce for every caller; select on may go up to the Jev cap.
+    if (!useJev && limit !== undefined && limit > 100) {
+      throw new Error('limit above 100 needs select on (Jev); with select off the maximum is 100');
+    }
+    // limit omitted: Jev scores every candidate (up to its cap); without Jev the plain default of 20 applies.
+    // Needs undefined to reach here, which is why the schema carries no zod default for limit.
+    const effectiveLimit = limit ?? (useJev ? JEV_CONFIG.MAX_CANDIDATES : 20);
     const metadata = await loadGlobalMetadata();
     const queryLower = query.toLowerCase();
     const results: Array<{
@@ -221,9 +229,9 @@ export async function handleSearchWWDCContent(
     results.sort((a, b) => b.matches.length - a.matches.length);
 
     if (useJev) {
-      // limit is the recall width: the Jev stage scores the top `limit` videos by match count and keeps <= maxResults.
+      // limit is the recall width: the Jev stage scores the top effectiveLimit videos by match count and keeps <= maxResults.
       // A failure propagates to the catch below as an error result, never an unranked fallback.
-      const candidates = results.slice(0, limit);
+      const candidates = results.slice(0, effectiveLimit);
       // Explicit fields only: spreading the video would leak its `id` over the Jev row id.
       const rows: JevRow[] = candidates.map(r => ({
         title: r.video.title,
@@ -233,11 +241,11 @@ export async function handleSearchWWDCContent(
       }));
       const jev = await selectWithJev(query, rows, { maxResults, source: 'wwdc' });
       const selected = jev.selected.map(s => ({ ...candidates[s.index], score: s.score }));
-      return formatSearchResults(selected, query, searchIn, jev.noStrongMatch);
+      return formatSearchResults(selected, query, searchIn, jev.noStrongMatch, jev.scored);
     }
 
     // Apply limit
-    const limitedResults = results.slice(0, limit);
+    const limitedResults = results.slice(0, effectiveLimit);
 
     return formatSearchResults(limitedResults, query, searchIn);
 
@@ -532,6 +540,7 @@ function formatSearchResults(
   query: string,
   searchIn: string,
   noStrongMatch: boolean = false,
+  scored?: number,
 ): string {
   if (results.length === 0) {
     return `No ${searchIn === 'code' ? 'code' : searchIn === 'transcript' ? 'transcript' : 'content'} found containing "${query}".`;
@@ -541,6 +550,9 @@ function formatSearchResults(
   content += `**Search Query:** "${query}"\n`;
   content += `**Search Scope:** ${searchIn === 'code' ? 'Code' : searchIn === 'transcript' ? 'Transcript' : 'All Content'}\n`;
   content += `**Found ${results.length} related videos**\n\n`;
+  if (scored !== undefined) {
+    content += `Selected ${results.length} of ${scored} candidates by relevance (Jev)\n\n`;
+  }
   if (noStrongMatch) {
     content += `> **No strong match:** no video scored above the relevance threshold; the best score is ${results[0].score?.toFixed(2)}. Treat the result below as a weak guess.\n\n`;
   }

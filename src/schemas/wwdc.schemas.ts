@@ -22,7 +22,9 @@ export const searchWWDCContentSchema = z.object({
   searchIn: z.enum(['transcript', 'code', 'both']).default('both').describe('Where to search'),
   year: z.string().optional().describe('Filter by WWDC year'),
   language: z.string().optional().describe('Filter code by language'),
-  limit: z.number().min(1).max(100).default(20).describe('Maximum number of results (with select on: the recall width scored by Jev)'),
+  // No zod default: the handler must tell 'limit omitted' (Jev scores every candidate) from an explicit limit.
+  // Max is the Jev cap; the handler rejects limit > 100 when select is off (that cap is not knowable here).
+  limit: z.number().min(1).max(256).optional().describe('Maximum number of results (default 20, max 100). With select on: the recall width scored by Jev (max 256); omitted = every candidate up to 256'),
   select: z.boolean().optional()
     .describe('Jev semantic selection: keep only the best-matching videos. Default follows APPLE_DOCS_MCP_JEV_RERANK; true while it is not enabled is an error'),
   maxResults: z.number().int().min(1).max(5).default(5)

@@ -34588,7 +34588,7 @@ var StdioServerTransport = class {
 
 // src/tools/search-parser.ts
 init_logger();
-function formatSearchResults(results, query, filterType, searchUrl, noStrongMatch = false) {
+function formatSearchResults(results, query, filterType, searchUrl, noStrongMatch = false, scored) {
   let content = "";
   content += "# Apple Documentation Search Results\n\n";
   content += `**Query:** "${query}"
@@ -34598,6 +34598,11 @@ function formatSearchResults(results, query, filterType, searchUrl, noStrongMatc
   content += `**Results found:** ${results.length}
 
 `;
+  if (scored !== void 0) {
+    content += `Selected ${results.length} of ${scored} candidates by relevance (Jev)
+
+`;
+  }
   if (noStrongMatch) {
     content += `> **No strong match:** no result scored above the relevance threshold; the best score is ${results[0]?.score?.toFixed(2)}. Treat the result below as a weak guess.
 
@@ -34736,9 +34741,9 @@ This search covers documentation and samples, but not WWDC videos. For WWDC cont
   }
   return null;
 }
-function formatSearchResultsResponse(results, query, searchUrl, filterType = "all", noStrongMatch = false) {
+function formatSearchResultsResponse(results, query, searchUrl, filterType = "all", noStrongMatch = false, scored) {
   try {
-    const formattedContent = formatSearchResults(results, query, filterType, searchUrl, noStrongMatch);
+    const formattedContent = formatSearchResults(results, query, filterType, searchUrl, noStrongMatch, scored);
     return {
       content: [{
         type: "text",
@@ -36255,11 +36260,11 @@ var toolDefinitions = [
         },
         limit: {
           type: "number",
-          description: "Max results (default: 20). Results include context snippets. With select on, limit is the recall width: that many videos (ranked by match count) are scored by Jev, and maxResults is how many are returned."
+          description: "Max results (1-100, default 20) with select off. With select on, limit is the recall width: that many videos (ranked by match count, up to 256) are scored by Jev. When limit is omitted with select on, every candidate up to 256 is scored; maxResults is how many are returned."
         },
         select: {
           type: "boolean",
-          description: "Jev semantic selection: score the candidate videos against the query and return only the best 1-5, each with a relevance score. Default: on when APPLE_DOCS_MCP_JEV_RERANK=1 is set, otherwise off. select: true while it is not enabled is an error. Adds a Jev provider call (up to about 15 s)."
+          description: "Jev semantic selection: score the candidate videos against the query and return only the best 1-5, each with a relevance score. Without limit it scores every candidate (up to 256). Default: on when APPLE_DOCS_MCP_JEV_RERANK=1 is set, otherwise off. select: true while it is not enabled is an error. Adds a Jev provider call (up to about 15 s)."
         },
         maxResults: {
           type: "number",
@@ -36558,7 +36563,9 @@ var searchWWDCContentSchema = external_exports.object({
   searchIn: external_exports.enum(["transcript", "code", "both"]).default("both").describe("Where to search"),
   year: external_exports.string().optional().describe("Filter by WWDC year"),
   language: external_exports.string().optional().describe("Filter code by language"),
-  limit: external_exports.number().min(1).max(100).default(20).describe("Maximum number of results (with select on: the recall width scored by Jev)"),
+  // No zod default: the handler must tell 'limit omitted' (Jev scores every candidate) from an explicit limit.
+  // Max is the Jev cap; the handler rejects limit > 100 when select is off (that cap is not knowable here).
+  limit: external_exports.number().min(1).max(256).optional().describe("Maximum number of results (default 20, max 100). With select on: the recall width scored by Jev (max 256); omitted = every candidate up to 256"),
   select: external_exports.boolean().optional().describe("Jev semantic selection: keep only the best-matching videos. Default follows APPLE_DOCS_MCP_JEV_RERANK; true while it is not enabled is an error"),
   maxResults: external_exports.number().int().min(1).max(5).default(5).describe("With select on: how many videos to return at most (1-5)")
 });
@@ -36676,6 +36683,7 @@ async function loadVideoData(year, videoId) {
 }
 
 // src/tools/wwdc/wwdc-handlers.ts
+init_constants();
 async function loadVideosData(videoFiles) {
   const videos = [];
   for (const file2 of videoFiles) {
@@ -36747,9 +36755,13 @@ async function handleListWWDCVideos(year, topic, hasCode, limit = 50) {
     return `Error: Failed to list WWDC videos: ${errorMessage}`;
   }
 }
-async function handleSearchWWDCContent(query, searchIn = "both", year, language, limit = 20, select2, maxResults) {
+async function handleSearchWWDCContent(query, searchIn = "both", year, language, limit, select2, maxResults) {
   try {
     const useJev = resolveSelect(select2);
+    if (!useJev && limit !== void 0 && limit > 100) {
+      throw new Error("limit above 100 needs select on (Jev); with select off the maximum is 100");
+    }
+    const effectiveLimit = limit ?? (useJev ? JEV_CONFIG.MAX_CANDIDATES : 20);
     const metadata = await loadGlobalMetadata();
     const queryLower = query.toLowerCase();
     const results = [];
@@ -36799,7 +36811,7 @@ async function handleSearchWWDCContent(query, searchIn = "both", year, language,
     }
     results.sort((a, b) => b.matches.length - a.matches.length);
     if (useJev) {
-      const candidates = results.slice(0, limit);
+      const candidates = results.slice(0, effectiveLimit);
       const rows = candidates.map((r) => ({
         title: r.video.title,
         url: r.video.url,
@@ -36808,9 +36820,9 @@ async function handleSearchWWDCContent(query, searchIn = "both", year, language,
       }));
       const jev = await selectWithJev(query, rows, { maxResults, source: "wwdc" });
       const selected = jev.selected.map((s) => ({ ...candidates[s.index], score: s.score }));
-      return formatSearchResults2(selected, query, searchIn, jev.noStrongMatch);
+      return formatSearchResults2(selected, query, searchIn, jev.noStrongMatch, jev.scored);
     }
-    const limitedResults = results.slice(0, limit);
+    const limitedResults = results.slice(0, effectiveLimit);
     return formatSearchResults2(limitedResults, query, searchIn);
   } catch (error62) {
     logger.error("Failed to search WWDC content:", error62);
@@ -36992,7 +37004,7 @@ function formatVideoList(videos, year, topic, hasCode) {
   });
   return content;
 }
-function formatSearchResults2(results, query, searchIn, noStrongMatch = false) {
+function formatSearchResults2(results, query, searchIn, noStrongMatch = false, scored) {
   if (results.length === 0) {
     return `No ${searchIn === "code" ? "code" : searchIn === "transcript" ? "transcript" : "content"} found containing "${query}".`;
   }
@@ -37004,6 +37016,11 @@ function formatSearchResults2(results, query, searchIn, noStrongMatch = false) {
   content += `**Found ${results.length} related videos**
 
 `;
+  if (scored !== void 0) {
+    content += `Selected ${results.length} of ${scored} candidates by relevance (Jev)
+
+`;
+  }
   if (noStrongMatch) {
     content += `> **No strong match:** no video scored above the relevance threshold; the best score is ${results[0].score?.toFixed(2)}. Treat the result below as a weak guess.
 
@@ -55203,18 +55220,21 @@ var AppleDeveloperDocsMCPServer = class {
       logger.info(`Searching Apple docs for: ${query}`);
       let results = await fetchAppleDocsSearch(query, type, searchUrl);
       let noStrongMatch = false;
+      let scored;
       if (useJev && results.length > 0) {
         const rows = results.map((r) => ({
           title: r.title,
-          summary: r.description,
+          // An empty description is omitted, not sent as an empty field.
+          summary: r.description || void 0,
           url: r.url,
           topics: r.framework
         }));
         const jev = await selectWithJev(query, rows, { maxResults, source: "docs" });
         results = jev.selected.map((s) => ({ ...results[s.index], score: s.score }));
         noStrongMatch = jev.noStrongMatch;
+        scored = jev.scored;
       }
-      return formatSearchResultsResponse(results, query, searchUrl, type, noStrongMatch);
+      return formatSearchResultsResponse(results, query, searchUrl, type, noStrongMatch, scored);
     } catch (error62) {
       if (error62 && typeof error62 === "object" && "type" in error62) {
         return createToolErrorResponse(error62, "search_apple_docs");

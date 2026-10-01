@@ -10,6 +10,7 @@ export function formatSearchResults(
   filterType: string,
   searchUrl: string,
   noStrongMatch: boolean = false,
+  scored?: number,
 ): string {
   let content = '';
 
@@ -18,6 +19,9 @@ export function formatSearchResults(
   content += `**Query:** "${query}"\n`;
   content += `**Filter:** ${filterType}\n`;
   content += `**Results found:** ${results.length}\n\n`;
+  if (scored !== undefined) {
+    content += `Selected ${results.length} of ${scored} candidates by relevance (Jev)\n\n`;
+  }
   if (noStrongMatch) {
     content += `> **No strong match:** no result scored above the relevance threshold; the best score is ${results[0]?.score?.toFixed(2)}. Treat the result below as a weak guess.\n\n`;
   }
@@ -206,9 +210,10 @@ export function formatSearchResultsResponse(
   searchUrl: string,
   filterType: string = 'all',
   noStrongMatch: boolean = false,
+  scored?: number,
 ): { content: Array<{ type: string; text: string }> } {
   try {
-    const formattedContent = formatSearchResults(results, query, filterType, searchUrl, noStrongMatch);
+    const formattedContent = formatSearchResults(results, query, filterType, searchUrl, noStrongMatch, scored);
 
     return {
       content: [{

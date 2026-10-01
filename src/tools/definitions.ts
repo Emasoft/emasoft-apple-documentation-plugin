@@ -530,11 +530,11 @@ export const toolDefinitions: Tool[] = [
         },
         limit: {
           type: 'number',
-          description: 'Max results (default: 20). Results include context snippets. With select on, limit is the recall width: that many videos (ranked by match count) are scored by Jev, and maxResults is how many are returned.',
+          description: 'Max results (1-100, default 20) with select off. With select on, limit is the recall width: that many videos (ranked by match count, up to 256) are scored by Jev. When limit is omitted with select on, every candidate up to 256 is scored; maxResults is how many are returned.',
         },
         select: {
           type: 'boolean',
-          description: 'Jev semantic selection: score the candidate videos against the query and return only the best 1-5, each with a relevance score. Default: on when APPLE_DOCS_MCP_JEV_RERANK=1 is set, otherwise off. select: true while it is not enabled is an error. Adds a Jev provider call (up to about 15 s).',
+          description: 'Jev semantic selection: score the candidate videos against the query and return only the best 1-5, each with a relevance score. Without limit it scores every candidate (up to 256). Default: on when APPLE_DOCS_MCP_JEV_RERANK=1 is set, otherwise off. select: true while it is not enabled is an error. Adds a Jev provider call (up to about 15 s).',
         },
         maxResults: {
           type: 'number',

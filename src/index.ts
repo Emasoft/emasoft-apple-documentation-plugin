@@ -263,20 +263,23 @@ export default class AppleDeveloperDocsMCPServer {
 
       // Jev selection: a failure propagates to the catch below as a tool error, never an unranked fallback.
       let noStrongMatch = false;
+      let scored: number | undefined;
       if (useJev && results.length > 0) {
         const rows: JevRow[] = results.map(r => ({
           title: r.title,
-          summary: r.description,
+          // An empty description is omitted, not sent as an empty field.
+          summary: r.description || undefined,
           url: r.url,
           topics: r.framework,
         }));
         const jev = await selectWithJev(query, rows, { maxResults, source: 'docs' });
         results = jev.selected.map(s => ({ ...results[s.index], score: s.score }));
         noStrongMatch = jev.noStrongMatch;
+        scored = jev.scored;
       }
 
       // 格式化并返回搜索结果
-      return formatSearchResultsResponse(results, query, searchUrl, type, noStrongMatch);
+      return formatSearchResultsResponse(results, query, searchUrl, type, noStrongMatch, scored);
     } catch (error) {
       if (error && typeof error === 'object' && 'type' in error) {
         return createToolErrorResponse(error as any, 'search_apple_docs');
